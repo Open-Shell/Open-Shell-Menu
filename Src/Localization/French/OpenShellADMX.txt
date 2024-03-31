@@ -1,7 +1,7 @@
 ﻿; TRANSLATE ===================================================================
 
 Title.text = Paramètres Open-Shell
-State.text = Etat:
+State.text = État:
 State1.text = Verrouillé sur cette valeur
 State2.text = Verrouillé sur le paramètre par défaut
 State3.text = Déverrouillé
@@ -13,7 +13,7 @@ OpenShellCat.text = Open-Shell
 OpenShellCatHelp.text = Paramètres de la stratégie de groupe de Open-Shell
 SUPPORTED_CS404.text = Nécessite Open-Shell 4.0.4 ou plus.
 
-Language.nameOverride = Langage pour les composants Open-Shell
-Language.tipOverride = Sélectionnez la langue pour être utilisée avec Open-Shell (par exemple en-US ou de-DE). La langue affectera le texte dans le menu démarrer, les barres d'outils, etc. Si la DLL de langue appropriée est installée, les paramètres UI peuvent aussi être traduits
+Language.nameOverride = Langue pour les composants Open-Shell
+Language.tipOverride = Sélectionnez la langue à utiliser avec Open-Shell (par exemple en-US ou de-DE). Le choix de langue affectera le texte dans le menu démarrer, les barres d'outils, etc. Si la DLL de langue appropriée est installée, les paramètres UI peuvent aussi être traduits
 Update.nameOverride = Activer la vérification automatique de nouvelles versions
-Update.tipOverride = Lorsque ceci est coché, Open-Shell vérifiera s'il y a des nouvelles versions chaque semaine. Vous serez averti s'il y a une nouvelle version du logiciel ou une mise à jour pour votre langage actuel
+Update.tipOverride = Lorsque ceci est coché, Open-Shell vérifiera s'il y a des nouvelles versions chaque semaine. Vous serez averti s'il y a une nouvelle version du logiciel ou une mise à jour pour votre langue actuelle
