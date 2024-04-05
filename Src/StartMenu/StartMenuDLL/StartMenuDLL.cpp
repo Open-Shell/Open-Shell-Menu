@@ -603,6 +603,11 @@ UINT GetTaskbarPosition( HWND taskBar, MONITORINFO *pInfo, HMONITOR *pMonitor, R
 		SHAppBarMessage(ABM_GETTASKBARPOS,&appbar);
 		if (pRc)
 		{
+			if (RECT rc; GetWindowRgnBox(taskBar,&rc)!=ERROR)
+			{
+				MapWindowPoints(taskBar,NULL,(POINT*)&rc,2);
+				appbar.rc=rc;
+			}
 			*pRc=appbar.rc;
 			RECT rc;
 			GetWindowRect(taskBar,&rc);
@@ -1217,9 +1222,8 @@ static void UpdateStartButtonPosition(const TaskbarInfo* taskBar, const WINDOWPO
 		RecreateStartButton(taskBar->taskbarId);
 
 	RECT rcTask;
-	GetWindowRect(taskBar->taskBar, &rcTask);
 	MONITORINFO info;
-	UINT uEdge = GetTaskbarPosition(taskBar->taskBar, &info, NULL, NULL);
+	UINT uEdge = GetTaskbarPosition(taskBar->taskBar, &info, NULL, &rcTask);
 	DWORD buttonFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE;
 	if (IsWindowVisible(taskBar->taskBar))
 		buttonFlags |= SWP_SHOWWINDOW;
