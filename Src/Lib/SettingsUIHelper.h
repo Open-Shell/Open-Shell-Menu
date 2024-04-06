@@ -216,6 +216,7 @@ struct CStdCommand
 	const KNOWNFOLDERID *knownFolder;
 	unsigned int settings;
 	const wchar_t *iconD;
+	const wchar_t *iconH;
 
 	bool IsSeparator( void ) const { return !itemName; }
 	bool IsCustom( void ) const { return !*name; }
@@ -230,6 +231,7 @@ struct CTreeItem
 	CString label;
 	CString tip;
 	CString icon;
+	CString iconH;
 	CString iconD;
 	unsigned int settings;
 	const CStdCommand *pStdCommand; // always valid
@@ -239,7 +241,9 @@ struct CTreeItem
 	unsigned int GetIconKey( void ) const;
 	HICON LoadIcon( bool bSmall, std::vector<HMODULE> &modules ) const;
 	unsigned int GetIconDKey( unsigned int iconKey ) const;
-	HICON LoadIconD( HICON hIcon, std::vector<HMODULE> &modules ) const; // always large
+	HICON LoadIconD( HICON hIcon, std::vector<HMODULE> &modules ) const;
+	unsigned int GetIconHKey(unsigned int iconKey) const;
+	HICON LoadIconH(std::vector<HMODULE>& modules) const;
 	CString GetDisplayName( bool bTitle ) const;
 };
 
@@ -356,7 +360,7 @@ protected:
 	LRESULT OnCancel( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
 
 	void InitDialog( CWindow commandCombo, const CStdCommand *pStdcommands, int style, int mask, CWindow linkCombo, const KNOWNFOLDERID *const *pCommonLinks );
-	void UpdateIcons( int iconID, int iconDID );
+	void UpdateIcons( int iconID, int iconDID, int HID = NULL );
 	CString GetComboText( WORD wNotifyCode, WORD wID );
 
 private:
@@ -367,6 +371,8 @@ private:
 	unsigned int m_IconKey;
 	HICON m_hIconD;
 	unsigned int m_IconDKey;
+	HICON m_hIconH;
+	unsigned int m_IconHKey;
 	CTreeItem m_StoredItem;
 
 	void StorePlacement( void );

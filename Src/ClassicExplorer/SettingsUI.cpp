@@ -110,6 +110,7 @@ const wchar_t *g_DefaultToolbar=
 	L"UpItem.Command=up\n"
 	L"UpItem.Tip=$Toolbar.GoUp\n"
 	L"UpItem.Icon=,2\n"
+	L"UpItem.IconHover=,6\n"
 	L"UpItem.IconDisabled=,3\n"
 	L"NavPaneItem.Command=nav_pane\n"
 	L"NavPaneItem.Tip=$Toolbar.NavigationPane\n"
@@ -205,10 +206,12 @@ public:
 		COMMAND_HANDLER( IDC_BUTTONCOMMAND, BN_CLICKED, OnBrowseCommand )
 		COMMAND_HANDLER( IDC_BUTTONLINK, BN_CLICKED, OnBrowseLink )
 		COMMAND_HANDLER( IDC_BUTTONICON, BN_CLICKED, OnBrowseIcon )
+		COMMAND_HANDLER( IDC_BUTTONICONH, BN_CLICKED, OnBrowseIcon )
 		COMMAND_HANDLER( IDC_BUTTONICOND, BN_CLICKED, OnBrowseIcon )
 		COMMAND_HANDLER( IDC_COMBOLINK, CBN_KILLFOCUS, OnLinkChanged )
 		COMMAND_HANDLER( IDC_COMBOLINK, CBN_SELENDOK, OnLinkChanged )
 		COMMAND_HANDLER( IDC_EDITICON, EN_KILLFOCUS, OnIconChanged )
+		COMMAND_HANDLER(IDC_EDITICONH, EN_KILLFOCUS, OnIconHChanged)
 		COMMAND_HANDLER( IDC_EDITICOND, EN_KILLFOCUS, OnIconDChanged )
 		COMMAND_HANDLER( IDC_BUTTONRESET, BN_CLICKED, OnReset )
 		CHAIN_MSG_MAP( CEditCustomItemDlg )
@@ -223,6 +226,8 @@ public:
 	RESIZE_CONTROL(IDC_EDITTIP,MOVE_SIZE_X)
 	RESIZE_CONTROL(IDC_EDITICON,MOVE_SIZE_X)
 	RESIZE_CONTROL(IDC_BUTTONICON,MOVE_MOVE_X)
+	RESIZE_CONTROL(IDC_EDITICONH, MOVE_SIZE_X)
+	RESIZE_CONTROL(IDC_BUTTONICONH, MOVE_MOVE_X)
 	RESIZE_CONTROL(IDC_EDITICOND,MOVE_SIZE_X)
 	RESIZE_CONTROL(IDC_BUTTONICOND,MOVE_MOVE_X)
 	RESIZE_CONTROL(IDOK,MOVE_MOVE_X)
@@ -239,6 +244,7 @@ protected:
 	LRESULT OnCommandChanged( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
 	LRESULT OnLinkChanged( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
 	LRESULT OnIconChanged( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
+	LRESULT OnIconHChanged(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnIconDChanged( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
 	LRESULT OnBrowseCommand( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
 	LRESULT OnBrowseLink( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
@@ -259,11 +265,12 @@ LRESULT CEditToolbarDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam, 
 	SetDlgItemText(IDC_EDITLABEL,m_pItem->label);
 	SetDlgItemText(IDC_EDITTIP,m_pItem->tip);
 	SetDlgItemText(IDC_EDITICON,m_pItem->icon);
+	SetDlgItemText(IDC_EDITICONH, m_pItem->iconH);
 	SetDlgItemText(IDC_EDITICOND,m_pItem->iconD);
 
 	GetDlgItem(IDC_BUTTONRESET).EnableWindow(m_pItem->pStdCommand && *m_pItem->pStdCommand->name);
 
-	UpdateIcons(IDC_ICONN,IDC_ICOND);
+	UpdateIcons(IDC_ICONN,IDC_ICOND,IDC_ICONH);
 
 	CWindow tooltip=CreateWindowEx(WS_EX_TOPMOST|WS_EX_TOOLWINDOW|WS_EX_TRANSPARENT,TOOLTIPS_CLASS,NULL,WS_POPUP|TTS_NOPREFIX|TTS_ALWAYSTIP,0,0,0,0,m_hWnd,NULL,g_Instance,NULL);
 	tooltip.SendMessage(TTM_SETMAXTIPWIDTH,0,GetSystemMetrics(SM_CXSCREEN)/2);
@@ -327,7 +334,7 @@ LRESULT CEditToolbarDlg::OnCommandChanged( WORD wNotifyCode, WORD wID, HWND hWnd
 	if (text==m_pItem->command) return 0;
 	m_pItem->SetCommand(text,g_StdCommands,m_Style,SETTINGS_STYLE_MASK);
 	GetDlgItem(IDC_BUTTONRESET).EnableWindow(m_pItem->pStdCommand && *m_pItem->pStdCommand->name);
-	UpdateIcons(IDC_ICONN,IDC_ICOND);
+	UpdateIcons(IDC_ICONN,IDC_ICOND,IDC_ICONH);
 	return 0;
 }
 
@@ -336,7 +343,7 @@ LRESULT CEditToolbarDlg::OnLinkChanged( WORD wNotifyCode, WORD wID, HWND hWndCtl
 	CString text=GetComboText(wNotifyCode,wID);
 	if (text==m_pItem->link) return 0;
 	m_pItem->link=text;
-	UpdateIcons(IDC_ICONN,IDC_ICOND);
+	UpdateIcons(IDC_ICONN,IDC_ICOND,IDC_ICONH);
 	return 0;
 }
 
@@ -348,7 +355,7 @@ LRESULT CEditToolbarDlg::OnIconChanged( WORD wNotifyCode, WORD wID, HWND hWndCtl
 	text.TrimRight();
 	if (text==m_pItem->icon) return 0;
 	m_pItem->icon=text;
-	UpdateIcons(IDC_ICONN,IDC_ICOND);
+	UpdateIcons(IDC_ICONN,IDC_ICOND,IDC_ICONH);
 	return 0;
 }
 
@@ -360,7 +367,19 @@ LRESULT CEditToolbarDlg::OnIconDChanged( WORD wNotifyCode, WORD wID, HWND hWndCt
 	text.TrimRight();
 	if (text==m_pItem->iconD) return 0;
 	m_pItem->iconD=text;
-	UpdateIcons(IDC_ICONN,IDC_ICOND);
+	UpdateIcons(IDC_ICONN,IDC_ICOND,IDC_ICONH);
+	return 0;
+}
+
+LRESULT CEditToolbarDlg::OnIconHChanged(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	CString text;
+	GetDlgItemText(IDC_EDITICONH, text);
+	text.TrimLeft();
+	text.TrimRight();
+	if (text == m_pItem->iconH) return 0;
+	m_pItem->iconH = text;
+	UpdateIcons(IDC_ICONN,IDC_ICOND,IDC_ICONH);
 	return 0;
 }
 
@@ -392,9 +411,10 @@ LRESULT CEditToolbarDlg::OnBrowseIcon( WORD wNotifyCode, WORD wID, HWND hWndCtl,
 {
 	wchar_t text[_MAX_PATH];
 	if (wID==IDC_BUTTONICON) wID=IDC_EDITICON;
+	if (wID==IDC_BUTTONICONH) wID=IDC_EDITICONH;
 	if (wID==IDC_BUTTONICOND) wID=IDC_EDITICOND;
 	GetDlgItemText(wID,text,_countof(text));
-	if (wID==IDC_EDITICOND && !*text)
+	if ((wID==IDC_EDITICOND || wID==IDC_EDITICONH) && !*text)
 		GetDlgItemText(IDC_EDITICON,text,_countof(text));
 	if (BrowseIconHelper(m_hWnd,text))
 	{
@@ -417,9 +437,10 @@ LRESULT CEditToolbarDlg::OnReset( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 	SetDlgItemText(IDC_EDITLABEL,m_pItem->label);
 	SetDlgItemText(IDC_EDITTIP,m_pItem->tip);
 	SetDlgItemText(IDC_EDITICON,m_pItem->icon);
+	SetDlgItemText(IDC_EDITICONH, m_pItem->iconD);
 	SetDlgItemText(IDC_EDITICOND,m_pItem->iconD);
 
-	UpdateIcons(IDC_ICONN,IDC_ICOND);
+	UpdateIcons(IDC_ICONN,IDC_ICOND,IDC_ICONH);
 	return 0;
 }
 
@@ -439,6 +460,8 @@ protected:
 void CCustomToolbarDlg::ParseTreeItemExtra( CTreeItem *pItem, CSettingsParser &parser )
 {
 	wchar_t text[256];
+	Sprintf(text, _countof(text), L"%s.IconHover", pItem->name);
+	pItem->iconH = parser.FindSetting(text, L"");
 	Sprintf(text,_countof(text),L"%s.IconDisabled",pItem->name);
 	pItem->iconD=parser.FindSetting(text,L"");
 }
@@ -450,6 +473,13 @@ void CCustomToolbarDlg::SerializeItemExtra( CTreeItem *pItem, std::vector<wchar_
 		wchar_t text[2048];
 		Sprintf(text,_countof(text),L"%s.IconDisabled=%s\n",pItem->name,pItem->iconD);
 		AppendString(stringBuilder,text);
+	}
+
+	if (!pItem->iconH.IsEmpty())
+	{
+		wchar_t text[2048];
+		Sprintf(text, _countof(text), L"%s.IconHover=%s\n", pItem->name, pItem->iconH);
+		AppendString(stringBuilder, text);
 	}
 }
 

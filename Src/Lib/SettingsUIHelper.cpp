@@ -115,6 +115,25 @@ unsigned int CTreeItem::GetIconDKey( unsigned int iconKey ) const
 	return CalcFNVHash(iconD);
 }
 
+unsigned int CTreeItem::GetIconHKey(unsigned int iconKey) const
+{
+	if (iconH.IsEmpty())
+		return ~iconKey;
+	return CalcFNVHash(iconH);
+}
+
+HICON CTreeItem::LoadIconH(std::vector<HMODULE>& modules) const
+{
+	if (!iconH.IsEmpty())
+	{
+		if (_wcsicmp(iconH, L"none") == 0)
+			return NULL;
+		return ::LoadIcon(GetSystemMetrics(SM_CXICON), iconH, modules);
+	}
+	else
+		return NULL;
+}
+
 HICON CTreeItem::LoadIconD( HICON hIcon, std::vector<HMODULE> &modules ) const
 {
 	if (!iconD.IsEmpty())
@@ -647,6 +666,7 @@ HTREEITEM CSettingsTree::CreateStdItem( const CStdCommand *pCommand, HTREEITEM h
 	pNewItem->label=pCommand->label;
 	pNewItem->tip=pCommand->tip;
 	pNewItem->icon=pCommand->icon;
+	pNewItem->iconH=pCommand->iconH;
 	pNewItem->iconD=pCommand->iconD;
 	pNewItem->pStdCommand=pCommand;
 	pNewItem->settings=pCommand->settings&~m_StyleMask;
@@ -933,6 +953,7 @@ LRESULT CCommandsTree::OnChar( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 CEditCustomItemDlg::~CEditCustomItemDlg( void )
 {
 	if (m_hIcon) DestroyIcon(m_hIcon);
+	if (m_hIconH) DestroyIcon(m_hIconH);
 	if (m_hIconD) DestroyIcon(m_hIconD);
 }
 
@@ -987,6 +1008,8 @@ void CEditCustomItemDlg::InitDialog( CWindow commandCombo, const CStdCommand *pS
 
 	m_hIcon=NULL;
 	m_IconKey=0;
+	m_hIconH = NULL;
+	m_IconHKey = 0;
 	m_hIconD=NULL;
 	m_IconDKey=0;
 	m_StoredItem=*m_pItem;
@@ -1043,7 +1066,7 @@ LRESULT CEditCustomItemDlg::OnCancel( WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 	return 0;
 }
 
-void CEditCustomItemDlg::UpdateIcons( int iconID, int iconDID )
+void CEditCustomItemDlg::UpdateIcons( int iconID, int iconDID, int iconHID )
 {
 	unsigned int key=m_pItem->GetIconKey();
 
@@ -1064,6 +1087,18 @@ void CEditCustomItemDlg::UpdateIcons( int iconID, int iconDID )
 			if (m_hIconD) DestroyIcon(m_hIconD);
 			m_hIconD=m_pItem->LoadIconD(m_hIcon,m_Modules);
 			SendDlgItemMessage(iconDID,STM_SETICON,(WPARAM)m_hIconD);
+		}
+	}
+
+	if (iconHID)
+	{
+		key = m_pItem->GetIconHKey(key);
+		if (key != m_IconHKey)
+		{
+			m_IconHKey = key;
+			if (m_hIconH) DestroyIcon(m_hIconH);
+			m_hIconH = m_pItem->LoadIconH(m_Modules);
+			SendDlgItemMessage(iconHID, STM_SETICON, (WPARAM)m_hIconH);
 		}
 	}
 }

@@ -123,6 +123,9 @@ void CBandWindow::ParseToolbarItem( const wchar_t *name, StdToolbarItem &item )
 	Sprintf(text,_countof(text),L"%s.Icon",name);
 	item.iconPath=m_Parser.FindSetting(text);
 
+	Sprintf(text, _countof(text), L"%s.IconHover", name);
+	item.iconPathH = m_Parser.FindSetting(text);
+
 	Sprintf(text,_countof(text),L"%s.IconDisabled",name);
 	item.iconPathD=m_Parser.FindSetting(text);
 
@@ -169,6 +172,7 @@ void CBandWindow::ParseToolbar( void )
 			item.command=NULL;
 			item.link=NULL;
 			item.iconPath=NULL;
+			item.iconPathH=NULL;
 			item.iconPathD=NULL;
 			item.submenu=NULL;
 			item.menuIcon=NULL;
@@ -271,6 +275,7 @@ LRESULT CBandWindow::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 	if (m_MenuIconSize>32) m_MenuIconSize=32;
 
 	m_ImgEnabled=ImageList_Create(iconSize,iconSize,ILC_COLOR32|ILC_MASK|(IsLanguageRTL()?ILC_MIRROR:0),0,mainCount);
+	m_ImgHover=ImageList_Create(iconSize, iconSize, ILC_COLOR32 | ILC_MASK | (IsLanguageRTL() ? ILC_MIRROR : 0), 0, mainCount);
 	m_ImgDisabled=ImageList_Create(iconSize,iconSize,ILC_COLOR32|ILC_MASK|(IsLanguageRTL()?ILC_MIRROR:0),0,mainCount);
 
 	HMODULE hShell32=GetModuleHandle(L"Shell32.dll");
@@ -332,14 +337,23 @@ LRESULT CBandWindow::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 					hIcon2=CreateDisabledIcon(hIcon,iconSize);
 				int idx=ImageList_AddIcon(m_ImgDisabled,hIcon2);
 				Assert(button.iBitmap==idx);
+				HICON hIcon3 = item.iconPathH ? LoadIcon(iconSize, item.iconPathH, modules) : NULL;
+				if (!hIcon3)
+					hIcon3=hIcon;
+				int idy = ImageList_AddIcon(m_ImgHover, hIcon3);
+				Assert(button.iBitmap == idy);
 				DestroyIcon(hIcon);
 				DestroyIcon(hIcon2);
+				if (hIcon3 != hIcon)
+					DestroyIcon(hIcon3);
 			}
 			else if (hBitmap)
 			{
 				button.iBitmap=ImageList_AddMasked(m_ImgEnabled,hBitmap,CLR_NONE);
 				int idx=ImageList_AddMasked(m_ImgDisabled,hBitmap,CLR_NONE);
 				Assert(button.iBitmap==idx);
+				int idy=ImageList_AddMasked(m_ImgHover,hBitmap,CLR_NONE);
+				Assert(button.iBitmap == idy);
 				DeleteObject(hBitmap);
 			}
 
@@ -381,6 +395,8 @@ LRESULT CBandWindow::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 	if (old) ImageList_Destroy(old);
 	old=(HIMAGELIST)m_Toolbar.SendMessage(TB_SETDISABLEDIMAGELIST,0,(LPARAM)m_ImgDisabled);
 	if (old) ImageList_Destroy(old);
+	old=(HIMAGELIST)m_Toolbar.SendMessage(TB_SETHOTIMAGELIST,0,(LPARAM)m_ImgHover);
+	if (old) ImageList_Destroy(old);
 	if (!m_Buttons.empty())
 		m_Toolbar.SendMessage(TB_ADDBUTTONS,(WPARAM)m_Buttons.size(),(LPARAM)&m_Buttons[0]);
 	SendMessage(WM_CLEAR);
@@ -391,6 +407,7 @@ LRESULT CBandWindow::OnDestroy( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 {
 	if (m_ImgEnabled) ImageList_Destroy(m_ImgEnabled); m_ImgEnabled=NULL;
 	if (m_ImgDisabled) ImageList_Destroy(m_ImgDisabled); m_ImgDisabled=NULL;
+	if (m_ImgHover) ImageList_Destroy(m_ImgHover); m_ImgHover=NULL;
 	for (std::vector<StdToolbarItem>::iterator it=m_Items.begin();it!=m_Items.end();++it)
 	{
 		if (it->menuIcon) DeleteObject(it->menuIcon);

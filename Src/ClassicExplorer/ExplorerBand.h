@@ -120,6 +120,7 @@ private:
 	CComPtr<IWebBrowser2> m_pWebBrowser;
 	CComPtr<IPropertyBag> m_pBrowserBag;
 	HIMAGELIST m_ImgEnabled;
+	HIMAGELIST m_ImgHover;
 	HIMAGELIST m_ImgDisabled;
 	int m_MenuIconSize;
 
@@ -131,6 +132,7 @@ private:
 		const wchar_t *label; // text on the button
 		const wchar_t *tip; // default tooltip
 		const wchar_t *iconPath;
+		const wchar_t *iconPathH;
 		const wchar_t *iconPathD;
 		CString regName; // name of the registry value to check for enabled/checked state
 		CString labelString, tipString; // additional storage for the strings

@@ -71,6 +71,10 @@
 #define IDC_COMBOLINK                   258
 #define IDC_STATICICON1                 260
 #define IDC_BUTTONRESET                 261
+#define IDC_EDITICONH                   262
+#define IDC_BUTTONICONH                 263
+#define IDC_ICONH                       264
+#define IDC_STATICICONH                 265
 #define IDC_STATICFNAME                 1003
 #define IDC_STATICSRCSIZE               1004
 #define IDC_STATICSRCTIME               1005

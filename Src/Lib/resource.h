@@ -27,6 +27,10 @@
 #define IDC_ICOND                       257
 #define IDC_COMBOLINK                   258
 #define IDC_STATICHINT                  259
+#define IDC_EDITICONH                   262
+#define IDC_BUTTONICONH                 263
+#define IDC_ICONH                       264
+#define IDC_STATICICONH                 265
 #define IDI_ICONLOCK                    1000
 #define IDI_ICONWARNING                 1001
 #define IDC_EDITFILE                    1001
