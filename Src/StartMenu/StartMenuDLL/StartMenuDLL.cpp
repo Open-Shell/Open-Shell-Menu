@@ -1854,6 +1854,7 @@ static LRESULT CALLBACK SubclassTaskBarProc( HWND hWnd, UINT uMsg, WPARAM wParam
 		ComputeTaskbarColors(data);
 		WINCOMPATTRDATA attrData={0x13,&data,sizeof(data)};
 		SetWindowCompositionAttribute(hWnd,&attrData);
+		UpdateTaskBars(TASKBAR_UPDATE_TEXTURE);
 		return res;
 	}
 	if ((uMsg==WM_DWMCOLORIZATIONCOLORCHANGED || uMsg==WM_SETTINGCHANGE) && taskBar && taskBar->bCustomLook && SetWindowCompositionAttribute && GetWinVersion()<WIN_VER_WIN10)
@@ -1914,7 +1915,7 @@ static LRESULT CALLBACK SubclassTaskBarProc( HWND hWnd, UINT uMsg, WPARAM wParam
 				WINCOMPATTRDATA attrData={0x13,&data,sizeof(data)};
 				SetWindowCompositionAttribute(hWnd,&attrData);
 			}
-			if (g_TaskbarTexture && IsAppThemed())
+			if (g_TaskbarTexture)// && IsAppThemed())
 			{
 				// draw taskbar background (behind start button and separators)
 				PAINTSTRUCT ps;
@@ -2365,12 +2366,13 @@ void UpdateTaskBars( TUpdateTaskbar update )
 					}
 				}
 			}
-			else if (GetWinVersion()<WIN_VER_WIN10 && (!bDefColor || !bDefOpacity))
+			else //if (GetWinVersion()<WIN_VER_WIN10 && (!bDefColor || !bDefOpacity))
 			{
-				if (bDefColor && GetWinVersion()>WIN_VER_WIN7)
+				//if (bDefColor && GetWinVersion()>WIN_VER_WIN7)
 				{
-					color=GetSystemGlassColor8();
-					color=((color&0xFF)<<16)|(color&0xFF00)|((color>>16)&0xFF);
+					//color=GetSystemGlassColor8();
+					color=GetSysColor(COLOR_BTNFACE);
+					//color=((color&0xFF)<<16)|(color&0xFF00)|((color>>16)&0xFF);
 				}
 				BITMAPINFO bi={0};
 				bi.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
@@ -2970,7 +2972,7 @@ static void InitStartMenuDLL( void )
 		if (GetWinVersion()<=WIN_VER_WIN81)
 			g_DrawThemeBackgroundHook=SetIatHook(module,"uxtheme.dll","DrawThemeBackground",DrawThemeBackground2);
 		g_DrawThemeTextHook=SetIatHook(module,"uxtheme.dll","DrawThemeText",DrawThemeText2);
-		g_DrawThemeTextExHook=SetIatHook(module,"uxtheme.dll","DrawThemeTextEx",DrawThemeTextEx2);
+		//g_DrawThemeTextExHook=SetIatHook(module,"uxtheme.dll","DrawThemeTextEx",DrawThemeTextEx2);
 		g_DrawThemeTextCtlHook=SetIatHook(GetModuleHandle(L"comctl32.dll"),"uxtheme.dll","DrawThemeText",DrawThemeText2);
 		if (GetWinVersion()>=WIN_VER_WIN10)
 			g_SetWindowCompositionAttributeHook=SetIatHook(module,"user32.dll","SetWindowCompositionAttribute",SetWindowCompositionAttribute2);
