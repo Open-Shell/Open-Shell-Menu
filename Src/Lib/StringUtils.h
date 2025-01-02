@@ -41,6 +41,8 @@
 #include <stdarg.h>
 
 #if defined(_WIN32) || defined(_WIN64)
+#define VC_EXTRALEAN
+#define NOMINMAX
 #include <windows.h>
 #endif
 

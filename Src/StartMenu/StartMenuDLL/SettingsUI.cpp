@@ -2634,7 +2634,7 @@ HICON CCustomMenuDlg7::CItemList::LoadIcon( const MenuItem &item, bool bSmall ) 
 			TNetworkType networkType;
 			MenuParseDisplayName(buf,&pidl,NULL,&networkType);
 			// disable for now, to match the tree item icon loading
-			if (pidl && GetWinVersion()>=WIN_VER_WIN8 && _wcsicmp(PathFindExtension(buf),L".lnk")==0)
+			if (pidl && GetWinVersion()>=_WIN32_WINNT_WIN8 && _wcsicmp(PathFindExtension(buf),L".lnk")==0)
 			{
 				CComPtr<IShellItem> pItem;
 				if (SUCCEEDED(SHCreateItemFromIDList(pidl,IID_IShellItem,(void**)&pItem)))
@@ -3790,7 +3790,7 @@ LRESULT CMenuStyleDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 
 	m_hIcon=NULL;
 	m_IconPath="?";
-	SetDlgItemText(IDC_CHECKENABLED,LoadStringEx(GetWinVersion()==WIN_VER_WIN8?IDS_ENABLE_BUTTON:IDS_ENABLE_BUTTON2));
+	SetDlgItemText(IDC_CHECKENABLED,LoadStringEx(GetWinVersion()==_WIN32_WINNT_WIN8?IDS_ENABLE_BUTTON:IDS_ENABLE_BUTTON2));
 	m_ButtonAero=GetDlgItem(IDC_STATICAERO);
 	m_ButtonClassic=GetDlgItem(IDC_STATICCLASSIC);
 	m_ButtonCustom=GetDlgItem(IDC_STATICCUSTOM);
@@ -4671,7 +4671,7 @@ static CString GetWindowsBrandingString()
 {
 	CString retval;
 
-	if (GetWinVersion() >= WIN_VER_WIN10)
+	if (GetWinVersion() >= _WIN32_WINNT_WIN10)
 	{
 		auto winbrand = LoadLibraryEx(L"winbrand.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
 		if (winbrand)
@@ -4843,7 +4843,7 @@ void UpdateSettings( void )
 	}
 	UpdateSetting(L"MenuUsername",CComVariant(title),false);
 
-	if (GetWinVersion()>=WIN_VER_WIN8)
+	if (GetWinVersion()>=_WIN32_WINNT_WIN8)
 	{
 		HideSettingGroup(L"WindowsMenu",true);
 		HideSettingGroup(L"AllProgramsSkin",true);
@@ -4856,7 +4856,7 @@ void UpdateSettings( void )
 
 		HideSetting(L"EnableTouch",!(GetSystemMetrics(SM_DIGITIZER)&NID_INTEGRATED_TOUCH));
 
-		bool bStartScreen=GetWinVersion()<WIN_VER_WIN10;
+		bool bStartScreen=GetWinVersion()<_WIN32_WINNT_WIN10;
 		CSetting *pSetting=FindSetting(L"MouseClick")+3;
 		pSetting->nameID=bStartScreen?IDS_OPEN_WSS:IDS_OPEN_WSM;
 		pSetting->tipID=bStartScreen?IDS_OPEN_WSS_TIP:IDS_OPEN_WSM_TIP;
@@ -4887,9 +4887,9 @@ void UpdateSettings( void )
 			UpdateSettingText(L"OpenMouseMonitor",IDS_MOUSE_MONITOR2,IDS_MOUSE_MONITOR_TIP2,false);
 		UpdateSettingText(L"ShiftRight",IDS_RIGHT_SHIFTX,IDS_RIGHT_SHIFTX_TIP,false);
 
-		if (GetWinVersion()>=WIN_VER_WIN81)
+		if (GetWinVersion()>=_WIN32_WINNT_WINBLUE)
 		{
-			if (GetWinVersion()>=WIN_VER_WIN10)
+			if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 			{
 				UpdateGroupText(L"Metro",IDS_METRO_SETTINGS10);
 				UpdateSetting(L"SkipMetro",CComVariant(0),false); HideSetting(L"SkipMetro",true);
@@ -4942,7 +4942,7 @@ void UpdateSettings( void )
 #endif
 		UpdateSetting(L"HighlightNewApps",CComVariant(0),false); HideSetting(L"HighlightNewApps",true);
 	}
-	if (GetWinVersion()<WIN_VER_WIN10)
+	if (GetWinVersion()<_WIN32_WINNT_WIN10)
 	{
 		int dr, dg, db, da, dc;
 		GetSystemGlassColor(dr,dg,db,da,dc);
@@ -4961,14 +4961,14 @@ void UpdateSettings( void )
 		UpdateSetting(L"GlassBlending",CComVariant(100-da*100/255),false);
 		HideSetting(L"GlassOpacity",true);
 		UpdateSetting(L"EnableGlass",CComVariant(1),false); HideSetting(L"EnableGlass",true);
-		UpdateSetting(L"TaskbarOpacity",CComVariant(GetWinVersion()<=WIN_VER_WIN7?DEFAULT_TASK_OPACITY7:DEFAULT_TASK_OPACITY8),false);
-		if (GetWinVersion()>WIN_VER_WIN7)
+		UpdateSetting(L"TaskbarOpacity",CComVariant(GetWinVersion()<=_WIN32_WINNT_WIN7?DEFAULT_TASK_OPACITY7:DEFAULT_TASK_OPACITY8),false);
+		if (GetWinVersion()>_WIN32_WINNT_WIN7)
 		{
 			int color=GetSystemGlassColor8();
 			UpdateSetting(L"TaskbarColor",CComVariant(RgbToBgr(color)),false);
 		}
 
-		if (GetWinVersion()<=WIN_VER_WIN7)
+		if (GetWinVersion()<=_WIN32_WINNT_WIN7)
 		{
 			UpdateSetting(L"TaskbarLook",CComVariant(TASKBAR_GLASS),false);
 		}
@@ -5014,7 +5014,7 @@ void UpdateSettings( void )
 		// make games disabled by default if the folder doesn't exist (like on a server)
 		
 		const wchar_t *defaultMenu, *gameSettings0, *gameSettings1, *gameSettings2;
-		if (GetWinVersion()<WIN_VER_WIN81)
+		if (GetWinVersion()<_WIN32_WINNT_WINBLUE)
 		{
 			defaultMenu=g_DefaultStartMenu7;
 			gameSettings0=L"Item10.Command=games\n";
@@ -5050,7 +5050,7 @@ void UpdateSettings( void )
 		const wchar_t *skin12, *skin3;
 		const wchar_t *options1=L"", *options2=L"", *options3=L"";
 		bool bClassic;
-		if (GetWinVersion()<WIN_VER_WIN8)
+		if (GetWinVersion()<_WIN32_WINNT_WIN8)
 			bClassic=!IsAppThemed();
 		else
 		{
@@ -5076,7 +5076,7 @@ void UpdateSettings( void )
 				options3=L"USER_IMAGE=1\nSMALL_ICONS=0\nTHICK_BORDER=0\nSOLID_SELECTION=0\n";
 			}
 		}
-		else if (GetWinVersion()<WIN_VER_WIN8)
+		else if (GetWinVersion()<_WIN32_WINNT_WIN8)
 		{
 			BOOL comp=FALSE;
 			skin12=(SUCCEEDED(DwmIsCompositionEnabled(&comp)) && comp)?L"Windows Aero":L"Windows Basic";
@@ -5085,7 +5085,7 @@ void UpdateSettings( void )
 			options2=L"NO_ICONS=1\nUSER_IMAGE=1\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nLARGE_FONT=0\nDISABLE_MASK=0\nWHITE_SUBMENUS=1\n";
 			options3=L"USER_IMAGE=1\nSMALL_ICONS=0\nLARGE_FONT=0\nDISABLE_MASK=0\nWHITE_SUBMENUS=1\n";
 		}
-		else if (GetWinVersion()<WIN_VER_WIN10)
+		else if (GetWinVersion()<_WIN32_WINNT_WIN10)
 		{
 			skin12=L"Windows 8";
 			skin3=L"Windows 8";
@@ -5145,7 +5145,7 @@ static MenuCustomSettings g_CustomSettings;
 
 void InitSettings( void )
 {
-	if (GetWinVersion()>WIN_VER_WIN8)
+	if (GetWinVersion()>_WIN32_WINNT_WIN8)
 	{
 		for (CSetting *pSetting=g_Settings;pSetting->name;pSetting++)
 			if (wcscmp(pSetting->name,L"SkipMetro")==0)
@@ -5210,7 +5210,7 @@ void ClosingSettings( HWND hWnd, int flags, int command )
 	{
 		if (flags&CSetting::FLAG_COLD)
 			MessageBox(hWnd,LoadStringEx(IDS_NEW_SETTINGS),LoadStringEx(IDS_APP_TITLE),MB_OK|MB_ICONWARNING);
-		if (GetWinVersion()>WIN_VER_WIN8)
+		if (GetWinVersion()>_WIN32_WINNT_WIN8)
 		{
 			CRegKey regSkip;
 			if (regSkip.Open(HKEY_CURRENT_USER,L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartPage",KEY_WRITE)==ERROR_SUCCESS)

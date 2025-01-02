@@ -1,5 +1,7 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#define VC_EXTRALEAN
+#define NOMINMAX
 #include <windows.h>
 #include <NotificationActivationCallback.h>
 #include <windows.ui.notifications.h>

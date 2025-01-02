@@ -123,11 +123,13 @@ static CComPtr<IApplicationResolver> g_pAppResolver;
 // Creates the app id resolver object
 static void CreateAppResolver( void )
 {
-	if (GetWinVersion()>=WIN_VER_WIN7)
+#if _WIN32_WINNT < _WIN32_WINNT_WIN7
+	if (GetWinVersion()>=_WIN32_WINNT_WIN7)
+#endif
 	{
 		CComPtr<IUnknown> pUnknown;
 		pUnknown.CoCreateInstance(CLSID_ApplicationResolver);
-		if (GetWinVersion()==WIN_VER_WIN7)
+		if (GetWinVersion()==_WIN32_WINNT_WIN7)
 			g_pAppResolver=CComQIPtr<IApplicationResolver,&IID_IApplicationResolver7>(pUnknown);
 		else
 			g_pAppResolver=CComQIPtr<IApplicationResolver,&IID_IApplicationResolver8>(pUnknown);
@@ -851,7 +853,7 @@ static bool ComparePidls( PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2 )
 const CItemManager::ItemInfo *CItemManager::GetItemInfo( IShellItem *pItem, PIDLIST_ABSOLUTE pidl, int refreshFlags, TLocation location )
 {
 	Assert(!RWLock::ThreadHasReadLock(RWLOCK_ITEMS));
-	if ((refreshFlags&INFO_METRO) && GetWinVersion()<WIN_VER_WIN8)
+	if ((refreshFlags&INFO_METRO) && GetWinVersion()<_WIN32_WINNT_WIN8)
 		refreshFlags&=~INFO_METRO;
 	CComString pName;
 	if (refreshFlags&INFO_NO_PATH)
@@ -952,7 +954,7 @@ const CItemManager::ItemInfo *CItemManager::GetItemInfo( CString path, int refre
 {
 	Assert(!RWLock::ThreadHasReadLock(RWLOCK_ITEMS));
 	Assert(!path.IsEmpty());
-	if ((refreshFlags&INFO_METRO) && GetWinVersion()<WIN_VER_WIN8)
+	if ((refreshFlags&INFO_METRO) && GetWinVersion()<_WIN32_WINNT_WIN8)
 		refreshFlags&=~INFO_METRO;
 	CString PATH=path;
 	StringUpper(PATH);
@@ -1130,7 +1132,7 @@ const CItemManager::ItemInfo *CItemManager::GetCustomIcon( const wchar_t *path, 
 	{
 		if (IsWin11())
 			index=-IDI_APPSICON11;
-		else if (GetWinVersion()==WIN_VER_WIN10)
+		else if (GetWinVersion()==_WIN32_WINNT_WIN10)
 			index=-IDI_APPSICON10;
 	}
 	return GetCustomIcon(text,index,iconSizeType,false);
@@ -1634,7 +1636,7 @@ void CItemManager::UpdateNewPrograms( const POINT &balloonPos )
 				m_NewProgramRoots.push_back(GetItemInfo(pFolder,pidl,0));
 		}
 	}
-	if (GetWinVersion()>=WIN_VER_WIN8)
+	if (GetWinVersion()>=_WIN32_WINNT_WIN8)
 	{
 		wchar_t path[_MAX_PATH]=METRO_APP_ROOT;
 		DoEnvironmentSubst(path,_countof(path));
@@ -1831,7 +1833,7 @@ void CItemManager::RefreshItemInfo( ItemInfo *pInfo, int refreshFlags, IShellIte
 	CComPtr<IShellItem> pAppItem;
 	bool bStartScreen=
 #ifndef STARTSCREEN_WIN7
-		GetWinVersion()>=WIN_VER_WIN8 &&
+		GetWinVersion()>=_WIN32_WINNT_WIN8 &&
 #endif
 		(_wcsicmp(PathFindFileName(newInfo.PATH),STARTSCREEN_COMMAND)==0);
 	bool bValidateIcons=!bStartScreen; // hack - don't mark the icon as valid, so we have to load it next time
@@ -1938,12 +1940,14 @@ void CItemManager::RefreshItemInfo( ItemInfo *pInfo, int refreshFlags, IShellIte
 				}
 				if (pStore)
 				{
-					if (GetWinVersion()>=WIN_VER_WIN7)
+#if _WIN32_WINNT < _WIN32_WINNT_WIN7
+					if (GetWinVersion()>=_WIN32_WINNT_WIN7)
+#endif
 					{
 						newInfo.appid=GetPropertyStoreString(pStore,PKEY_AppUserModel_ID);
 						newInfo.bExplicitAppId=!newInfo.appid.IsEmpty();
 					}
-					if (!newInfo.appid.IsEmpty() && (refreshFlags&INFO_METRO) && (GetWinVersion()<=WIN_VER_WIN8 || _wcsicmp(newInfo.appid,SEARCH_APP_ID)!=0))
+					if (!newInfo.appid.IsEmpty() && (refreshFlags&INFO_METRO) && (GetWinVersion()<=_WIN32_WINNT_WIN8 || _wcsicmp(newInfo.appid,SEARCH_APP_ID)!=0))
 					{
 						PROPVARIANT val;
 						PropVariantInit(&val);
@@ -2363,7 +2367,7 @@ void CItemManager::LoadShellIcon( IShellItem *pItem, int refreshFlags, const Ico
 	}
 	
 	Strcpy(metroLocation,_countof(metroLocation),location);
-	if (pMetroColor && GetWinVersion()>=WIN_VER_WIN10 && ParseMetroBitmapLocation2(metroLocation))
+	if (pMetroColor && GetWinVersion()>=_WIN32_WINNT_WIN10 && ParseMetroBitmapLocation2(metroLocation))
 	{
 		if (refreshFlags&INFO_SMALL_ICON)
 		{
@@ -2385,7 +2389,7 @@ void CItemManager::LoadShellIcon( IShellItem *pItem, int refreshFlags, const Ico
 		}
 	}
 
-	if (GetWinVersion()>=WIN_VER_WIN10)
+	if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 		pMetroColor=NULL;
 
 	int smallIconSize=SMALL_ICON_SIZE;
@@ -2454,7 +2458,7 @@ void CItemManager::LoadShellIcon( IShellItem *pItem, int refreshFlags, const Ico
 
 static bool SetResContextTargetSize( IResourceContext *pResContext, int size )
 {
-	if (GetWinVersion()>=WIN_VER_WIN10)
+	if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 	{
 		if (SUCCEEDED(pResContext->SetTargetSize(size)))
 			return true;
@@ -2792,7 +2796,7 @@ void CItemManager::LoadMetroItems( int refreshFlags )
 		}
 		if (m_LoadingStage!=LOAD_LOADING) break;
 	}
-	if (GetWinVersion()>=WIN_VER_WIN10)
+	if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 	{
 		wchar_t APPID[256];
 		for (std::vector<MetroLink>::const_iterator it=links.begin();it!=links.end();++it)
@@ -2890,7 +2894,7 @@ void CItemManager::PreloadItemsThread( void )
 			}
 			else if (g_CacheFolders[i].folder==FOLDERID_MetroApps)
 			{
-				if (GetWinVersion()<WIN_VER_WIN8) continue;
+				if (GetWinVersion()<_WIN32_WINNT_WIN8) continue;
 				wchar_t path[_MAX_PATH]=METRO_APP_ROOT;
 				DoEnvironmentSubst(path,_countof(path));
 				pidl.Attach(ILCreateFromPath(path));

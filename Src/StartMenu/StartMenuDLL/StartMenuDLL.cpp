@@ -274,7 +274,7 @@ struct StartScreenThumbInfo
 
 static bool CreateImmersiveShell( CComPtr<IUnknown> &ptr )
 {
-	if (GetWinVersion()<WIN_VER_WIN8)
+	if (GetWinVersion()<_WIN32_WINNT_WIN8)
 		return false;
 	ptr.CoCreateInstance(CLSID_ImmersiveShell);
 	return ptr.p!=NULL;
@@ -455,7 +455,7 @@ STARTMENUAPI HWND FindTaskBar( DWORD process )
 	if (g_TaskBar)
 	{
 		// find start button
-		if (GetWinVersion()==WIN_VER_WIN7)
+		if (GetWinVersion()==_WIN32_WINNT_WIN7)
 			EnumThreadWindows(GetWindowThreadProcessId(g_TaskBar,NULL),FindStartButtonEnum,NULL);
 		if (GetWindowThreadProcessId(g_TaskBar,NULL)==GetCurrentThreadId())
 		{
@@ -795,7 +795,7 @@ public:
 	// IAppVisibilityEvents
 	virtual HRESULT STDMETHODCALLTYPE AppVisibilityOnMonitorChanged( HMONITOR hMonitor, MONITOR_APP_VISIBILITY previousMode, MONITOR_APP_VISIBILITY currentMode )
 	{
-		if (GetWinVersion()<WIN_VER_WIN10)
+		if (GetWinVersion()<_WIN32_WINNT_WIN10)
 		{
 			ResetHotCorners();
 			if (IsWin81Update1() && GetSettingBool(L"CustomTaskbar"))
@@ -807,7 +807,7 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE LauncherVisibilityChange( BOOL currentVisibleState )
 	{
 		CComPtr<IUnknown> pImmersiveShell;
-		if (GetWinVersion()>=WIN_VER_WIN10 && CreateImmersiveShell(pImmersiveShell))
+		if (GetWinVersion()>=_WIN32_WINNT_WIN10 && CreateImmersiveShell(pImmersiveShell))
 		{
 			int taskbarId=-1;
 			if (currentVisibleState)
@@ -957,14 +957,14 @@ static LRESULT CALLBACK HookAppManager( int code, WPARAM wParam, LPARAM lParam )
 									if (pMonitorService)
 									{
 										HMONITOR monitor=MonitorFromPoint(pt,MONITOR_DEFAULTTONEAREST);
-										if (GetWinVersion()==WIN_VER_WIN8)
+										if (GetWinVersion()==_WIN32_WINNT_WIN8)
 										{
 											CComPtr<IUnknown> pMonitor;
 											pMonitorService->GetFromHandle(monitor,&pMonitor);
 											if (pMonitor)
 												pMonitorService->SetImmersiveMonitor(pMonitor);
 										}
-										else if (GetWinVersion()>WIN_VER_WIN8)
+										else if (GetWinVersion()>_WIN32_WINNT_WIN8)
 										{
 											// doesn't seem to be doing anything on 8.1, but do it just in case
 											CComPtr<IUnknown> pMonitor;
@@ -1001,7 +1001,7 @@ static LRESULT CALLBACK HookAppManager( int code, WPARAM wParam, LPARAM lParam )
 							}
 							if (msg->wParam==MSG_SHIFTWIN)
 							{
-								if (GetWinVersion()==WIN_VER_WIN8)
+								if (GetWinVersion()==_WIN32_WINNT_WIN8)
 								{
 									HMONITOR monitor=(HMONITOR)msg->lParam;
 									if (monitor)
@@ -1280,7 +1280,7 @@ static void UpdateStartButtonPosition(const TaskbarInfo* taskBar, const WINDOWPO
 	if (!IsStartButtonSmallIcons(taskBar->taskbarId))
 	{
 		bool bClassic;
-		if (GetWinVersion() < WIN_VER_WIN8)
+		if (GetWinVersion() < _WIN32_WINNT_WIN8)
 			bClassic = !IsAppThemed();
 		else
 		{
@@ -1393,7 +1393,7 @@ static LRESULT CALLBACK SubclassWin81StartButton( HWND hWnd, UINT uMsg, WPARAM w
 		}
 	}
 #endif
-	if (uMsg==WM_PAINT && GetWinVersion()>=WIN_VER_WIN10)
+	if (uMsg==WM_PAINT && GetWinVersion()>=_WIN32_WINNT_WIN10)
 	{
 		g_CurrentTaskbarButton=hWnd;
 		LRESULT res=DefSubclassProc(hWnd,uMsg,wParam,lParam);
@@ -1520,11 +1520,13 @@ static BOOL CALLBACK FindWindowsMenuProc( HWND hwnd, LPARAM lParam )
 	if (_wcsicmp(name,L"DV2ControlHost")==0)
 	{
 		HWND w1=hwnd;
-		if (GetWinVersion()==WIN_VER_VISTA)
+#if _WIN32_WINNT > _WIN32_WINNT_VISTA
+		if (GetWinVersion()==_WIN32_WINNT_VISTA)
 		{
 			w1=FindWindowEx(w1,NULL,L"Desktop Open Pane Host",NULL);
 			if (!w1) return TRUE;
 		}
+#endif
 		w1=FindWindowEx(w1,NULL,L"Desktop More Programs Pane",NULL);
 		if (!w1) return TRUE;
 
@@ -1539,7 +1541,7 @@ static BOOL CALLBACK FindWindowsMenuProc( HWND hwnd, LPARAM lParam )
 static void FindWindowsMenu( void )
 {
 	if (g_TopWin7Menu) return;
-	if (GetWinVersion()<WIN_VER_WIN8)
+	if (GetWinVersion()<_WIN32_WINNT_WIN8)
 	{
 		Assert(GetCurrentThreadId()==GetWindowThreadProcessId(g_TaskBar,NULL));
 		EnumThreadWindows(GetCurrentThreadId(),FindWindowsMenuProc,0);
@@ -1606,7 +1608,7 @@ static void ComputeTaskbarColors( int *data )
 {
 	bool bDefLook;
 	int look=GetSettingInt(L"TaskbarLook",bDefLook);
-	if (GetWinVersion()<WIN_VER_WIN10 || look==TASKBAR_AEROGLASS || (look==TASKBAR_TRANSPARENT && g_TaskbarTexture))
+	if (GetWinVersion()<_WIN32_WINNT_WIN10 || look==TASKBAR_AEROGLASS || (look==TASKBAR_TRANSPARENT && g_TaskbarTexture))
 	{
 		memset(data,0,16);
 	}
@@ -1643,7 +1645,7 @@ static void ShowWinX( void )
 		return;
 	}
 
-	if (GetWinVersion()>=WIN_VER_WIN10)
+	if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 	{
 		CComPtr<IUnknown> pImmersiveShell;
 		if (CreateImmersiveShell(pImmersiveShell))
@@ -1720,9 +1722,9 @@ static LRESULT CALLBACK SubclassTrayButtonProc( HWND hWnd, UINT uMsg, WPARAM wPa
 
 static LRESULT CALLBACK SubclassTaskBarProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData )
 {
-	if (uMsg==WM_MOUSEACTIVATE && (HIWORD(lParam)==WM_MBUTTONDOWN || GetWinVersion()>=WIN_VER_WIN10))
+	if (uMsg==WM_MOUSEACTIVATE && (HIWORD(lParam)==WM_MBUTTONDOWN || GetWinVersion()>=_WIN32_WINNT_WIN10))
 	{
-		if (GetWinVersion()>=WIN_VER_WIN10 && CMenuContainer::IsMenuOpened() && CMenuContainer::HasInputHandler() && GetFocus())
+		if (GetWinVersion()>=_WIN32_WINNT_WIN10 && CMenuContainer::IsMenuOpened() && CMenuContainer::HasInputHandler() && GetFocus())
 		{
 			// Win10: if the taskbar is clicked while the menu is opened, check if the touch keyboard button was clicked and ignore the activation
 			// Otherwise the click on the touch keyboard button will deactivate the menu (possibly because both run on the same thread)
@@ -1798,7 +1800,7 @@ static LRESULT CALLBACK SubclassTaskBarProc( HWND hWnd, UINT uMsg, WPARAM wParam
 		if (PointAroundStartButton((int)dwRefData,CPoint(lParam)))
 		{
 			int control=GetSettingInt(L"MouseClick");
-			if (control==OPEN_BOTH && GetWinVersion()>=WIN_VER_WIN10)
+			if (control==OPEN_BOTH && GetWinVersion()>=_WIN32_WINNT_WIN10)
 				control=GetWin10TabletMode()?OPEN_WINDOWS:OPEN_CLASSIC;
 			if (control==OPEN_CLASSIC)
 				ToggleStartMenu(taskBar->taskbarId,false);
@@ -1829,7 +1831,7 @@ static LRESULT CALLBACK SubclassTaskBarProc( HWND hWnd, UINT uMsg, WPARAM wParam
 		{
 			UpdateStartButtonPosition(taskBar,(WINDOWPOS*)lParam);
 		}
-		if (taskBar->oldButton && GetWinVersion()<WIN_VER_WIN10)
+		if (taskBar->oldButton && GetWinVersion()<_WIN32_WINNT_WIN10)
 		{
 			UINT uEdge=GetTaskbarPosition(hWnd,NULL,NULL,NULL);
 			int x=(uEdge==ABE_BOTTOM?-1:0);
@@ -1847,7 +1849,7 @@ static LRESULT CALLBACK SubclassTaskBarProc( HWND hWnd, UINT uMsg, WPARAM wParam
 		taskBar->bThemeChanging=false;
 		return res;
 	}
-	if ((uMsg==WM_DWMCOLORIZATIONCOLORCHANGED || uMsg==WM_SETTINGCHANGE || uMsg==0x5CB || uMsg==0x5BB) && taskBar && taskBar->bCustomLook && SetWindowCompositionAttribute && GetWinVersion()>=WIN_VER_WIN10)
+	if ((uMsg==WM_DWMCOLORIZATIONCOLORCHANGED || uMsg==WM_SETTINGCHANGE || uMsg==0x5CB || uMsg==0x5BB) && taskBar && taskBar->bCustomLook && SetWindowCompositionAttribute && GetWinVersion()>=_WIN32_WINNT_WIN10)
 	{
 		LRESULT res=DefSubclassProc(hWnd,uMsg,wParam,lParam);
 		int data[4];
@@ -1856,7 +1858,7 @@ static LRESULT CALLBACK SubclassTaskBarProc( HWND hWnd, UINT uMsg, WPARAM wParam
 		SetWindowCompositionAttribute(hWnd,&attrData);
 		return res;
 	}
-	if ((uMsg==WM_DWMCOLORIZATIONCOLORCHANGED || uMsg==WM_SETTINGCHANGE) && taskBar && taskBar->bCustomLook && SetWindowCompositionAttribute && GetWinVersion()<WIN_VER_WIN10)
+	if ((uMsg==WM_DWMCOLORIZATIONCOLORCHANGED || uMsg==WM_SETTINGCHANGE) && taskBar && taskBar->bCustomLook && SetWindowCompositionAttribute && GetWinVersion()<_WIN32_WINNT_WIN10)
 	{
 		LRESULT res=DefSubclassProc(hWnd,uMsg,wParam,lParam);
 		UpdateTaskBars(TASKBAR_UPDATE_TEXTURE);
@@ -1872,25 +1874,25 @@ static LRESULT CALLBACK SubclassTaskBarProc( HWND hWnd, UINT uMsg, WPARAM wParam
 			int margin;
 			enum { FLAG_BLUR=1, FLAG_MARGIN=2, FLAG_ATTRIBUTE=4};
 			int flags=0;
-			if (winVer==WIN_VER_WIN7)
+			if (winVer==_WIN32_WINNT_WIN7)
 			{
 				blurBehind=look==TASKBAR_GLASS;
 				margin=look==TASKBAR_OPAQUE?0:-1;
 				flags=FLAG_BLUR|FLAG_MARGIN;
 			}
-			else if (winVer==WIN_VER_WIN8)
+			else if (winVer==_WIN32_WINNT_WIN8)
 			{
 				blurBehind=look==TASKBAR_OPAQUE;
 				margin=look==TASKBAR_OPAQUE?0:-1;
 				flags=FLAG_BLUR|FLAG_MARGIN|((look==TASKBAR_TRANSPARENT && g_TaskbarTexture)?FLAG_ATTRIBUTE:0);
 			}
-			else if (winVer==WIN_VER_WIN81)
+			else if (winVer==_WIN32_WINNT_WINBLUE)
 			{
 				blurBehind=look==TASKBAR_OPAQUE;
 				margin=look==TASKBAR_OPAQUE?0:-1;
 				flags=FLAG_BLUR|FLAG_MARGIN|((look==TASKBAR_OPAQUE || g_TaskbarTexture)?FLAG_ATTRIBUTE:0);
 			}
-			else if (winVer>=WIN_VER_WIN10)
+			else if (winVer>=_WIN32_WINNT_WIN10)
 			{
 				blurBehind=TRUE;
 				margin=look==TASKBAR_OPAQUE?0:-1;
@@ -2016,14 +2018,14 @@ static LRESULT CALLBACK SubclassTaskBarProc( HWND hWnd, UINT uMsg, WPARAM wParam
 	{
 		ResetHotCorners();
 	}
-	if (uMsg==WM_NCLBUTTONDOWN && taskBar && GetWinVersion()==WIN_VER_WIN7 && taskBar->bReplaceButton)
+	if (uMsg==WM_NCLBUTTONDOWN && taskBar && GetWinVersion()==_WIN32_WINNT_WIN7 && taskBar->bReplaceButton)
 	{
 		g_bSuppressMessage243=true;
 		LRESULT res=DefSubclassProc(hWnd,uMsg,wParam,lParam);
 		g_bSuppressMessage243=false;
 		return res;
 	}
-	if (uMsg==WM_PARENTNOTIFY && taskBar && LOWORD(wParam)==WM_CREATE && GetWinVersion()>=WIN_VER_WIN10)
+	if (uMsg==WM_PARENTNOTIFY && taskBar && LOWORD(wParam)==WM_CREATE && GetWinVersion()>=_WIN32_WINNT_WIN10)
 	{
 		wchar_t name[100];
 		HWND child=(HWND)lParam;
@@ -2225,7 +2227,7 @@ static void HandleTaskbarParts( TaskbarInfo &taskBar, bool bPrimary )
 				SetWindowSubclass(clock,SubclassTaskbarPartProc,'CLSH',taskBar.taskbarId);
 				taskBar.taskbarParts.push_back(clock);
 			}
-			if (GetWinVersion()<=WIN_VER_WIN81)
+			if (GetWinVersion()<=_WIN32_WINNT_WINBLUE)
 			{
 				taskBar.desktop=FindWindowEx(tray,NULL,L"TrayShowDesktopButtonWClass",NULL);
 				if (taskBar.desktop)
@@ -2233,7 +2235,7 @@ static void HandleTaskbarParts( TaskbarInfo &taskBar, bool bPrimary )
 			}
 		}
 	}
-	else if (GetWinVersion()>=WIN_VER_WIN10)
+	else if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 	{
 		HWND clock=FindWindowEx(taskBar.taskBar,NULL,L"ClockButton",NULL);
 		if (clock && !taskBar.HasPart(clock))
@@ -2259,12 +2261,12 @@ static void HandleSecondaryTaskbar( HWND hwnd )
 		if (taskBar.taskList)
 			SetWindowSubclass(taskBar.taskList,SubclassTaskListProc,'CLSH',taskbarId);
 	}
-	if (GetWinVersion()>WIN_VER_WIN8)
+	if (GetWinVersion()>_WIN32_WINNT_WIN8)
 	{
 		taskBar.oldButton=FindWindowEx(taskBar.taskBar,NULL,L"Start",NULL);
 		if (taskBar.oldButton)
 		{
-			if (GetWinVersion()>=WIN_VER_WIN10)
+			if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 			{
 				taskBar.pOriginalTarget=(IDropTarget*)GetProp(taskBar.oldButton,L"OleDropTargetInterface");
 				if (taskBar.pOriginalTarget)
@@ -2274,12 +2276,12 @@ static void HandleSecondaryTaskbar( HWND hwnd )
 			CStartMenuTarget *pNewTarget=new CStartMenuTarget(taskBar.taskbarId);
 			RegisterDragDrop(taskBar.oldButton,pNewTarget);
 			pNewTarget->Release();
-			if (GetWinVersion()<WIN_VER_WIN10 && GetTaskbarPosition(taskBar.taskBar,NULL,NULL,NULL)==ABE_BOTTOM)
+			if (GetWinVersion()<_WIN32_WINNT_WIN10 && GetTaskbarPosition(taskBar.taskBar,NULL,NULL,NULL)==ABE_BOTTOM)
 				SetWindowPos(taskBar.oldButton,NULL,-1,0,0,0,SWP_NOSIZE|SWP_NOZORDER);
 			SetWindowSubclass(taskBar.oldButton,SubclassWin81StartButton,'CLSH',taskBar.taskbarId);
 		}
 	}
-	if (GetWinVersion()>=WIN_VER_WIN10)
+	if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 	{
 		for (HWND button=FindWindowEx(taskBar.taskBar,NULL,L"TrayButton",NULL);button;button=FindWindowEx(taskBar.taskBar,button,L"TrayButton",NULL))
 		{
@@ -2365,9 +2367,9 @@ void UpdateTaskBars( TUpdateTaskbar update )
 					}
 				}
 			}
-			else if (GetWinVersion()<WIN_VER_WIN10 && (!bDefColor || !bDefOpacity))
+			else if (GetWinVersion()<_WIN32_WINNT_WIN10 && (!bDefColor || !bDefOpacity))
 			{
-				if (bDefColor && GetWinVersion()>WIN_VER_WIN7)
+				if (bDefColor && GetWinVersion()>_WIN32_WINNT_WIN7)
 				{
 					color=GetSystemGlassColor8();
 					color=((color&0xFF)<<16)|(color&0xFF00)|((color>>16)&0xFF);
@@ -2509,7 +2511,7 @@ void UpdateTaskBars( TUpdateTaskbar update )
 				{
 					ShowWindow(g_WinStartButton,SW_HIDE);
 					SetWindowSubclass(g_WinStartButton,SubclassWin7StartButton,'CLSH',0);
-					if (GetWinVersion()==WIN_VER_WIN7)
+					if (GetWinVersion()==_WIN32_WINNT_WIN7)
 					{
 						// Windows 7 draws the start button on the taskbar as well
 						// so we zero out the bitmap resources
@@ -2594,11 +2596,11 @@ void UpdateTaskBars( TUpdateTaskbar update )
 			// set custom look
 			taskBar.bCustomLook=bCustomLook;
 
-			if (!bCustomLook && GetWinVersion()<WIN_VER_WIN10)
+			if (!bCustomLook && GetWinVersion()<_WIN32_WINNT_WIN10)
 			{
-				DWM_BLURBEHIND blur={DWM_BB_ENABLE,GetWinVersion()<WIN_VER_WIN8};
+				DWM_BLURBEHIND blur={DWM_BB_ENABLE,GetWinVersion()<_WIN32_WINNT_WIN8};
 				DwmEnableBlurBehindWindow(taskBar.taskBar,&blur);
-				if (GetWinVersion()==WIN_VER_WIN7)
+				if (GetWinVersion()==_WIN32_WINNT_WIN7)
 				{
 					MARGINS margins={0};
 					DwmExtendFrameIntoClientArea(taskBar.taskBar,&margins);
@@ -2895,7 +2897,7 @@ void NTAPI DisableShellHotkeysFunc(ULONG_PTR Parameter)
 
 static void OpenCortana( void )
 {
-	if (GetWinVersion()>=WIN_VER_WIN10)
+	if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 		ShellExecute(NULL,NULL,L"shell:::{2559a1f8-21d7-11d4-bdaf-00c04f60b9f0}",NULL,NULL,SW_SHOWNORMAL);
 }
 
@@ -2943,7 +2945,7 @@ static void InitStartMenuDLL( void )
 		if (!module)
 			module=GetModuleHandle(NULL);
 
-		if (GetWinVersion()>=WIN_VER_WIN10)
+		if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 		{
 			HMODULE shlwapi=GetModuleHandle(L"shlwapi.dll");
 			if (shlwapi)
@@ -2967,17 +2969,17 @@ static void InitStartMenuDLL( void )
 			DestroyWindow(dlg);
 		}
 
-		if (GetWinVersion()<=WIN_VER_WIN81)
+		if (GetWinVersion()<=_WIN32_WINNT_WINBLUE)
 			g_DrawThemeBackgroundHook=SetIatHook(module,"uxtheme.dll","DrawThemeBackground",DrawThemeBackground2);
 		g_DrawThemeTextHook=SetIatHook(module,"uxtheme.dll","DrawThemeText",DrawThemeText2);
 		g_DrawThemeTextExHook=SetIatHook(module,"uxtheme.dll","DrawThemeTextEx",DrawThemeTextEx2);
 		g_DrawThemeTextCtlHook=SetIatHook(GetModuleHandle(L"comctl32.dll"),"uxtheme.dll","DrawThemeText",DrawThemeText2);
-		if (GetWinVersion()>=WIN_VER_WIN10)
+		if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 			g_SetWindowCompositionAttributeHook=SetIatHook(module,"user32.dll","SetWindowCompositionAttribute",SetWindowCompositionAttribute2);
 	}
 
 	g_TaskbarThreadId=GetCurrentThreadId();
-	g_bTrimHooks=GetWinVersion()==WIN_VER_WIN7 && (GetSettingInt(L"CompatibilityFixes")&COMPATIBILITY_TRIM_HOOKS);
+	g_bTrimHooks=GetWinVersion()==_WIN32_WINNT_WIN7 && (GetSettingInt(L"CompatibilityFixes")&COMPATIBILITY_TRIM_HOOKS);
 	InitManagers(false);
 	int level=GetSettingInt(L"CrashDump");
 	if (level>=1 && level<=3)
@@ -3025,7 +3027,7 @@ static void InitStartMenuDLL( void )
 	HWND hwnd=FindWindow(L"OpenShellMenu.CStartHookWindow",L"StartHookWindow");
 	LoadLibrary(L"StartMenuDLL.dll"); // keep the DLL from unloading
 	if (hwnd) PostMessage(hwnd,WM_CLEAR,0,0); // tell the exe to unhook this hook
-	if (GetWinVersion()>=WIN_VER_WIN8)
+	if (GetWinVersion()>=_WIN32_WINNT_WIN8)
 	{
 		SetWindowCompositionAttribute=(tSetWindowCompositionAttribute)GetProcAddress(GetModuleHandle(L"user32.dll"),"SetWindowCompositionAttribute");
 	}
@@ -3052,12 +3054,12 @@ static void InitStartMenuDLL( void )
 		if (taskBar.taskList)
 			SetWindowSubclass(taskBar.taskList,SubclassTaskListProc,'CLSH',taskbarId);
 	}
-	if (GetWinVersion()>WIN_VER_WIN8)
+	if (GetWinVersion()>_WIN32_WINNT_WIN8)
 	{
 		taskBar.oldButton=FindWindowEx(taskBar.taskBar,NULL,L"Start",NULL);
 		if (taskBar.oldButton)
 		{
-			if (GetWinVersion()>=WIN_VER_WIN10)
+			if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 			{
 				taskBar.pOriginalTarget=(IDropTarget*)GetProp(taskBar.oldButton,L"OleDropTargetInterface");
 				if (taskBar.pOriginalTarget)
@@ -3067,12 +3069,12 @@ static void InitStartMenuDLL( void )
 			CStartMenuTarget *pNewTarget=new CStartMenuTarget(taskBar.taskbarId);
 			RegisterDragDrop(taskBar.oldButton,pNewTarget);
 			pNewTarget->Release();
-			if (GetWinVersion()<WIN_VER_WIN10 && GetTaskbarPosition(taskBar.taskBar,NULL,NULL,NULL)==ABE_BOTTOM)
+			if (GetWinVersion()<_WIN32_WINNT_WIN10 && GetTaskbarPosition(taskBar.taskBar,NULL,NULL,NULL)==ABE_BOTTOM)
 				SetWindowPos(taskBar.oldButton,NULL,-1,0,0,0,SWP_NOSIZE|SWP_NOZORDER);
 			SetWindowSubclass(taskBar.oldButton,SubclassWin81StartButton,'CLSH',taskBar.taskbarId);
 		}
 	}
-	if (GetWinVersion()>=WIN_VER_WIN10)
+	if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 	{
 		for (HWND button=FindWindowEx(g_TaskBar,NULL,L"TrayButton",NULL);button;button=FindWindowEx(g_TaskBar,button,L"TrayButton",NULL))
 		{
@@ -3110,7 +3112,7 @@ if (!g_bTrimHooks)
 	}
 #endif
 
-	if (GetWinVersion()>=WIN_VER_WIN8)
+	if (GetWinVersion()>=_WIN32_WINNT_WIN8)
 	{
 		g_pAppVisibility.CoCreateInstance(CLSID_MetroMode);
 		if (g_pAppVisibility)
@@ -3119,7 +3121,7 @@ if (!g_bTrimHooks)
 			g_pAppVisibility->Advise(monitor,&g_AppVisibilityMonitorCookie);
 			monitor->Release();
 		}
-		if (GetWinVersion()<WIN_VER_WIN10)
+		if (GetWinVersion()<_WIN32_WINNT_WIN10)
 		{
 			HWND hwndAppManager=FindWindow(L"ApplicationManager_DesktopShellWindow",NULL);
 			if (hwndAppManager)
@@ -3127,7 +3129,7 @@ if (!g_bTrimHooks)
 				g_AppManagerThread=GetWindowThreadProcessId(hwndAppManager,NULL);
 				g_AppManagerHook=SetWindowsHookEx(WH_GETMESSAGE,HookAppManager,g_Instance,g_AppManagerThread);
 			}
-			if (GetWinVersion()==WIN_VER_WIN8 && GetSettingBool(L"SkipMetro"))
+			if (GetWinVersion()==_WIN32_WINNT_WIN8 && GetSettingBool(L"SkipMetro"))
 			{
 				g_SkipMetroCount=abs(GetSettingInt(L"SkipMetroCount"));
 				SetTimer(g_TaskBar,'CLSM',500,NULL);
@@ -3258,7 +3260,7 @@ static void CleanStartMenuDLL( void )
 		if (it->second.oldButton)
 		{
 			RemoveWindowSubclass(it->second.oldButton,SubclassWin81StartButton,'CLSH');
-			if (GetWinVersion()<WIN_VER_WIN10 && GetTaskbarPosition(it->second.taskBar,NULL,NULL,NULL)==ABE_BOTTOM)
+			if (GetWinVersion()<_WIN32_WINNT_WIN10 && GetTaskbarPosition(it->second.taskBar,NULL,NULL,NULL)==ABE_BOTTOM)
 				SetWindowPos(it->second.oldButton,NULL,0,0,0,0,SWP_NOSIZE|SWP_NOZORDER);
 			RevokeDragDrop(it->second.oldButton);
 			if (it->second.pOriginalTarget)
@@ -3323,7 +3325,7 @@ static bool WindowsMenuOpened( void )
 {
 	FindWindowsMenu();
 	CComPtr<IUnknown> pImmersiveShell;
-	if (GetWinVersion()>=WIN_VER_WIN10 && CreateImmersiveShell(pImmersiveShell))
+	if (GetWinVersion()>=_WIN32_WINNT_WIN10 && CreateImmersiveShell(pImmersiveShell))
 	{
 		{
 			CComPtr<IImmersiveLauncher81> pLauncher;
@@ -3340,7 +3342,7 @@ static bool WindowsMenuOpened( void )
 				return bIsVisible!=0;
 		}
 	}
-	if (GetWinVersion()>=WIN_VER_WIN8)
+	if (GetWinVersion()>=_WIN32_WINNT_WIN8)
 	{
 		return GetMetroMode(NULL)!=METRO_NONE;
 	}
@@ -3356,7 +3358,7 @@ static void OpenStartScreen( HMONITOR monitor )
 	if (CreateImmersiveShell(pImmersiveShell))
 	{
 		CComPtr<IUnknown> pMonitor;
-		if (GetWinVersion()==WIN_VER_WIN8)
+		if (GetWinVersion()==_WIN32_WINNT_WIN8)
 		{
 			if (monitor)
 			{
@@ -3390,7 +3392,7 @@ static void OpenStartScreen( HMONITOR monitor )
 			{
 				if (pMonitor)
 					pLauncher->ConnectToMonitor(pMonitor);
-				HRESULT hr=pLauncher->ShowStartView(GetWinVersion()>=WIN_VER_WIN10?11:5,0);
+				HRESULT hr=pLauncher->ShowStartView(GetWinVersion()>=_WIN32_WINNT_WIN10?11:5,0);
 				return;
 			}
 		}
@@ -3401,7 +3403,7 @@ static void OpenStartScreen( HMONITOR monitor )
 			{
 				if (pMonitor)
 					pLauncher->ConnectToMonitor(pMonitor);
-				HRESULT hr=pLauncher->ShowStartView(GetWinVersion()>=WIN_VER_WIN10?11:5,0);
+				HRESULT hr=pLauncher->ShowStartView(GetWinVersion()>=_WIN32_WINNT_WIN10?11:5,0);
 				return;
 			}
 		}
@@ -3418,12 +3420,12 @@ static LRESULT CALLBACK HookProgManThread( int code, WPARAM wParam, LPARAM lPara
 		MSG *msg=(MSG*)lParam;
 		if (msg->message==WM_SYSCOMMAND && (msg->wParam&0xFFF0)==SC_TASKLIST)
 		{
-			if (GetWinVersion()<WIN_VER_WIN8 && !CMenuContainer::CanShowMenu())
+			if (GetWinVersion()<_WIN32_WINNT_WIN8 && !CMenuContainer::CanShowMenu())
 				msg->message=WM_NULL;
 			// Win button pressed
 			if (msg->lParam=='WSMK' || msg->lParam=='WSMM' || msg->lParam=='WSMH')
 			{
-				if ((g_AppManagerThread || GetWinVersion()>=WIN_VER_WIN10) && (msg->lParam=='WSMM' || msg->lParam=='WSMH' || (g_TaskbarInfos.size()>1 && GetSettingBool(L"OpenMouseMonitor"))))
+				if ((g_AppManagerThread || GetWinVersion()>=_WIN32_WINNT_WIN10) && (msg->lParam=='WSMM' || msg->lParam=='WSMH' || (g_TaskbarInfos.size()>1 && GetSettingBool(L"OpenMouseMonitor"))))
 				{
 					if (!WindowsMenuOpened())
 					{
@@ -3444,7 +3446,7 @@ static LRESULT CALLBACK HookProgManThread( int code, WPARAM wParam, LPARAM lPara
 				int control=GetSettingInt(L"WinKey");
 				if (control==OPEN_BOTH)
 				{
-					if (GetWinVersion()>=WIN_VER_WIN10)
+					if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 						control=GetWin10TabletMode()?OPEN_WINDOWS:OPEN_CLASSIC;
 					else
 						control=GetMetroMode(MonitorFromPoint(CPoint(GetMessagePos()),MONITOR_DEFAULTTONEAREST))?OPEN_WINDOWS:OPEN_CLASSIC;
@@ -3472,7 +3474,7 @@ static LRESULT CALLBACK HookProgManThread( int code, WPARAM wParam, LPARAM lPara
 						SetForegroundWindow(taskBar->startButton?taskBar->startButton:taskBar->taskBar);
 						msg->message=WM_NULL;
 					}
-					else if (GetWinVersion()>=WIN_VER_WIN8 && g_TaskbarInfos.size()>1 && GetSettingBool(L"OpenMouseMonitor") && !WindowsMenuOpened())
+					else if (GetWinVersion()>=_WIN32_WINNT_WIN8 && g_TaskbarInfos.size()>1 && GetSettingBool(L"OpenMouseMonitor") && !WindowsMenuOpened())
 					{
 						HMONITOR monitor=MonitorFromPoint(CPoint(GetMessagePos()),MONITOR_DEFAULTTONULL);
 						OpenStartScreen(monitor);
@@ -3501,7 +3503,7 @@ static LRESULT CALLBACK HookProgManThread( int code, WPARAM wParam, LPARAM lPara
 				}
 			}
 		}
-		if ((msg->message==WM_MOUSEMOVE || msg->message==WM_LBUTTONDOWN) && GetWinVersion()>=WIN_VER_WIN8 && HIWORD(msg->lParam)<10 && GetSettingInt(L"DisableHotCorner")==2)
+		if ((msg->message==WM_MOUSEMOVE || msg->message==WM_LBUTTONDOWN) && GetWinVersion()>=_WIN32_WINNT_WIN8 && HIWORD(msg->lParam)<10 && GetSettingInt(L"DisableHotCorner")==2)
 		{
 			if (msg->hwnd!=g_TopDesktopBar || !g_TopDesktopBar || !IsWindow(g_TopDesktopBar))
 			{
@@ -3565,7 +3567,7 @@ static LRESULT CALLBACK HookDesktopThread( int code, WPARAM wParam, LPARAM lPara
 		}
 if (!g_bTrimHooks)
 {
-		if (((msg->message>=WM_MOUSEFIRST && msg->message<=WM_MOUSELAST) || msg->message==WM_MOUSEHOVER || msg->message==WM_MOUSELEAVE) && GetWinVersion()<=WIN_VER_WIN7 && CMenuContainer::ProcessMouseMessage(msg->hwnd,msg->message,msg->wParam,msg->lParam))
+		if (((msg->message>=WM_MOUSEFIRST && msg->message<=WM_MOUSELAST) || msg->message==WM_MOUSEHOVER || msg->message==WM_MOUSELEAVE) && GetWinVersion()<=_WIN32_WINNT_WIN7 && CMenuContainer::ProcessMouseMessage(msg->hwnd,msg->message,msg->wParam,msg->lParam))
 		{
 			msg->message=WM_NULL;
 			return 0;
@@ -3599,7 +3601,7 @@ if (!g_bTrimHooks)
 					int control=GetSettingInt(L"ShiftWin");
 					if (control==OPEN_BOTH)
 					{
-						if (GetWinVersion()>=WIN_VER_WIN10)
+						if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 							control=GetWin10TabletMode()?OPEN_WINDOWS:OPEN_CLASSIC;
 						else
 							control=GetMetroMode(MonitorFromPoint(CPoint(GetMessagePos()),MONITOR_DEFAULTTONEAREST))?OPEN_WINDOWS:OPEN_CLASSIC;
@@ -3627,9 +3629,9 @@ if (!g_bTrimHooks)
 					if (taskBar)
 					{
 						int control=GetSettingInt((msg->wParam==MSG_DRAG)?L"MouseClick":L"ShiftClick");
-						if (control==OPEN_BOTH && GetWinVersion()>=WIN_VER_WIN10)
+						if (control==OPEN_BOTH && GetWinVersion()>=_WIN32_WINNT_WIN10)
 							control=GetWin10TabletMode()?OPEN_WINDOWS:OPEN_CLASSIC;
-						if (control==OPEN_CLASSIC || (control==OPEN_WINDOWS && GetWinVersion()>=WIN_VER_WIN8))
+						if (control==OPEN_CLASSIC || (control==OPEN_WINDOWS && GetWinVersion()>=_WIN32_WINNT_WIN8))
 							ToggleStartMenu(taskBar->taskbarId,true);
 						else if (control==OPEN_WINDOWS)
 							PostMessage(g_ProgWin,WM_SYSCOMMAND,SC_TASKLIST,'WSMM');
@@ -3721,7 +3723,7 @@ if (!g_bTrimHooks)
 				int control=GetSettingInt(L"WinKey");
 				if (control==OPEN_BOTH)
 				{
-					if (GetWinVersion()>=WIN_VER_WIN10)
+					if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 						control=GetWin10TabletMode()?OPEN_WINDOWS:OPEN_CLASSIC;
 					else
 						control=GetMetroMode(MonitorFromWindow(g_TaskBar,MONITOR_DEFAULTTONEAREST))?OPEN_WINDOWS:OPEN_CLASSIC;
@@ -3767,7 +3769,7 @@ if (!g_bTrimHooks)
 			}
 			if (taskBar)
 			{
-				if (msg->message==WM_LBUTTONDOWN && GetWinVersion()==WIN_VER_WIN7 && msg->hwnd==taskBar->startButton)
+				if (msg->message==WM_LBUTTONDOWN && GetWinVersion()==_WIN32_WINNT_WIN7 && msg->hwnd==taskBar->startButton)
 				{
 					// on Win7 ignore the click if the mouse is not over the start button (clicks on the context menu are sent to the start button)
 					CPoint pt(GetMessagePos());
@@ -3797,7 +3799,7 @@ if (!g_bTrimHooks)
 				}
 
 				int control=GetSettingInt(name);
-				if (control==OPEN_BOTH && GetWinVersion()>=WIN_VER_WIN10)
+				if (control==OPEN_BOTH && GetWinVersion()>=_WIN32_WINNT_WIN10)
 					control=GetWin10TabletMode()?OPEN_WINDOWS:OPEN_CLASSIC;
 				if (control==OPEN_CLASSIC)
 				{
@@ -3981,7 +3983,7 @@ if (!g_bTrimHooks)
 		{
 			TaskbarInfo *taskBar=FindTaskBarInfoButton(msg->hwnd);
 			DWORD winVer=GetWinVersion();
-			if (!taskBar && winVer>=WIN_VER_WIN8)
+			if (!taskBar && winVer>=_WIN32_WINNT_WIN8)
 			{
 				taskBar=FindTaskBarInfoBar(msg->hwnd);
 				if (taskBar && !PointAroundStartButton(taskBar->taskbarId))
@@ -4003,7 +4005,7 @@ if (!g_bTrimHooks)
 				else
 				{
 					bShowCSMenu=(GetSettingBool(L"ShiftRight")==(GetKeyState(VK_SHIFT)<0));
-					bShowWinX=winVer>=WIN_VER_WIN8 && !bShowCSMenu;
+					bShowWinX=winVer>=_WIN32_WINNT_WIN8 && !bShowCSMenu;
 				}
 				bShowWin7=!bShowCSMenu && g_WinStartButton && msg->hwnd!=g_WinStartButton;
 
@@ -4157,7 +4159,7 @@ HBITMAP GetStartScreenIcon( int size )
 	// for sizes<32 use the system background color
 	StartScreenThumbInfo info={{size<64?64:size}};
 	info.size.cy=info.size.cx;
-	if (size>=32 && g_AppManagerThread && GetWinVersion()==WIN_VER_WIN8)
+	if (size>=32 && g_AppManagerThread && GetWinVersion()==_WIN32_WINNT_WIN8)
 	{
 		info.event=CreateEvent(NULL,TRUE,FALSE,NULL);
 		PostThreadMessage(g_AppManagerThread,g_StartMenuMsg,MSG_METROTHUMBNAIL,(LPARAM)&info);
@@ -4209,7 +4211,7 @@ HBITMAP GetStartScreenIcon( int size )
 		}
 		SetDCBrushColor(hDst,color);
 		FillRect(hDst,&rc,(HBRUSH)GetStockObject(DC_BRUSH));
-		HICON hIcon=(HICON)LoadImage(g_Instance,MAKEINTRESOURCE(GetWinVersion()>=WIN_VER_WIN10?IDI_START10:IDI_START),IMAGE_ICON,size,size,LR_DEFAULTCOLOR);
+		HICON hIcon=(HICON)LoadImage(g_Instance,MAKEINTRESOURCE(GetWinVersion()>=_WIN32_WINNT_WIN10?IDI_START10:IDI_START),IMAGE_ICON,size,size,LR_DEFAULTCOLOR);
 		DrawIconEx(hDst,0,0,hIcon,size,size,0,NULL,DI_NORMAL);
 		DestroyIcon(hIcon);
 	}
