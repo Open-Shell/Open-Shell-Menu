@@ -274,15 +274,30 @@ static void ParseApplicationInformation(CComPtr<IXMLDOMNode>& parent, AttributeW
 	}
 }
 
+static void ParseSettingIDs(CComPtr<IXMLDOMNode>& node, AttributeWriter& writer)
+{
+	writer.addString(Id::PageId, GetTranslatedString(node, L"PageID"));
+	writer.addString(Id::HostId, GetTranslatedString(node, L"HostID"));
+	writer.addString(Id::GroupId, GetTranslatedString(node, L"GroupID"));
+	writer.addString(Id::SettingId, GetTranslatedString(node, L"SettingID"));
+}
+
+static void ParseSettingPaths(CComPtr<IXMLDOMNode>& parent, AttributeWriter& writer)
+{
+	CComPtr<IXMLDOMNode> node;
+	if (parent->selectSingleNode(CComBSTR(L"SettingPaths/Path"), &node) == S_OK)
+		ParseSettingIDs(node, writer);
+}
+
 static void ParseSettingIdentity(CComPtr<IXMLDOMNode>& parent, AttributeWriter& writer)
 {
 	CComPtr<IXMLDOMNode> node;
 	if (parent->selectSingleNode(CComBSTR(L"SettingIdentity"), &node) == S_OK)
 	{
-		writer.addString(Id::PageId, GetTranslatedString(node, L"PageID"));
-		writer.addString(Id::HostId, GetTranslatedString(node, L"HostID"));
-		writer.addString(Id::GroupId, GetTranslatedString(node, L"GroupID"));
-		writer.addString(Id::SettingId, GetTranslatedString(node, L"SettingID"));
+		// Win11 24H2+
+		ParseSettingPaths(node, writer);
+		// older
+		ParseSettingIDs(node, writer);
 	}
 }
 
