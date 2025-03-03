@@ -67,6 +67,8 @@ static SIZE g_TaskbarTextureSize;
 static TTaskbarTile g_TaskbarTileH, g_TaskbarTileV;
 static RECT g_TaskbarMargins;
 int g_CurrentCSMTaskbar=-1, g_CurrentWSMTaskbar=-1;
+// ExplorerPatcher taskbar
+static bool g_epTaskbar = false;
 
 static void FindWindowsMenu( void );
 static void RecreateStartButton( size_t taskbarId );
@@ -1342,7 +1344,7 @@ static void UpdateStartButtonPosition(const TaskbarInfo* taskBar, const WINDOWPO
 
 		// Start button on Win11 is a bit shifted to the right
 		// We will shift our Aero button to cover original button
-		if (IsWin11() && (x == info.rcMonitor.left) && (GetStartButtonType() == START_BUTTON_AERO))
+		if (IsWin11() && (x == info.rcMonitor.left) && (GetStartButtonType() == START_BUTTON_AERO) && !g_epTaskbar)
 			x += ScaleForDpi(taskBar->taskBar, 6);
 	}
 
@@ -2772,6 +2774,17 @@ static void WINAPI SHFillRectClr2( HDC hdc, const RECT *pRect, COLORREF color )
 		g_SHFillRectClr(hdc,pRect,color);
 }
 
+static IatHookData* g_ExtTextOutWHook = nullptr;
+
+// used by ExplorerPatcher's custom implementation of `SHFillRectClr`
+static BOOL WINAPI ExtTextOutW2(HDC hdc, int X, int Y, UINT fuOptions, const RECT* lprc, LPCWSTR lpString, UINT cbCount, const INT* lpDx)
+{
+	if (fuOptions != ETO_OPAQUE || lpString || cbCount || lpDx || !g_CurrentTaskList || !g_TaskbarTexture || GetCurrentThreadId() != g_TaskbarThreadId)
+		return ExtTextOutW(hdc, X, Y, fuOptions, lprc, lpString, cbCount, lpDx);
+
+	return FALSE;
+}
+
 static HRESULT STDAPICALLTYPE DrawThemeBackground2( HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, LPCRECT pClipRect )
 {
 	if (g_CurrentTaskList && g_TaskbarTexture && iPartId==1 && iStateId==0 && GetCurrentThreadId()==g_TaskbarThreadId)
@@ -2957,6 +2970,15 @@ static void InitStartMenuDLL( void )
 	{
 		auto module=GetModuleHandle(L"taskbar.dll");
 		if (!module)
+		{
+			module = GetModuleHandle(L"ep_taskbar.5.dll");
+			if (!module)
+				module = GetModuleHandle(L"ep_taskbar.2.dll");
+
+			if (module)
+				g_epTaskbar = true;
+		}
+		if (!module)
 			module=GetModuleHandle(NULL);
 
 		if (GetWinVersion()>=WIN_VER_WIN10)
@@ -2975,6 +2997,10 @@ static void InitStartMenuDLL( void )
 			g_StretchDIBitsHook=SetIatHook(module,"gdi32.dll","StretchDIBits",StretchDIBits2);
 			if (!g_StretchDIBitsHook)
 				g_StretchDIBitsHook=SetIatHook(module,"ext-ms-win-gdi-draw-l1-1-0.dll","StretchDIBits",StretchDIBits2);
+
+			// ExplorerPatcher compatibility
+			if (g_epTaskbar)
+				g_ExtTextOutWHook = SetIatHook(module, "gdi32.dll", "ExtTextOutW", ExtTextOutW2);
 		}
 
 		{
@@ -3204,6 +3230,7 @@ static void RecreateStartButton( size_t taskbarId )
 			{
 				RECT rc;
 				GetWindowRect(btn,&rc);
+				MapWindowPoints(NULL,taskBar.taskBar,(POINT*)&rc,2); // convert to taskbar coordinates
 				SetWindowPos(btn,HWND_TOP,rc.left,rc.top,0,0,SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOZORDER);
 			}
 		}
@@ -3230,6 +3257,8 @@ static void CleanStartMenuDLL( void )
 	g_SHFillRectClrHook=NULL;
 	ClearIatHook(g_StretchDIBitsHook);
 	g_StretchDIBitsHook=NULL;
+	ClearIatHook(g_ExtTextOutWHook);
+	g_ExtTextOutWHook = NULL;
 
 	ClearIatHook(g_DrawThemeBackgroundHook);
 	g_DrawThemeBackgroundHook=NULL;
