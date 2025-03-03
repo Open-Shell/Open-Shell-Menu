@@ -91,7 +91,7 @@ HBITMAP CMenuContainer::LoadUserImage( int size, HBITMAP hMask )
 	CString str=GetSettingString(L"UserPicturePath");
 	if (str.IsEmpty())
 	{
-		if (GetWinVersion()==WIN_VER_WIN8)
+		if (GetWinVersion()==_WIN32_WINNT_WIN8)
 		{
 			CComPtr<IUserTileStore8> pStore;
 			pStore.CoCreateInstance(CLSID_UserTileStore);
@@ -102,7 +102,7 @@ HBITMAP CMenuContainer::LoadUserImage( int size, HBITMAP hMask )
 					Strcpy(path,_countof(path),pPath);
 			}
 		}
-		else if (GetWinVersion()==WIN_VER_WIN81)
+		else if (GetWinVersion()==_WIN32_WINNT_WINBLUE)
 		{
 			CComPtr<IUserTileStore81> pStore;
 			pStore.CoCreateInstance(CLSID_UserTileStore);
@@ -113,7 +113,7 @@ HBITMAP CMenuContainer::LoadUserImage( int size, HBITMAP hMask )
 					Strcpy(path,_countof(path),pPath);
 			}
 		}
-		else if (GetWinVersion()>=WIN_VER_WIN10)
+		else if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 		{
 			CComPtr<IUserTileStore10> pStore;
 			pStore.CoCreateInstance(CLSID_UserTileStore);
