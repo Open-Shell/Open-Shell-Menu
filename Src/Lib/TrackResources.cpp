@@ -143,7 +143,7 @@ static const GdiTableCell *GetGdiTable( void )
 	if (GdiQueryTable)
 	{
 		// GdiQueryTable();
-		if (GetWinVersion()>=WIN_VER_WIN8)
+		if (GetWinVersion()>= _WIN32_WINNT_WIN8)
 			return *(GdiTableCell**)((char*)GdiQueryTable+0x6b1b0);
 		else
 			return *(GdiTableCell**)((char*)GdiQueryTable+0x29db0);

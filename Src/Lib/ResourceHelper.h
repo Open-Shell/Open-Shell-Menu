@@ -1,5 +1,5 @@
 // Classic Shell (c) 2009-2017, Ivo Beltchev
-// Open-Shell (c) 2017-2018, The Open-Shell Team
+// Open-Shell (c) 2017-2024, The Open-Shell Team
 // Confidential information of Ivo Beltchev. Not for disclosure or distribution without prior written consent from the author
 
 #pragma once
@@ -49,23 +49,17 @@ HICON CreateDisabledIcon( HICON hIcon, int iconSize );
 // Returns the version of a given module
 DWORD GetVersionEx( HINSTANCE hInstance, DWORD *pBuild=NULL );
 
-const int WIN_VER_VISTA=0x600;
-const int WIN_VER_WIN7 =0x601;
-const int WIN_VER_WIN8 =0x602;
-const int WIN_VER_WIN81=0x603;
-const int WIN_VER_WIN10=0xA00;
-
 // Returns the Windows version - 0x600, 0x601, ...
-WORD GetWinVersion( void );
+WORD GetWinVersion();
 
 // Returns true if the version is Win81 Update1
-bool IsWin81Update1( void );
+bool IsWin81Update1();
 
 // Returns true if the version is Windows10 RS1 or later
-bool IsWin10RS1( void );
+bool IsWin10RS1();
 
 // Returns true if the version is Windows10 RS4 (Spring Creator Update) or later
-bool IsWin10RS4( void );
+bool IsWin10RS4();
 
 // Returns true if the version is Windows11 or later
 bool IsWin11();

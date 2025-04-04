@@ -946,9 +946,9 @@ static void ManualUninstallInternal( void )
 
 	// remove TreatAs, app launcher keys
 	WORD winVer=HIWORD(GetVersionEx(GetModuleHandle(L"user32.dll")));
-	if (winVer>=WIN_VER_WIN8)
+	if (winVer>=_WIN32_WINNT_WIN8)
 	{
-		if (!RemoveRegistryKeys(winVer>=WIN_VER_WIN10))
+		if (!RemoveRegistryKeys(winVer>=_WIN32_WINNT_WIN10))
 		{
 			progress.DestroyWindow();
 			return;

@@ -51,7 +51,7 @@ void UpgradeSettings( bool bShared )
 
 void UpdateSettings( void )
 {
-	bool bWin8=(GetWinVersion()>=WIN_VER_WIN8);
+	bool bWin8=(GetWinVersion()>=_WIN32_WINNT_WIN8);
 
 	BOOL bComposition=0;
 	if (FAILED(DwmIsCompositionEnabled(&bComposition)))
@@ -75,7 +75,7 @@ void UpdateSettings( void )
 
 	UpdateSetting(L"Glow",CComVariant(bComposition?1:0),false);
 	UpdateSetting(L"MaxGlow",CComVariant(bComposition?1:0),false);
-	UpdateSetting(L"CenterCaption",CComVariant((bWin8 && GetWinVersion()<WIN_VER_WIN10)?1:0),false);
+	UpdateSetting(L"CenterCaption",CComVariant((bWin8 && GetWinVersion()<_WIN32_WINNT_WIN10)?1:0),false);
 
 	// create a dummy window to get a theme
 	HWND hwnd=CreateWindow(L"#32770",L"",WS_OVERLAPPEDWINDOW,0,0,0,0,NULL,NULL,NULL,0);
