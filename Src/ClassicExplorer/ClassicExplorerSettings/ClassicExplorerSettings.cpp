@@ -37,9 +37,15 @@ static BOOL CALLBACK FindSettingsEnum( HWND hwnd, LPARAM lParam )
 HMODULE LoadClassicExplorerDll( void )
 {
 	wchar_t path[_MAX_PATH];
-	GetModuleFileName(NULL,path,_countof(path));
-	*PathFindFileName(path)=0;
-	PathAppend(path,L"ClassicExplorer32.dll");
+	GetModuleFileName(NULL, path, _countof(path));
+	*PathFindFileName(path) = 0;
+
+	// Load the proper module depending on architecture rather than hardcoding the x86 one
+#ifdef _WIN64
+	PathAppend(path, L"ClassicExplorer64.dll");
+#else
+	PathAppend(path, L"ClassicExplorer32.dll");
+#endif
 	return LoadLibrary(path);
 }
 
