@@ -53,7 +53,7 @@ static DWORD StartBroker( bool bWait, const wchar_t *param )
 #if defined(_M_AMD64) || defined(_M_IX86)
 	PathAppend(path,L"ClassicIE_64.exe");
 #elif defined(_M_ARM64)
-	PathAppend(path,L"ClassicIE_ARM64.exe");
+	PathAppend(path,L"ClassicIE_A64.exe");
 #endif
 
 	wchar_t cmdLine[1024];

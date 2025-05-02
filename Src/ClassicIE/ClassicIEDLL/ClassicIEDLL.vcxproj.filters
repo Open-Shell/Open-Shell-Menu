@@ -58,7 +58,7 @@
     <None Include="ClassicIEDLL.rgs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="ClassicIEDLL_ARM64.def">
+    <None Include="ClassicIEDLL_A64.def">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

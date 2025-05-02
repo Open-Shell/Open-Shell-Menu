@@ -1,6 +1,6 @@
 ; StartMenuHelper.def : Declares the module parameters.
 
-LIBRARY      "StartMenuHelperARM64.DLL"
+LIBRARY      "StartMenuHelperA64.DLL"
 
 EXPORTS
 	DllCanUnloadNow		PRIVATE

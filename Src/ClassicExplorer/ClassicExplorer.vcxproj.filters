@@ -80,7 +80,7 @@
     <None Include="ShareOverlay.rgs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="ClassicExplorerARM64.def">
+    <None Include="ClassicExplorerA64.def">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

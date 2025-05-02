@@ -68,7 +68,7 @@
 				<ComponentRef Id="ClassicExplorer64.dll" />
 				<?endif ?>
 				<?if $(var.ARM64)=1 ?>
-				<ComponentRef Id="ClassicExplorerARM64.dll" />
+				<ComponentRef Id="ClassicExplorerA64.dll" />
 				<?endif ?>
 				<ComponentRef Id="ExplorerL10N.ini" />
 				<ComponentRef Id="ClassicExplorerSettings.exe" />
@@ -83,7 +83,7 @@
 				<ComponentRef Id="StartMenuHelper64.dll" />
 				<?endif ?>
 				<?if $(var.ARM64)=1 ?>
-				<ComponentRef Id="StartMenuHelperARM64.dll" />
+				<ComponentRef Id="StartMenuHelperA64.dll" />
 				<?endif ?>
 				<ComponentRef Id="StartScreenLink" />
 				<ComponentRef Id="StartMenuHelperL10N.ini" />
@@ -113,8 +113,8 @@
 				<ComponentRef Id="ClassicIEDLL_64.dll" />
 				<ComponentRef Id="ClassicIE_64.exe" />
 				<?elseif $(var.ARM64)=1 ?>
-				<ComponentRef Id="ClassicIEDLL_ARM64.dll" />
-				<ComponentRef Id="ClassicIE_ARM64.exe" />
+				<ComponentRef Id="ClassicIEDLL_A64.dll" />
+				<ComponentRef Id="ClassicIE_A64.exe" />
 				<?endif ?>
 				<ComponentRef Id="IESettingsLink" />
 			</Feature>
@@ -458,14 +458,14 @@
 				<File Id="StartMenuDLL.dll" Checksum="yes" KeyPath="yes" Source="Output\x64\StartMenuDLL.dll" Vital="yes" />
 			</Component>
 			<?elseif $(var.ARM64)=1 ?>
-			<Component Id="ClassicExplorerARM64.dll" Guid="2C25783D-394D-4E5B-9259-1650F561E2CE" Win64="yes" DiskId="2">
-				<File Id="ClassicExplorerARM64.dll" KeyPath="yes" Source="Output\ARM64\ClassicExplorerARM64.dll" Checksum="yes" SelfRegCost="0" Vital="yes" />
+			<Component Id="ClassicExplorerA64.dll" Guid="2C25783D-394D-4E5B-9259-1650F561E2CE" Win64="yes" DiskId="2">
+				<File Id="ClassicExplorerA64.dll" KeyPath="yes" Source="Output\ARM64\ClassicExplorerA64.dll" Checksum="yes" SelfRegCost="0" Vital="yes" />
 			</Component>
-			<Component Id="ClassicIEDLL_ARM64.dll" Guid="43E62408-40EB-4FBB-98CC-7463F5B78266" Win64="yes" DiskId="2">
-				<File Id="ClassicIEDLL_ARM64.dll" KeyPath="yes" Source="Output\ARM64\ClassicIEDLL_ARM64.dll" Checksum="yes" SelfRegCost="0" Vital="yes" />
+			<Component Id="ClassicIEDLL_A64.dll" Guid="43E62408-40EB-4FBB-98CC-7463F5B78266" Win64="yes" DiskId="2">
+				<File Id="ClassicIEDLL_A64.dll" KeyPath="yes" Source="Output\ARM64\ClassicIEDLL_A64.dll" Checksum="yes" SelfRegCost="0" Vital="yes" />
 			</Component>
-			<Component Id="ClassicIE_ARM64.exe" Guid="E822E720-8477-4511-AD93-172313EFA636" Win64="yes" DiskId="2">
-				<File Id="ClassicIE_ARM64.exe" KeyPath="yes" Source="Output\ARM64\ClassicIE_ARM64.exe" Checksum="yes" Vital="yes" />
+			<Component Id="ClassicIE_A64.exe" Guid="E822E720-8477-4511-AD93-172313EFA636" Win64="yes" DiskId="2">
+				<File Id="ClassicIE_A64.exe" KeyPath="yes" Source="Output\ARM64\ClassicIE_A64.exe" Checksum="yes" Vital="yes" />
 			</Component>
 			<Component Id="StartMenu.exe" Guid="FC69E080-4232-4161-A1E5-20E255FB2F6B" Win64="yes" DiskId="2">
 				<File Id="StartMenu.exe" KeyPath="yes" Checksum="yes" Source="Output\ARM64\StartMenu.exe" Vital="yes" />
@@ -658,8 +658,8 @@
 			</Component>
 			<?endif ?>
 			<?if $(var.ARM64)=1 ?>
-			<Component Id="StartMenuHelperARM64.dll" Guid="108B11E8-2F76-4C37-A274-62BAE6240490" Win64="yes" DiskId="2">
-				<File Id="StartMenuHelperARM64.dll" KeyPath="yes" Source="Output\ARM64\StartMenuHelperARM64.dll" Checksum="yes" SelfRegCost="0" Vital="yes" />
+			<Component Id="StartMenuHelperA64.dll" Guid="108B11E8-2F76-4C37-A274-62BAE6240490" Win64="yes" DiskId="2">
+				<File Id="StartMenuHelperA64.dll" KeyPath="yes" Source="Output\ARM64\StartMenuHelperA64.dll" Checksum="yes" SelfRegCost="0" Vital="yes" />
 			</Component>
 			<?endif ?>
 		</DirectoryRef>

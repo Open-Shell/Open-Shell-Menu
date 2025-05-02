@@ -1,6 +1,6 @@
 ; ClassicIEDLL.def : Declares the module parameters.
 
-LIBRARY      "ClassicIEDLL_ARM64.DLL"
+LIBRARY      "ClassicIEDLL_A64.DLL"
 
 EXPORTS
 	DllCanUnloadNow		PRIVATE

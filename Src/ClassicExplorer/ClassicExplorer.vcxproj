@@ -66,7 +66,7 @@
     <TargetName>$(ProjectName)64</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Platform)'=='ARM64'">
-    <TargetName>$(ProjectName)ARM64</TargetName>
+    <TargetName>$(ProjectName)A64</TargetName>
   </PropertyGroup>
   <PropertyGroup>
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
@@ -113,7 +113,7 @@
     <None Include="ClassicExplorer.rgs" />
     <None Include="ClassicExplorer32.def" />
     <None Include="ClassicExplorer64.def" />
-    <None Include="ClassicExplorerARM64.def" />
+    <None Include="ClassicExplorerA64.def" />
     <None Include="ExplorerBand.rgs" />
     <None Include="ExplorerBHO.rgs" />
     <None Include="ExplorerL10N.ini">
