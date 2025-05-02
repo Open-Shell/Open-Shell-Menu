@@ -380,7 +380,7 @@ LRESULT CEditToolbarDlg::OnBrowseLink( WORD wNotifyCode, WORD wID, HWND hWndCtl,
 {
 	wchar_t text[_MAX_PATH];
 	GetDlgItemText(IDC_COMBOLINK,text,_countof(text));
-	if (BrowseLinkHelper(m_hWnd,text))
+	if (BrowseLinkHelper(m_hWnd,text,false))
 	{
 		SetDlgItemText(IDC_COMBOLINK,text);
 		SendMessage(WM_COMMAND,MAKEWPARAM(IDC_COMBOLINK,CBN_KILLFOCUS));
@@ -621,7 +621,7 @@ void UpdateSettings( void )
 
 		UpdateSetting(L"ShowCaption",CComVariant(0),false); HideSetting(L"ShowCaption",true);
 		UpdateSetting(L"ShowIcon",CComVariant(0),false); HideSetting(L"ShowIcon",true);
-		UpdateSetting(L"FixFolderScroll",CComVariant(0),false); HideSetting(L"FixFolderScroll",true);
+		UpdateSetting(L"FixFolderScroll",CComVariant(0),false);
 		UpdateSetting(L"ToolbarItems",CComVariant(g_DefaultToolbar2),false);
 
 		if (GetWinVersion()>=WIN_VER_WIN10)

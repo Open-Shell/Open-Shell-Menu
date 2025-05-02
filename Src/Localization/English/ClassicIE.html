@@ -13,45 +13,46 @@
  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Classic IE</title>
 <style type="text/css">
 h1 {
-  font-family: "Times New Roman",Times,serif;
-  color: #0070c0;
+  color: #0078d4;
+  font-family: "Segoe UI",Tahoma,sans-serif;
+  font-weight: 600;
 }
 p {
-  font-family: Arial,Helvetica,sans-serif;
+  font-family: "Segoe UI",Tahoma,sans-serif;
 }
 body {
-  font-family: Arial,Helvetica,sans-serif;
+  font-family: "Segoe UI",Tahoma,sans-serif;
 }
 
-</style></head><body>
-<h1><a target="_blank" href="http://www.classicshell.net/"><img src="images/OpenShell.png" style="border: 0px solid ; width: 64px; height: 64px;" alt="Open-Shell website" title="Open-Shell website"></a>&nbsp;
-Classic IE</h1><span style="font-style: italic; color: rgb(0, 112, 192); font-weight: bold;"></span><span style="color: rgb(79, 129, 189); font-weight: bold;"><br>
+  </style></head><body>
+<a target="_blank" href="https://github.com/Open-Shell/Open-Shell-Menu"><img src="images/OpenShell.png" style="border: 0px solid ; width: 64px; height: 64px; float:left;" alt="Open-Shell website" title="Open-Shell website"></a><h1 style="padding-top: 12px; padding-bottom: 12px;">&nbsp; Classic IE</h1>
+<span style="font-style: italic; color: #2b88d8; font-weight: bold;"></span><span style="color: #2b88d8; font-weight: bold;"><br>
 Classic IE</span>
 is a
 small plugin for Internet Explorer that:<br>
 <ul>
   <li>Adds a caption to the title
-bar so you can see the full title of the page</li>
+bar so you can see the full title of a page</li>
   <li>Shows the security zone in the status bar</li>
   <li>Shows the loading progress in the status bar</li>
 </ul>
 <br>
 See the full page title even when it doesn't fit in the tab:<br>
-<img style="width: 748px; height: 190px;" alt="" src="images/ie9_caption.png"><br>
+<img style="width: 561px;" alt="" src="images/ie9_caption.png"><br>
 <br>See the progress and the security zone:<br>
-<img style="width: 429px; height: 56px;" alt="" src="images/ie9_status.png"><br>
+<img style="width: 322px;" alt="" src="images/ie9_status.png"><br>
 <br>
 <h1><a name="install"></a>Installation</h1>
 When you run Internet Explorer for the first time after installing
-Classic IE it may prompt you that a new add-on called ClassicIEBHO is
+Classic IE, it may prompt you that a new add-on called ClassicIEBHO is
 installed and if you want to enable it. Click on the Enable button. If
-you don't get a prompt, go to <span style="font-weight: bold;">Tools -&gt; Manage add-ons</span> and make sure ClassicIEBHO is enabled. After enabling the add-on you have to restart Internet Explorer to activate the plugin.<br>
+you don't get a prompt, go to <span style="font-weight: bold;">Tools -&gt; Manage add-ons</span> and make sure ClassicIEBHO is enabled. After enabling the add-on, you have to restart Internet Explorer to activate the plugin.<br>
 <br>
 <h1><a name="settings"></a>Settings</h1>
 You can access the settings from <span style="font-weight: bold;">Tools -&gt; Classic IE Settings</span>
-or from the start menu. The settings control the color and the font of
+or from the Start menu. The settings control the color and the font of
 the caption, and what information to display on the status bar.<br>
-<img style="width: 683px; height: 438px;" alt="" src="images/ie9_settings.png"><br>
+<img style="width: 512px;" alt="" src="images/ie9_settings.png"><br>
 <br>You can choose from seeing only the basic settings, or all
 available settings. Hover over each setting to see a description of
 what it's for. Type in the search box to find a setting by name.<br>
@@ -80,20 +81,20 @@ all of their settings. An administrator can lock specific settings, so
 no user can edit them. This is achieved by adding the setting to the <span style="font-weight: bold;">HKEY_LOCAL_MACHINE\SOFTWARE\OpenShell\ClassicIE</span> registry key.<br>
 <br>
 You may also wish to not lock the setting but only override its initial
-value. Then add "_Default" to the name of the registry value.<br>
+value. Do this by adding "_Default" to the name of the registry value.<br>
 <br>
 The easiest way to know the registry name of a setting and its value is to modify it, and then look it up in <span style="font-weight: bold;">HKEY_CURRENT_USER\Software\OpenShell\ClassicIE\Settings</span>.<br>
 
 Sometimes you may want to lock a setting to its default value, but you
-don't know what the default value is. Then create a DWORD value and set
+don't know what the default value is. Do this by creating a DWORD value and setting
 it to 0xDEFA.<br>
 
 <br>
 
 There is also a global setting <span style="font-weight: bold;">EnableSettings</span>. Set it to 0 in the
-registry to prevent the users from even opening the Settings dialog:<br>
+registry to prevent the users from opening the Settings dialog:<br>
 
-<img style="width: 656px; height: 292px;" alt="" src="images/settings_disable_ie9.png"><br>
+<img style="width: 492px;" alt="" src="images/settings_disable_ie9.png"><br>
 <br>
 Editing the settings through group policies is also supported. Extract the file <b>PolicyDefinitions.zip</b> found in the installation folder and read the document <b>PolicyDefinitions.rtf</b> for more details.<br>
 <br>

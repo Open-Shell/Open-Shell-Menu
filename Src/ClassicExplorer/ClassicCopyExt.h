@@ -7,7 +7,7 @@
 #pragma once
 #include "resource.h"       // main symbols
 
-#include "ClassicExplorer_i.h"
+#include "ClassicExplorer_h.h"
 #include <vector>
 
 // CClassicCopyExt

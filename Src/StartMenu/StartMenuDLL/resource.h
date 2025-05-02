@@ -4,6 +4,8 @@
 //
 #define IDI_APPICON                     1
 #define IDI_APPSICON                    2
+#define IDI_APPSICON10                  3
+#define IDI_APPSICON11                  4
 #define IDD_RENAME                      102
 #define IDC_EDITNAME                    102
 #define IDD_RENAMER                     103
@@ -754,6 +756,36 @@
 #define IDS_SELECT_LAST                 3657
 #define IDS_SELECT_LAST_TIP             3658
 #define IDS_CLEAR_CACHE                 3659
+#define IDS_ALIGN_WORK_AREA             3660
+#define IDS_ALIGN_WORK_AREA_TIP         3661
+#define IDS_HOR_OFFSET                  3662
+#define IDS_HOR_OFFSET_TIP              3663
+#define IDS_VERT_OFFSET                 3664
+#define IDS_VERT_OFFSET_TIP             3665
+#define IDS_NO_DBLCLICK                 3666
+#define IDS_NO_DBLCLICK_TIP             3667
+#define IDS_BOLD_SETTINGS               3668
+#define IDS_BOLD_SETTINGS_TIP           3669
+#define IDS_SEARCH_HINT                 3670
+#define IDS_SEARCH_HINT_TIP             3671
+#define IDS_NEW_SEARCH_HINT             3672
+#define IDS_NEW_SEARCH_HINT_TIP         3673
+#define IDS_MORE_RESULTS                3674
+#define IDS_MORE_RESULTS_TIP            3675
+#define IDS_OPEN_CMD                    3676
+#define IDS_OPEN_CMD_TIP                3677
+#define IDS_OPEN_CMD_TEXT               3678
+#define IDS_OPEN_CMD_TEXT_TIP           3679
+#define IDS_ITEM_LINKS                  3680
+#define IDS_ITEM_LINKS_TIP              3681
+#define IDS_OPEN_TRUE_PATH              3682
+#define IDS_OPEN_TRUE_PATH_TIP          3683
+#define IDS_PINNED_PATH                 3684
+#define IDS_PINNED_PATH_TIP             3685
+#define IDS_ENABLE_ACCELERATORS         3686
+#define IDS_ENABLE_ACCELERATORS_TIP     3687
+#define IDS_ALT_ACCELERATORS            3688
+#define IDS_ALT_ACCELERATORS_TIP        3689
 #define IDS_STRING7001                  7001
 #define IDS_STRING7002                  7002
 #define IDS_STRING7003                  7003
@@ -792,6 +824,13 @@
 #define IDS_STRING7036                  7036
 #define IDS_STRING7037                  7037
 #define IDS_STRING7038                  7038
+#define IDS_STRING7039                  7039
+#define IDS_STRING7040                  7040
+#define IDS_STRING7041                  7041
+#define IDS_STRING7042                  7042
+#define IDS_STRING7043                  7043
+#define IDS_STRING7044                  7044
+#define IDS_STRING7045                  7045
 #define IDS_STRING7100                  7100
 #define IDS_STRING7101                  7101
 #define IDS_STRING7102                  7102
@@ -803,6 +842,7 @@
 #define IDS_STRING7108                  7108
 #define IDS_STRING7109                  7109
 #define IDS_STRING7110                  7110
+#define IDS_STRING7111                  7111
 
 // Next default values for new objects
 // 

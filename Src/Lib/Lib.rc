@@ -98,8 +98,6 @@ FONT 9, "Segoe UI", 400, 0, 0x0
 BEGIN
     CONTROL         "",IDC_LISTLANGUAGE,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,18,302,99
     LTEXT           "Select a language for the user interface:",IDC_STATICHINT,7,7,131,8
-    PUSHBUTTON      "&Check for Updates",IDC_BUTTONCHECK,7,123,75,14
-    CONTROL         "download link goes here",IDC_LINKDOWNLOAD,"SysLink",WS_TABSTOP,85,126,224,10
 END
 
 IDD_CUSTOMTREE DIALOGEX 0, 0, 365, 183
@@ -279,20 +277,12 @@ BEGIN
     IDS_SETTING_SEARCH      "Search Results"
     IDS_WEBSITE_TIP         "Visit Open-Shell on the web - https://open-shell.github.io/Open-Shell-Menu"
     IDS_LOCATE_SETTING      "Locate setting"
-    IDS_LANGUAGE_UPDATED    "The language %s is up to date."
-    IDS_LANGUAGE_MISSING    "Update for language %s is not available."
-    IDS_LANGUAGE_DOWNLOAD   "New update for language %s is available. <a>Click here to install it.</a>"
-    IDS_LANGUAGE_SUCCESS    "The language file was installed successfully.\nYou need to log off and back on for the update to take effect."
-    IDS_LANGUAGE_SUCCESS2   "The language file was installed successfully.\nYou need to log off and back on for the update to take effect.\n\nNote: This update provides only basic translations. It supports only the main text found in the start menu and in Explorer. The settings will not be translated."
-    IDS_LANGUAGE_FAIL       "Failed to check for updates."
     IDS_INTERNET_FAIL       "Failed to connect to the Internet."
 END
 
 STRINGTABLE 
 BEGIN
     IDS_INITIATE_FAIL       "Failed to initiate the download."
-    IDS_LANG_DOWNLOAD_FAIL  "Failed to download the language file."
-    IDS_LANG_SAVE_FAIL      "Failed to save language file '%s'."
     IDS_UPDATE_TITLE        "Open-Shell Update"
     IDS_INST_DOWNLOAD_FAIL  "Failed to download the new version."
     IDS_INST_SAVE_FAIL      "Failed to save file '%s'."
@@ -306,11 +296,6 @@ BEGIN
     IDS_BMP_FILTERS2        "Image files (*.bmp,*.png,*.jpg)|*.bmp;*.png;*.jpg|"
     IDS_UNSAVED_CHANGES     "Do you want to save your changes to the settings?"
     IDS_UNSAVED_TITLE       "Unsaved changes"
-END
-
-STRINGTABLE 
-BEGIN
-    IDS_VERSION_URL         "http://www.classicshell.net/files/updates/update_"
 END
 
 #endif    // English (U.S.) resources

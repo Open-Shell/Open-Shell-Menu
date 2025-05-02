@@ -13,16 +13,11 @@
 #include <Uxtheme.h>
 #include <VSStyle.h>
 #include <propkey.h>
+#include <propvarutil.h>
 #include <htmlhelp.h>
 #include <vector>
 #include <map>
 #include <algorithm>
-
-#ifdef BUILD_SETUP
-#define DOC_PATH L""
-#else
-#define DOC_PATH L"..\\..\\Docs\\Help\\"
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -125,7 +120,7 @@ bool CSetting::IsEnabled( void ) const
 					if (operation=='>' && pSetting->GetValue().intVal<=val)
 						return false;
 				}
-				if ((pSetting->type==CSetting::TYPE_STRING || pSetting->type==CSetting::TYPE_BITMAP || pSetting->type==CSetting::TYPE_BITMAP_JPG) && pSetting->GetValue().vt==VT_BSTR)
+				if ((pSetting->type==CSetting::TYPE_STRING || pSetting->type==CSetting::TYPE_BITMAP || pSetting->type==CSetting::TYPE_BITMAP_JPG || pSetting->type==CSetting::TYPE_DIRECTORY) && pSetting->GetValue().vt==VT_BSTR)
 				{
 					if (operation=='~' && *pSetting->GetValue().bstrVal==0)
 						return false;
@@ -202,7 +197,7 @@ bool CSetting::ReadValue( CRegKey &regKey, const wchar_t *valName )
 	}
 
 	// string
-	if (type>=CSetting::TYPE_STRING && type<CSetting::TYPE_MULTISTRING)
+	if (type>=CSetting::TYPE_STRING && type!=CSetting::TYPE_MULTISTRING)
 	{
 		ULONG len;
 		if (regKey.QueryStringValue(valName,NULL,&len)==ERROR_SUCCESS)
@@ -789,7 +784,7 @@ CString CSettingsManager::LoadSettingsXml( const wchar_t *fname )
 						}
 						CComPtr<IXMLDOMNode> next;
 						child2->get_nextSibling(&next);
-						child2=next;
+						child2=std::move(next);
 					}
 					string.push_back(0);
 					pSetting->value=CComVariant(&string[0]);
@@ -839,7 +834,7 @@ CString CSettingsManager::LoadSettingsXml( const wchar_t *fname )
 		CComPtr<IXMLDOMNode> next;
 		if (child->get_nextSibling(&next)!=S_OK)
 			break;
-		child=next;
+		child=std::move(next);
 	}
 	if (ver<0x03090000)
 		UpgradeSettings(false);
@@ -984,7 +979,7 @@ void CSettingsManager::ResetSettings( void )
 HIMAGELIST CSettingsManager::GetImageList( HWND tree )
 {
 	if (m_ImageList) return m_ImageList;
-	HTHEME theme=OpenThemeData(tree,L"button");
+	HTHEME theme=OpenThemeData(GetParent(tree),L"button");
 	HDC hdc=CreateCompatibleDC(NULL);
 	int iconSize=(TreeView_GetItemHeight(tree)<32)?16:32;
 	int checkSize=16;
@@ -1114,7 +1109,7 @@ class CSettingsDlg: public CResizeableDlg<CSettingsDlg>
 {
 public:
 	CSettingsDlg( void );
-	void Init( CSetting *pSettings, ICustomSettings *pCustom, int tab );
+	void Init( CSetting *pSettings, ICustomSettings *pCustom, int tab, const wchar_t* appId );
 
 	BEGIN_MSG_MAP( CSettingsDlg )
 		MESSAGE_HANDLER( WM_INITDIALOG, OnInitDialog )
@@ -1188,6 +1183,7 @@ private:
 	bool m_bIgnoreEdit;
 	bool m_bDirty;
 	CString m_FilterText;
+	const wchar_t* m_AppId;
 
 	void AddTabs( int name, const CSetting *pSelect=NULL );
 	void SetCurTab( int index, bool bReset, const CSetting *pSelect=NULL );
@@ -1220,15 +1216,17 @@ CSettingsDlg::CSettingsDlg( void )
 	m_bOnTop=false;
 	m_bIgnoreEdit=false;
 	m_bDirty=false;
+	m_AppId=NULL;
 }
 
-void CSettingsDlg::Init( CSetting *pSettings, ICustomSettings *pCustom, int tab )
+void CSettingsDlg::Init( CSetting *pSettings, ICustomSettings *pCustom, int tab, const wchar_t* appId )
 {
 	m_pSettings=pSettings;
 	m_pCustom=pCustom;
 	m_InitialTab=tab;
 	m_FilterText.Empty();
 	m_bDirty=false;
+	m_AppId=appId;
 }
 
 // Subclass the tooltip to delay the tip when the mouse moves from one tree item to the next
@@ -1252,17 +1250,19 @@ LRESULT CSettingsDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 #ifdef _DEBUG
 	g_bUIThread=true;
 #endif
-/*
-	// attempt to make the dialog have its own icon. doesn't work though. the icon changes, but to the default folder icon
-	CComPtr<IPropertyStore> pStore;
-	if (SUCCEEDED(SHGetPropertyStoreForWindow(m_hWnd,IID_IPropertyStore,(void**)&pStore)))
+
+	if (m_AppId)
 	{
-		PROPVARIANT val;
-		val.vt=VT_LPWSTR;
-		val.pwszVal=L"OpenShell.Settings.Dialog";
-		pStore->SetValue(PKEY_AppUserModel_ID,val);
+		// attempt to make the dialog have its own icon
+		CComPtr<IPropertyStore> pStore;
+		if (SUCCEEDED(SHGetPropertyStoreForWindow(m_hWnd,IID_IPropertyStore,(void**)&pStore)))
+		{
+			PROPVARIANT val;
+			InitPropVariantFromString(m_AppId,&val);
+			pStore->SetValue(PKEY_AppUserModel_ID,val);
+		}
 	}
-*/
+
 	InitResize(MOVE_MODAL);
 	HMENU menu=GetSystemMenu(FALSE);
 	bool bAdded=false;
@@ -1701,6 +1701,7 @@ LRESULT CSettingsDlg::OnBackup( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 		ofn.Flags=OFN_DONTADDTORECENT|OFN_ENABLESIZING|OFN_EXPLORER|OFN_FILEMUSTEXIST|OFN_HIDEREADONLY|OFN_NOCHANGEDIR;
 		if (GetOpenFileName(&ofn))
 		{
+			SetCurTab(m_Index,true); // reload tab once to force-close any active edit boxes
 			CString error=g_SettingsManager.LoadSettingsXml(path);
 			if (!error.IsEmpty())
 			{
@@ -1710,7 +1711,7 @@ LRESULT CSettingsDlg::OnBackup( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 				::MessageBox(m_hWnd,text,LoadStringEx(IDS_ERROR_TITLE),MB_OK|MB_ICONERROR);
 			}
 			SetSettingsDirty();
-			SetCurTab(m_Index,true);
+			SetCurTab(m_Index,true); // reload tab again to show the new settings
 		}
 	}
 	if (res==3)
@@ -1845,7 +1846,7 @@ bool CSettingsDlg::IsTabValid( void )
 
 static CSettingsDlg g_SettingsDlg;
 
-void EditSettings( const wchar_t *title, bool bModal, int tab )
+void EditSettings( const wchar_t *title, bool bModal, int tab, const wchar_t* appId )
 {
 	if (g_SettingsDlg.m_hWnd)
 	{
@@ -1863,7 +1864,7 @@ void EditSettings( const wchar_t *title, bool bModal, int tab )
 		}
 		DLGTEMPLATE *pTemplate=LoadDialogEx(IDD_SETTINGS);
 		g_SettingsManager.ResetImageList();
-		g_SettingsDlg.Init(g_SettingsManager.GetSettings(),g_SettingsManager.GetCustom(),tab);
+		g_SettingsDlg.Init(g_SettingsManager.GetSettings(),g_SettingsManager.GetCustom(),tab,appId);
 		g_SettingsDlg.Create(NULL,pTemplate);
 		g_SettingsDlg.SetWindowText(title);
 		g_SettingsDlg.SetWindowPos(HWND_TOPMOST,0,0,0,0,SWP_NOSIZE|SWP_NOMOVE|(g_SettingsDlg.GetOnTop()?0:SWP_NOZORDER)|SWP_SHOWWINDOW);
@@ -1951,6 +1952,13 @@ bool ImportSettingsXml( const wchar_t *fname )
 	if (error.IsEmpty())
 	{
 		g_SettingsManager.SaveSettings(false);
+
+		// we have successfuly imported settings from XML
+		// so there is no need to show settings dialog when start menu is triggered for the first time
+		CRegKey regKey;
+		if (regKey.Open(HKEY_CURRENT_USER,GetSettingsRegPath())==ERROR_SUCCESS)
+			regKey.SetDWORDValue(L"ShowedStyle2",1);
+
 		return true;
 	}
 
@@ -2177,7 +2185,7 @@ bool HasHelp( void )
 	GetModuleFileName(_AtlBaseModule.GetResourceInstance(),path,_countof(path));
 	*PathFindFileName(path)=0;
 	wchar_t topic[_MAX_PATH];
-	Sprintf(topic,_countof(topic),L"%s%sOpenShell.chm",path,GetDocRelativePath());
+	Sprintf(topic,_countof(topic),L"%sOpenShell.chm",path);
 	return (GetFileAttributes(topic)!=INVALID_FILE_ATTRIBUTES);
 }
 
@@ -2187,7 +2195,7 @@ void ShowHelp( void )
 	GetModuleFileName(_AtlBaseModule.GetResourceInstance(),path,_countof(path));
 	*PathFindFileName(path)=0;
 	wchar_t topic[_MAX_PATH];
-	Sprintf(topic,_countof(topic),L"%s%sOpenShell.chm::/%s.html",path,GetDocRelativePath(),PathFindFileName(g_SettingsManager.GetRegPath()));
+	Sprintf(topic,_countof(topic),L"%sOpenShell.chm::/%s.html",path,PathFindFileName(g_SettingsManager.GetRegPath()));
 	HtmlHelp(GetDesktopWindow(),topic,HH_DISPLAY_TOPIC,NULL);
 }
 
@@ -2208,7 +2216,7 @@ bool GetSettingBool( const CSetting &setting )
 
 CString GetSettingString( const CSetting &setting )
 {
-	Assert(setting.type==CSetting::TYPE_STRING);
+	Assert(setting.type==CSetting::TYPE_STRING || setting.type==CSetting::TYPE_DIRECTORY);
 	if (setting.value.vt!=VT_BSTR)
 		return CString();
 	return setting.value.bstrVal;
@@ -2709,7 +2717,7 @@ bool SaveAdmx( TSettingsComponent component, const char *admxFile, const char *a
 		{
 			fprintf_s(fAdmx,"\t\t\t\t<decimal id=\"Value\" valueName=\"%S\"/>\r\n",pSetting->name);
 		}
-		else if (pSetting->type==CSetting::TYPE_STRING || pSetting->type==CSetting::TYPE_ICON || pSetting->type==CSetting::TYPE_BITMAP || pSetting->type==CSetting::TYPE_BITMAP_JPG || pSetting->type==CSetting::TYPE_SOUND || pSetting->type==CSetting::TYPE_FONT)
+		else if (pSetting->type==CSetting::TYPE_STRING || pSetting->type==CSetting::TYPE_ICON || pSetting->type==CSetting::TYPE_BITMAP || pSetting->type==CSetting::TYPE_BITMAP_JPG || pSetting->type==CSetting::TYPE_SOUND || pSetting->type==CSetting::TYPE_FONT || pSetting->type==CSetting::TYPE_DIRECTORY)
 		{
 			fprintf_s(fAdmx,"\t\t\t\t<text id=\"Value\" valueName=\"%S\"/>\r\n",pSetting->name);
 		}
@@ -2769,7 +2777,7 @@ bool SaveAdmx( TSettingsComponent component, const char *admxFile, const char *a
 		{
 			fprintf_s(fAdml,"\t\t\t\t<decimalTextBox refId=\"Value\" spin=\"false\">%s</decimalTextBox>\r\n",(const char*)name);
 		}
-		else if (pSetting->type==CSetting::TYPE_STRING || pSetting->type==CSetting::TYPE_ICON || pSetting->type==CSetting::TYPE_BITMAP || pSetting->type==CSetting::TYPE_BITMAP_JPG || pSetting->type==CSetting::TYPE_SOUND || pSetting->type==CSetting::TYPE_FONT)
+		else if (pSetting->type==CSetting::TYPE_STRING || pSetting->type==CSetting::TYPE_ICON || pSetting->type==CSetting::TYPE_BITMAP || pSetting->type==CSetting::TYPE_BITMAP_JPG || pSetting->type==CSetting::TYPE_SOUND || pSetting->type==CSetting::TYPE_FONT || pSetting->type==CSetting::TYPE_DIRECTORY)
 		{
 			fprintf_s(fAdml,"\t\t\t\t<textBox refId=\"Value\"><label>%s</label></textBox>\r\n",(const char*)name);
 		}

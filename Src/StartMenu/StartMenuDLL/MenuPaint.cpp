@@ -19,6 +19,7 @@
 #include <dwmapi.h>
 #include <algorithm>
 #include <math.h>
+#include <chrono>
 
 static BLENDFUNCTION g_AlphaFunc={AC_SRC_OVER,0,255,AC_SRC_ALPHA};
 
@@ -3006,9 +3007,12 @@ void CProgramsTree::DrawScrollbarBackground( HDC hdc, int iPartId, int iStateId,
 
 void CMenuContainer::AnimateMenu( int flags, int speed, const RECT &rect )
 {
+	using namespace std::chrono;
+
 	RECT clipRect=m_bSubMenu?s_MenuLimits:s_MainMenuLimits;
 
 	bool bUserPic=(!m_bSubMenu && s_bWin7Style && s_UserPicture.m_hWnd && s_UserPictureRect.top<s_UserPictureRect.bottom);
+	int frames=0;
 
 	if ((flags&AW_BLEND) && speed>0)
 	{
@@ -3030,10 +3034,10 @@ void CMenuContainer::AnimateMenu( int flags, int speed, const RECT &rect )
 		}
 
 		// animate
-		int time0=GetTickCount();
+		auto time0=steady_clock::now();
 		while (true)
 		{
-			int dt=GetTickCount()-time0;
+			auto dt=duration_cast<milliseconds>(steady_clock::now()-time0).count();
 			if (dt>speed) break;
 			float f=dt/(float)speed;
 			int alpha=(int)(f*255);
@@ -3041,6 +3045,7 @@ void CMenuContainer::AnimateMenu( int flags, int speed, const RECT &rect )
 			RedrawWindow();
 			if (bUserPic)
 				s_UserPicture.Update(alpha);
+			frames++;
 		}
 
 		SetWindowLong(GWL_EXSTYLE,GetWindowLong(GWL_EXSTYLE)&~WS_EX_LAYERED);
@@ -3085,7 +3090,7 @@ void CMenuContainer::AnimateMenu( int flags, int speed, const RECT &rect )
 		}
 
 		// animate
-		int time0=GetTickCount();
+		auto time0=steady_clock::now();
 		int movex=0, movey=0;
 		if (flags&AW_HOR_POSITIVE)
 		{
@@ -3111,7 +3116,7 @@ void CMenuContainer::AnimateMenu( int flags, int speed, const RECT &rect )
 		HRGN clipRgn=CreateRectRgn(clipRect.left-rect.left,clipRect.top-rect.top,clipRect.right-rect.left,clipRect.bottom-rect.top); // clip region in window space
 		while (true)
 		{
-			int dt=GetTickCount()-time0;
+			auto dt=duration_cast<milliseconds>(steady_clock::now()-time0).count();
 			if (dt>speed) break;
 			float f=1-dt/(float)speed;
 			f=powf(f,5);
@@ -3139,6 +3144,7 @@ void CMenuContainer::AnimateMenu( int flags, int speed, const RECT &rect )
 				POINT pos={s_UserPictureRect.left-dx,s_UserPictureRect.top-dy};
 				s_UserPicture.UpdatePartial(pos,&clipRect);
 			}
+			frames++;
 		}
 		DeleteObject(clipRgn);
 
@@ -3169,4 +3175,7 @@ void CMenuContainer::AnimateMenu( int flags, int speed, const RECT &rect )
 		POINT pos={s_UserPictureRect.left,s_UserPictureRect.top};
 		s_UserPicture.UpdatePartial(pos,NULL);
 	}
+
+	if (frames)
+		LOG_MENU(LOG_OPEN,L"Menu animation %d frames in %dms (%.0f fps)",frames,speed,1000.0*frames/speed);
 }

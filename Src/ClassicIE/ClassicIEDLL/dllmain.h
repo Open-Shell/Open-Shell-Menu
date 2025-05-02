@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "ClassicIEDLL_i.h"
+#include "ClassicIEDLL_h.h"
 
 class CClassicIEDLLModule : public CAtlDllModuleT< CClassicIEDLLModule >
 {

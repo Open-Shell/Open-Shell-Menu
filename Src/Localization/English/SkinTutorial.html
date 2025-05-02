@@ -1,0 +1,2204 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+  <title>Start Menu Skinning</title>
+  <style type="text/css">
+h1 {
+  color: #0078d4;
+  font-family: "Segoe UI",Tahoma,sans-serif;
+  font-weight: 600;
+}
+h2 {
+  color: #005a9e;
+  font-family: "Segoe UI",Tahoma,sans-serif;
+  font-weight: 600;
+}
+h3 {
+  color: #005a9e;
+  font-weight: 600;
+}
+body {
+  font-family: "Segoe UI",Tahoma,sans-serif;
+}
+  </style></head>
+<body>
+<h1>Start Menu Skinning Tutorial</h1>
+<br>
+<h1>Introduction</h1><span style="font-weight: bold; color: rgb(0, 112, 192);">Open-Shell™</span> supports skin files for the start menu. The skin can change things like:
+<br>
+<ul>
+<li>The background image or color of the menu</li>
+<li>The font and text color for various elements</li>
+<li>Arrows and other icons</li>
+<li>Sizes, padding and alignment</li>
+<li>The image to use for the menu separators</li>
+</ul>
+<br>
+All information about a skin is stored in a <span style="font-weight: bold;">.skin</span> or a <span style="font-weight: bold;">.skin7</span> file (the <span style="font-weight: bold;">.skin7</span> files are for use by the Windows 7 style). The skin files must be installed in the <span style="font-weight: bold;">Skins</span> directory of Open-Shell (for example <span style="font-weight: bold;">C:\Program Files\Open-Shell\Skins</span>).
+<br>
+<br>
+<span style="font-weight: bold;">Tutorial Contents</span>:
+<br>
+<div style="margin-left: 40px;"><a href="#skin_file">Anatomy of a skin file</a>
+<br>
+<a href="#slices">Bitmap slices</a>
+<br>
+<a href="#main_menu">Main menu</a>
+<br>
+<a href="#submenu">Sub-menus</a>
+<br>
+<a href="#about">About box</a>
+<br>
+<a href="#variations">Skin variations</a>
+<br>
+<a href="#options">Skin options</a>
+<br>
+<a href="#custom">Custom skin</a>
+<br>
+<a href="#errors">Troubleshooting</a>
+<br>
+<a href="#reference">Skin description file reference</a>
+<br>
+</div>
+<br>
+<br>
+<h1><a name="skin_file"></a>Anatomy of a skin file</h1>
+The skin file is a DLL that contains specific resources like bitmaps, icons, etc. The only mandatory resource is a text resource with ID=1 and type="SKIN". It is the text that describes the skin. The description can refer to other resources like bitmaps and icons.
+<br>
+<br>
+The easiest way to create a new skin is to start from an existing .skin file. Make a copy of one of the default skins and save it under a new name. Then open it in Visual Studio's resource editor, or another resource editor like <a href="http://www.angusj.com/resourcehacker/">Resource Hacker</a>:
+<br>
+<br>
+<img src="images/reshacker.png" style="width: 428px; height: 262px;" alt="Skin file" title="Skin file">
+<br>
+<br>
+A great feature of Resource Hacker is that it lets you edit the text directly inside. When you are done, press the "Compile Script" button, then save the file.
+<br>
+<span style="font-weight: bold;">Note:</span> Keep in mind that often the <span style="font-weight: bold;">Skins</span> folder is protected by the OS. If you want to use a tool to edit a file directly in that folder, the tool must be started as Administrator.
+<br>
+<br>
+To replace a bitmap resource, select <span style="font-weight: bold;">Action –&gt; Replace Bitmap</span>. Then pick your new bitmap file, pick the ID of the bitmap resource you want to replace, click <span style="font-weight: bold;">Replace</span> and save. You can replace an icon resource in a similar way.
+<br>
+<br>
+To add a new bitmap, select <span style="font-weight: bold;">Action –&gt; Add a new Resource</span>. Pick the new bitmap file, enter a new name (must be a number), and you can leave the language blank. Finally click <span style="font-weight: bold;">Add Resource</span> and save.
+<br>
+<br>
+<br>
+<h1><a name="bitmaps"></a>Bitmaps</h1>
+The start menu uses various bitmap resources for its graphical elements. Every bitmap in the menu has a name for its setting (for example "Main_pager_arrows" or "Search_bitmap"). You specify the bitmap resource with the setting <span style="font-weight: bold;">&lt;name&gt;=&lt;resource index&gt;</span>. For example:
+<br>
+<code style="font-weight: bold;">
+<br>
+Main_bitmap=1 – </code><span style="font-weight: bold;"></span><span style="font-style: italic;">use bitmap resource with index 1</span>
+<br>
+<br>
+You can use <span style="font-weight: bold;">BMP</span>, <span style="font-weight: bold;">PNG</span> and <span style="font-weight: bold;">JPG</span> images as resources. Put BMP files into the BITMAP resource section. Put PNG and JPG files into the IMAGE resource section. The menu will first search the BITMAP section for the given resource index, and then the IMAGE section.
+<br>
+BMP and PNG images can have alpha channels to support transparency. JPG images are always opaque, and of course, of lower quality.
+<br>
+<br>
+A bitmap can optionally have a color mask. The mask determines how the bitmap is mixed with up to 3 additional colors, called "tint colors". The Red channel of the mask controls how much of the first tint color to mix in, the Green channel controls the second tint color and the Blue channel controls the third tint color. By default the first tint color is the system window (Glass) color, and the second tint color is the menu background color.
+<br>
+The mask only applies to the RGB portion of the bitmap. The Alpha channel remains unchanged:
+<br>
+<br>
+<img style="width: 200px; height: 200px;" alt="Color masks" title="Color masks" src="images/color_mask.png">
+<br>
+In this example the first image is the background, the second is the mask and the third is the end result. The red portions of the mask blend the glass color (purple) with the background. The green portions blend the menu color (gray) with the background. By varying the intensity of red and green in the mask image we control how much the colors are blended.
+<br>
+<br>
+The mask can be specified in one of two ways – either <span style="font-weight: bold;">&lt;bitmap&gt;_mask=&lt;resource index&gt;</span> or <span style="font-weight: bold;">&lt;bitmap&gt;_mask=#RRGGBB</span> (a color in hexadecimal format). If the mask is a bitmap it must have the same dimensions as the main bitmap. Some examples:
+<br>
+<code>
+<br>
+<span style="font-weight: bold;">Main_bitmap_mask=2 – use a bitmap resource with index 2</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_bitmap_mask=#FF0000 – use a fixed color with Red=255, Green=0, Blue=0</span><br style="font-weight: bold;">
+</code>
+<br>
+To change the tint color:
+<br>
+<br>
+<code><span style="font-weight: bold;">Main_bitmap_tint1=#000000 – The first tint color is black</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_bitmap_tint2=#808080 – The second tint color is gray</span><br style="font-weight: bold;">
+</code>
+<br>
+The main bitmap can also be a solid color. If both the bitmap and the mask are solid colors, the end result is a solid-color bitmap that is the result of the bitmap color and the tint colors all mixed together according to the mask.
+<br>
+If the main bitmap is a solid color and the mask is a bitmap, then the dimensions of the mask bitmap determine the dimensions of the final bitmap. In this case the alpha channel of the mask is used as alpha channel of the result.
+<br>
+<br>
+The masks and tint colors are a powerful system that allows you to achieve a large variation of possibilities without the need for a large number of bitmap resources. For good examples how to use the color tints, look at the Metro skin.
+<br>
+<br>
+<span style="font-weight: bold;">See the reference section at the end for the supported bitmaps.</span><br style="font-weight: bold;">
+<br>
+<h2>Named colors</h2>
+Everywhere a solid color is accepted, you can use one of the predefined named colors. The actual color at any given moment will depend on the current Windows settings. Using named colors allows you to create skins that follow the current Windows color scheme.
+<br>
+<br>
+A small number of colors are system colors for classic window elements – like button color, text highlight color, and so on. For example:
+<br>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">Main_bitmap=$SystemActiveBorder – use the system active border color</span><br style="font-weight: bold; font-family: monospace;"><span style="font-weight: bold; font-family: monospace;"></span></big>
+<br>
+<span style="font-weight: bold;">You can see a full list of those system colors in the reference section.</span>
+<br>
+<br>
+The rest of the named colors are only available on Windows 8 and up. They come from the Metro palette, which is a complete set of hundreds of named colors, designed to look good together.
+<br>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">Main_bitmap_jump=$StartHighlight – use the start screen highlight color</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">
+<br>
+</span></big>Not all colors are available on all versions of Windows. Windows 8.1 adds new ones that don't exist in Windows 8, and Windows 10 adds even more colors. To make skins that look good on all versions of Windows, you may use a list of colors in order of preference. If the first one is not available, the menu will use the next one in the list.
+<br>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">Main_selection=$SystemAccentDark2|$StartSelectionBackground – use the system accent dark 2 color, or if it is not available, use the start selection background color</span></big>
+<br>
+<br>
+You can get a full list of the Metro colors using the Classic Shell Utility. You can find it on the main <a href="http://www.classicshell.net/downloads">Downloads page</a>.
+<br>
+<br>
+For an example how to use the Metro colors, look at the Metro skin. It makes a heavy use of the named colors to achieve look that matches the current color scheme of the start screen.
+<br style="font-weight: bold; font-family: monospace;">
+<br>
+<h1><a name="slices"></a>Bitmap slices</h1>
+Since many of the start menu elements are not fixed size (they is resized depending on the number of menu items, the font size, etc) and bitmaps are fixed size, we need a way to resize the bitmap to fill a given area. Simply stretching the whole bitmap will not work because fine details around the border will get blurred.
+<br>
+<br>
+That's where the "slicing" system comes in. Each bitmap is split into slices horizontally and vertically:
+<br>
+<br>
+<img src="images/slices.png" style="width: 200px; height: 200px;" alt="bitmap slices" title="bitmap slices">
+<br>
+<br>
+The 4 corners are never stretched. The left and right slices are stretched only vertically. The top and bottom slices are stretched only horizontally. And the middle portion can be stretched in any direction. This lets us get any size background without sacrificing the sharp edges or the smooth gradient in the middle:
+<br>
+<br>
+<img src="images/resize.png" style="width: 129px; height: 55px;" alt="Resized images" title="Resized images">
+<br>
+<br>
+Some images can have more than 3 slices. The main menu background has 6 slices – 3 for the caption area and 3 for the menu area.
+<br>
+<br>
+Some images don't need both vertical and horizontal slices. The menu separator image is only split horizontally because all separators have the same height.
+<br>
+<br>
+<br>
+<h1><a name="backgrounds"></a>Backgrounds</h1>
+A background is a combination of a bitmap and its slices. It consists of the following settings: <span style="font-weight: bold;">&lt;name&gt;, &lt;name&gt;_mask, &lt;name&gt;_slices_X, &lt;name&gt;_slices_Y</span>. For example if the name is "Main_bitmap":
+<br>
+<br>
+<code><span style="font-weight: bold;">Main_bitmap=1 – </span></code><span style="font-weight: bold;"></span><span style="font-style: italic;">use bitmap resource with index 1</span>
+<br>
+<code><span style="font-weight: bold;">Main_bitmap_mask=2 – </span></code><span style="font-weight: bold;"></span><span style="font-style: italic;">use a bitmap resource with index 2</span>
+<br>
+<code><span style="font-weight: bold;">Main_bitmap_slices_X=6,1,1,6,1,13</span></code><span style="font-weight: bold;"></span><span style="font-style: italic;"></span>
+<br>
+<code><span style="font-weight: bold;">Main_bitmap_slices_Y=60,317,8</span></code><span style="font-weight: bold;"></span><span style="font-style: italic;"></span>
+<br>
+<br>
+</span></code>
+Not all backgrounds have both X and Y slices. For example horizontal separators only have X, and vertical separators only have Y, since they can only stretch in one direction.
+<br>
+<br>
+<span style="font-weight: bold;">See the reference section at the end for the supported backgrounds.</span>
+<br style="font-weight: bold;">
+<br>
+<br>
+<h1><a name="items"></a>Skin items</h1>
+A skin item is a combination of settings that control a particular element of the menu, for example the selected element. The following settings are supported:
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_font</span> – the font used for the text
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_glow_size</span> – the glow size for the text (only works in Windows 7)
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_text_color</span> – the color for the text (4 colors for normal, selected, disabled, disabled+selected)
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_text_padding</span> – the padding on all sides of the text (left, top, right, bottom)
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_icon_padding</span> – the padding on all sides of the icon
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_selection</span> – the background of the item, usually when it is selected (this setting has the _mask, _slices_X and _slices_Y sub-settings, it can also be a solid color in #RRGGBB format)
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_arrow_color</span> – the color of the sub-menu arrow triangle if the arrow is solid color (2 colors for normal and selected)
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_arrow</span> – a bitmap for the arrow if the arrow is a bitmap
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_arrow_padding</span> – the left and right padding of the arrow
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_icon_frame</span> – a background for the frame of the icon
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_icon_frame_offset</span> – an X and Y padding between the frame and the icon (X applies for left and right, Y applies to top and bottom)
+<br>
+<br>
+For example this defines the normal text in the main menu:
+<br>
+<code><span style="font-weight: bold;">Main_font="Segoe UI",normal,-10</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_text_color=#FFFFFF,#FFFFFF,#9F9F9F,#AFAFAF</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_text_padding=1,0,8,0</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_icon_padding=4,3,3,3</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_selection=3</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_selection_slices_X=4,63,4</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_selection_slices_Y=4,20,4</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_arrow_color=#FFFFFF,#FFFFFF</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_arrow_padding=8,9</span><br style="font-weight: bold;">
+</code>
+<br>
+When you specify a font you need to provide the font name, the weight (normal or <span style="font-weight: bold;">bold</span>), and a size. The font size is given in points. A point is 1/72 of an inch. So the font size in pixels is:
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">pixel_size = point_size * DPI / 72</span>
+<br>
+<br>
+where DPI is the current DPI display setting.
+<br>
+The font size can be negative or positive. A negative size measures the character height and a positive size measures the cell height of the font. Since the cell is usually taller than a character, a font size <span style="font-weight: bold;">-10</span> is usually slightly larger than <span style="font-weight: bold;">10</span>.
+<br>
+<br>
+<br>
+Some items inherit settings from other items. For example the "Main_split" item may only have these settings:
+<br>
+<code><span style="font-weight: bold;">Main_split_selection=11</span>
+<br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_split_selection_slices_X=4,63,4,0,16,4</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_split_selection_slices_Y=4,20,4</span>
+<br style="font-weight: bold;">
+</code>
+<br>
+The settings that are not specified will come from the "Main" item.
+<br>
+<br>
+<span style="font-weight: bold;">See the reference section at the end for the supported items.</span>
+<br>
+<br>
+<h1><a name="main_menu"></a>Main menu</h1>
+Now that we know what is a Bitmap, Background and Skin item, we are ready to define the look of the main menu.
+<br>
+<br>
+The main menu can use a solid color for its background or use a bitmap.
+<br>
+<br>
+If you want solid color, use this in the skin description:
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">Main_opacity=solid</span><span style="font-style: italic;"></span>&nbsp;<span style="font-style: italic;">– the menu is a solid rectangle</span>
+<br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;">Main_background=#00FF00</span>&nbsp;– <span style="font-style: italic;">green color</span>
+<br style="font-family: monospace; font-weight: bold;">
+<br>
+The color (and all colors in this file) are in the <span style="font-weight: bold;">#RRGGBB</span> hexadecimal format. This is the same format that is used by HTML text.
+<br>
+<br>
+To specify a bitmap, use:
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">Main_bitmap=1</span>&nbsp;<span style="font-style: italic;">– use bitmap resource 1</span><br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;">Main_bitmap_slices_X=8,1,1,5,1,13</span>&nbsp;<span style="font-style: italic;">– the horizontal slices</span><br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;">Main_bitmap_slices_Y=13,50,9</span>&nbsp;<span style="font-style: italic;">– the vertical slices</span><br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;">Main_opacity=glass</span>&nbsp;<span style="font-style: italic;">– use glass effect</span><br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;"></span>
+<br>
+<span style="font-weight: bold;">Main_opacity</span> can be <span style="font-weight: bold;">solid</span>, <span style="font-weight: bold;">region</span>, <span style="font-weight: bold;">alpha</span>, <span style="font-weight: bold;">glass, fullalpha </span>or<span style="font-weight: bold;"> fullglass</span>. <span style="font-weight: bold;">Solid</span> means the menu will be filled with the <span style="font-weight: bold;">Main_background</span> color and the bitmap will be drawn on top. <span style="font-weight: bold;">Region</span> means the pixels with alpha=0 will be transparent, and the rest will be opaque. <span style="font-weight: bold;">Alpha</span> means that the bitmap will be alpha-blended with the desktop behind it. <span style="font-weight: bold;">Glass</span> means the pixels with alpha=0 will be transparent, all the rest will blend between the glass color and the pixel color (alpha=1 is full glass, alpha=255 is fully opaque). <span style="font-weight: bold;">Fullalpha</span> and <span style="font-weight: bold;">fullglass</span> are the same as alpha/glass but inform the start menu that the background behind the menu items can be transparent.
+<br>
+<br>
+The bitmap must follow certain restrictions:
+<br>
+<ul>
+  <li>The bitmap can be either 24-bit or 32-bit with alpha channel.</li>
+  <li>For 32-bit images don't premultiply the alpha channel. If you don't know what "premultiply the alpha" means, never mind
+<br>
+  </li>
+  <li>The area where the menu items are going to be must be completely opaque if <span style="font-weight: bold;">fullalpha</span> or <span style="font-weight: bold;">fullglass</span> are not used
+<br>
+</li>
+  <li>For <span style="font-weight: bold;">region</span>, <span style="font-weight: bold;">alpha</span>, <span style="font-weight: bold;">glass</span>,    <span style="font-weight: bold;">fullalpha</span> or <span style="font-weight: bold;">fullglass</span> modes there is a limitation where the fully transparent (alpha=0) pixels can be. For every horizontal line of the bitmap there can be transparent pixels on the left end and on the right end, but not in the middle. The non-transparent (alpha&gt;0) pixels must be contiguous with no holes.</li>
+  <li>For right-to-left versions of Windows (like Arabic and Hebrew) the bitmap will be mirrored. Any text or directionally-sensitive graphics (like a logo) will be backwards. If you want to support right-to-left Windows, either don't use such graphics or provide an option that uses alternative image</li>
+  <li>The Windows 7 style (skin with extension .skin7) <span style="font-weight: bold;">does not support fullalpha or fullglass opacity modes</span>
+<br>
+  </li>
+</ul>To create a 32-bit bitmap with alpha channel you need an image editor like Photoshop or GIMP. In Photoshop the alpha channel goes here:
+<br>
+<br>
+<img src="images/photoshop.png" style="width: 213px; height: 223px;" alt="Alpha in Photoshop" title="Alpha in Photoshop">
+d
+<br>
+<br>
+When saving the bmp file make sure you pick the 32-bit file format.
+<br>
+<br>
+The first 3 numbers of <span style="font-weight: bold;">Main_bitmap_slices_X</span> relate to the caption area. Set them all to 0 if you don't want caption. If you do want caption, set the numbers to to the left, middle and right slice of the caption area of the bitmap.
+<br>
+The second 3 numbers of <span style="font-weight: bold;">Main_bitmap_slices_X </span>are for the left, middle, and right slice of the menu area.
+<br>
+The 3 numbers of <span style="font-weight: bold;">Main_bitmap_slices_Y </span>are for the top, middle and bottom slice of the whole menu. The same numbers are used for the caption and the menu.
+<br>
+<br>
+Here's an example of how the slices should look:
+<br>
+<img src="images/main_slices.png" style="width: 185px; height: 324px;" alt="Main menu slices" title="Main menu slices">
+<br>
+The highlighted vertical slices are single pixel wide and are stretched to fill the width of the caption area and the menu area.
+<br>
+<br>
+If your menu background is solid color or a completely rectangular bitmap, and you are running in Windows 7's Classic theme, you can select whether the menu will have a 1-pixel thin border or 2-pixel 3D border:
+<br>
+<span style="font-family: monospace; font-weight: bold;">Main_thin_frame=1 </span><span style="font-style: italic;">– use thin frame instead of the thick 3D frame (for Classic mode only)</span><br style="font-weight: bold; font-family: monospace;">
+<br>
+<br>
+<h2>The caption</h2>
+The caption is the area on the side of the menu that shows text like <span style="font-weight: bold;">Windows 7 Home</span>. If you want caption you must provide a bitmap for the main menu. There are few parameters related to the caption:
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">Caption_font="Segoe UI",normal,18</span>&nbsp;<span style="font-style: italic;">– the name, weight and size of the caption font</span><br style="font-family: monospace;">
+<span style="font-family: monospace; font-weight: bold;">Caption_text_color=#FFFFFF</span>&nbsp;<span style="font-style: italic;">– the color of the caption text</span><br style="font-family: monospace;">
+<span style="font-family: monospace; font-weight: bold;">Caption_glow_color=#FFFFFF</span>&nbsp;<span style="font-style: italic;">– the color of the glow behind the text</span><br style="font-family: monospace;">
+<span style="font-family: monospace; font-weight: bold;">Caption_glow_size=10</span>&nbsp;<span style="font-style: italic;">– the size of the glow (0 – no glow)</span><br style="font-family: monospace;">
+<span style="font-family: monospace; font-weight: bold;">Caption_padding=4,8,2,16</span>&nbsp;<span style="font-style: italic;">– the padding on the left, top, right and bottom of the caption</span><br style="font-family: monospace;">
+<br>
+The padding is the number of pixels to leave on each side of the caption text.
+<br>
+<br>
+<br>
+<h2>Two columns</h2>
+All Classic skins must support either a single column mode or two-column mode. The Windows 7 skins only support two columns.
+<br>
+There is a system option "TWO_COLUMNS", which is set when the skin runs in two-column mode. You may use that option to provide a different bitmap and other settings. For more on options look at the Skin Options section.
+<br>
+<br>
+The main bitmap for two columns must have 6 vertical slices, just like if the menu has a caption. But instead of having a caption section and the menu section, there are the first column section and the second color section.
+<br>
+<br>
+The second column can have its own set of properties to specify a different font, colors, selection bitmap, etc.:
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">Main2_opacity=fullglass
+<br>
+Main2_font="Segoe UI",bold,-10
+<br>
+Main2_text_color=#FFFFFF,#FFFFFF,#7F7F7F,#7F7F7F
+<br>Main2_padding=3,10,4,8
+<br></span><span style="font-weight: bold;">
+<br>
+</span>These properties are optional. If something is not set, the values from the first column will be used.
+<br>
+<br>
+<br>
+<h2>The menu items</h2>
+The main menu can display different kinds of items. Also some items can have multiple states. Each item is described in the skin as one or more "skin items" (as explained above). Here are some examples of items:
+<br>
+<span style="font-weight: bold;">Main</span> – the normal items in the main menu
+<br>
+<span style="font-weight: bold;">Main_new</span> – highlighted new programs
+<br>
+<span style="font-weight: bold;">Main2_separator</span> – a separator in the second column of the main menu
+<br>
+<br>
+<span style="font-weight: bold;">Note on separators:</span> For simple separators (with no text) the height of the separator is determined by the height of the provided bitmap. If no separator bitmap is given the menu uses the default etched line.
+<br>
+<br>
+<img src="images/separator.png" style="width: 267px; height: 138px;" alt="Custom separator" title="Custom separator">
+<br>
+<br>
+<br><span style="font-weight: bold;">For the complete list see the reference section at the end.</span>
+<br>
+<br>
+<h2>Patterns</h2>
+The main menu supports overlays of tiled (repeated) textures that are blended with the main background. You can have up to 4 patterns.
+<br>
+<br>
+<big>
+<span style="font-weight: bold; font-family: monospace;">Pattern1=11 – the first pattern will use image resource 11</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Pattern2=15</span>
+</big>
+<br>
+<br>
+Just like regular bitmaps, patterns can have masks and tint colors
+<br>
+<br>
+<big>
+<span style="font-weight: bold; font-family: monospace;">Pattern1_mask=#303000 – mask that blends 20% of tint1 and 20% of tint2</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Pattern1_tint1=#000000 – black color</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Pattern1_tint2=#FFFF00 – yellow color</span></big>
+<br>
+<br>
+By default the patterns will cover the entire menu. You can use a mask image to control where the patterns will be visible. The Red channel controls the first pattern, Green controls the second pattern, Blue controls the third pattern and Alpha controls the fourth pattern.
+<br>
+<br>
+<img style="width: 200px; height: 200px;" alt="Color masks" title="Color masks" src="images/pattern_mask.png">
+<br>
+In this example the red areas of the mask are replaced by Pattern1 and the green areas are replaced by Pattern2.
+<br>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">
+Main_pattern_mask=19 – use image resource 19 for pattern mask
+<br>
+Main_pattern_search_mask=20 – mask for the search mode of the menu
+<br>
+Main_pattern_jump_mask=21 – mask for the jumplist mode
+<br>
+</span></big><big><span style="font-weight: bold; font-family: monospace;">Search_pattern_mask=22 – mask for the search portion of the main menu
+<br></span></big><big><span style="font-weight: bold; font-family: monospace;">Search_pattern_search_mask=23 – mask for the search portion of the main menu in search mode
+<br></span></big><big><span style="font-weight: bold; font-family: monospace;">Search_pattern_jump_mask=24 – mask for the search portion of the main menu in jumplist mode
+<br>
+</span></big>
+<br>
+The masks must have the same size as the images they correspond – <span style="font-weight: bold;">Main_bitmap</span>, <span style="font-weight: bold;">Main_bitmap_search</span>, <span style="font-weight: bold;">Main_bitmap_jump</span> and <span style="font-weight: bold;">Search_background</span>.<span style="font-weight: bold;">
+<br>
+<br>
+Note:
+</span>
+Having multiple patterns blended together can be slow. For fastest results, try to limit most areas to a single pattern with the mask at full intensity (100% Red or 100% Blue, etc). If you want to have a semi-transparent pattern, it is more efficient to have the transparency in the alpha channel of the pattern bitmap instead of using half-intensity mask.
+<br>
+<br>
+For an example on using patterns, take a look at the Metallic skin.
+<br>
+<br>
+<h2>Emblems</h2>
+The main menu background can have additional images drawn on it, called "emblems". They are drawn without any stretching. You can have up to 10 of them. The first 4 can use a mask bitmap to control where in the image the emblems will be visible and where they will be hidden.
+<br>
+<br>
+<big>
+<span style="font-weight: bold; font-family: monospace;">Main_emblem1=11 – use image resource 11 for the emblem</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Main_emblem1_padding=20,20,20,20 – keep 20 pixels padding on all sides of the emblem</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Main_emblem1_alignH=right – align to the right side of the menu</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Main_emblem1_alignV=bottom – align to the bottom side of the menu</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Main_emblem_mask=12 – use image resource 12 for the emblem mask</span><br style="font-weight: bold; font-family: monospace;">
+</big>
+<big>
+<span style="font-weight: bold; font-family: monospace;">Main_</span></big><big><span style="font-weight: bold; font-family: monospace;">emblem</span>
+</big>
+<big>
+<span style="font-weight: bold; font-family: monospace;">_search_mask=20 – emblem mask for the search mode of the menu
+<br>
+Main_</span></big><big><span style="font-weight: bold; font-family: monospace;">emblem</span></big><big><span style="font-weight: bold; font-family: monospace;">_jump_mask=21 – </span></big><big><span style="font-weight: bold; font-family: monospace;">emblem </span></big><big><span style="font-weight: bold; font-family: monospace;">mask for the jumplist mode
+<br>
+</span></big><big><span style="font-weight: bold; font-family: monospace;">Search_</span></big><big><span style="font-weight: bold; font-family: monospace;">emblem</span></big><big><span style="font-weight: bold; font-family: monospace;">_mask=22 – </span></big><big><span style="font-weight: bold; font-family: monospace;">emblem </span></big><big><span style="font-weight: bold; font-family: monospace;">mask for the search portion of the main menu
+<br></span></big><big><span style="font-weight: bold; font-family: monospace;">Search_</span></big><big><span style="font-weight: bold; font-family: monospace;">emblem</span></big><big><span style="font-weight: bold; font-family: monospace;">_search_mask=23 – </span></big><big><span style="font-weight: bold; font-family: monospace;">emblem </span></big><big><span style="font-weight: bold; font-family: monospace;"> mask for the search portion of the main menu in search mode
+<br></span></big><big><span style="font-weight: bold; font-family: monospace;">Search_</span></big><big><span style="font-weight: bold; font-family: monospace;">emblem</span></big><big><span style="font-weight: bold; font-family: monospace;">_jump_mask=24 – </span></big><big><span style="font-weight: bold; font-family: monospace;">emblem </span></big><big><span style="font-weight: bold; font-family: monospace;">mask for the search portion of the main menu in jumplist mode
+<br>
+</span></big>
+<br>
+The horizontal alignment can be <span style="font-weight: bold;">left</span>, <span style="font-weight: bold;">right</span> or <span style="font-weight: bold;">center</span> for the entire menu, <span style="font-weight: bold;">left1</span>, <span style="font-weight: bold;">right1,</span> <span style="font-weight: bold;">center1</span> for the first column, <span style="font-weight: bold;">left2</span>, <span style="font-weight: bold;">right2,</span> <span style="font-weight: bold;">center2</span> for the second column, or <span style="font-weight: bold;">corner</span>. The corner alignment will align the emblem to the same corner of the screen where the start menu is shown.
+<br>
+<br>
+The certical alignment can be <span style="font-weight: bold;">top</span>, <span style="font-weight: bold;">bottom</span>, <span style="font-weight: bold;">center</span> or <span style="font-weight: bold;">corner</span>.
+<br>
+<br>
+The emblem mask controls where the emblems will be visible. Red is for the first emble, Green for the second, and so on.
+<br>
+<br>
+<br>
+<h2>Other menu elements</h2>
+<br>
+You can provide a custom bitmap to be used for the arrows:
+<br>
+<br>
+<span style="font-weight: bold; font-family: monospace;">Main_arrow=3</span>&nbsp;<span style="font-style: italic;">– the resource ID of the sub-menu arrow bitmap</span>
+<br style="font-weight: bold; font-family: monospace;"><span style="font-weight: bold; font-family: monospace;"></span>
+<br>
+The arrows bitmap (<span style="font-weight: bold;">Main_arrow</span>) needs 2 have 2 arrow images like this:
+<br>
+<img src="images/menu_arrows.png" style="width: 24px; height: 78px;" alt="Sub-menu arrows" title="Sub-menu arrows">
+<br>
+The top half is used for the normal arrow and the bottom half is for the selected arrow.
+<br>
+<br>
+The pager is used to scroll items in the menus if they don't fit. The pager needs a background and a bitmap for the arrow:
+<br>
+<span style="font-family: monospace; font-weight: bold;">
+<br>
+Main_pager=2</span>&nbsp;<span style="font-style: italic;">– the resource ID of the pager bitmap</span>
+<br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;">Main_pager_slices_X=3,1,3</span><span style="font-style: italic;">&nbsp;– the horizontal slices of the pager bitmap</span
+<br>
+<br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;">Main_pager_slices_Y=4,66,4</span>&nbsp;<span style="font-style: italic;">– the vertical slices of the pager bitmap</span>
+<br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;">Main_pager_arrows=3</span>&nbsp;<span style="font-style: italic;">– the resource ID of the pager arrows bitmap</span>
+<br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;"></span>
+<br>
+<span style="font-weight: bold;">Main_pager</span> has the normal and selected backgrounds for the scroll buttons:
+<br>
+<img src="images/pager_buttons.png" style="width: 48px; height: 90px;" alt="Pager buttons" title="Pager buttons">
+<br>
+<br><span style="font-weight: bold;">Main_pager_arrows</span> must have 4 arrow images like this:
+<br>
+<img src="images/pager_arrows.png" style="width: 50px; height: 32px;" alt="Pager Arrows" title="Pager Arrows">
+<br>
+The top 2 point up, the bottom 2 point down, the left 2 are normal and the right 2 are selected.
+<br>
+<br>
+<br>
+<h2>More on padding</h2>
+The start menu uses multiple padding settings to correctly align all graphical elements. You can see from this image:
+<br>
+<img src="images/padding.png" style="width: 400px; height: 376px;" alt="Padding settings" title="Padding settings">
+<br>
+<br>
+Tweak the numbers to get the desired alignment of the caption, or the gap between the icon and the text, etc.
+<br>
+<br>
+<br>
+<h2>User Picture (Classic skins)</h2>
+<br>
+The start menu can also show the user picture. You enable it by setting the size of the user picture. All original skins use 48x48 pixels, but you can choose any size up to 128x128:
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">User_image_size=48</span>
+<br>
+<br>
+You must also set the position of the image inside the menu:
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">User_frame_position=-10,6</span>
+<br>
+<br>Positive position is measured from the left and top, and negative numbers are from the right and the bottom. So "-10,6" means 10 pixels from the right and 6 pixels from the top. The horizontal position can also be "center", "center1" or "center2". Then the image will be centered over the whole menu, or over the first column, or over the second column:
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">User_frame_position=center2,6</span><span style="font-weight: bold; font-family: monospace;"></span>&nbsp;
+<span style="font-style: italic;">– center on top of the second column</span>
+<br>
+<br>
+Optionally, you can specify a frame bitmap:
+<br>
+<br>
+<span style="font-weight: bold; font-family: monospace;">User_bitmap=12</span>&nbsp;
+<span style="font-style: italic;">– the resource ID of the frame bitmap</span>
+<br>
+<span style="font-weight: bold; font-family: monospace;">User_image_offset=8,8</span>&nbsp;
+<span style="font-style: italic;">– how many pixels between the top/left corner of the frame and the top/left corner of the user picture
+<br>
+<br>
+</span>The frame is drawn on top of the user picture, so it must have a hole where the picture is supposed to be. That means the frame bitmap must have alpha channel.
+<br>
+<br>
+By default the user picture is drawn opaque. You can control the transparency of the picture with this property:
+<br>
+<br>
+<span style="font-weight: bold; font-family: monospace;">User_image_alpha=200</span>&nbsp;
+<span style="font-style: italic;">– set the transparency to 200 (out of 255)</span>
+<br>
+<br>
+<br>
+<h2>User Picture (Windows 7 skins)</h2>
+<br>
+The Windows 7 style shows the user picture as a separate window that can extend beyond the size of the start menu. The user image is restricted to 48x48 pixels and the frame around it is always 64x64 pixels. This limitation is because the size must match the size of the extra-large icons used by the items in the second column of the menu.
+<br>
+<br>
+You can provide the following settings:
+<br>
+<span style="font-weight: bold; font-family: monospace;">User_bitmap=12</span>&nbsp;
+<span style="font-style: italic;">– the resource ID of the frame bitmap</span>
+<br>
+<code><span style="font-weight: bold; font-family: monospace;"></span><span style="font-weight: bold;">User_bitmap_outside=1</span></code> <span style="font-style: italic;"> – if the frame can go outside of the main menu (but only when the start menu is at the bottom of the screen)</span>
+<br>
+<code><span style="font-weight: bold;">User_image_padding= -4,8</span></code> <span style="font-style: italic;"> – top and bottom padding of the frame (used to fine-tune the vertical position of the frame. the horizontal position is always centered)</span>
+<br>
+<br>
+<br>
+<h2>User Name (Classic skins only)</h2>
+<br>
+The start menu can also show the user name. To enable that feature you have to provide the location of the name inside the menu, its font and alignment:
+<br>
+<br>
+<span style="font-family: monospace;"><span style="font-weight: bold;">User_name_position=10,15,-75,55
+<br>
+User_name_align=right
+<br>
+User_font="Segoe UI",bold,22
+<br>
+User_text_color=#FFFFFF
+<br>
+User_glow_color=#000000
+<br>
+User_glow_size=2
+<br>
+</span></span><span style="font-family: monospace; font-weight: bold;"></span>
+<br>
+<br>
+<span style="font-weight: bold;"></span><span style="font-family: monospace; font-weight: bold;"></span>The four number are the left, top, right and bottom offsets of the rectangle. Positive numbers mean offsets from the left and top. Negative numbers mean offsets from the right and bottom. In this example the rectangle will be 10 pixels from the left, 15 from the top, 75 from the right and the <span style="font-weight: bold;">bottom</span> will be 55 from the <span style="font-weight: bold;">top</span>. Since the top and bottom numbers (second and fourth) are both positive, the rectangle will be aligned to the top of the menu and will always be 40 pixels tall.
+<br>
+<br>
+Unlike other fonts in the skin, the font for the user name does not scale when the screen DPI changes. Read more about font scaling in the <span style="font-weight: bold;">Scaling</span> section below.
+<br>
+<br>
+The alignment can be <span style="font-weight: bold;">center, center1, center2, left, left1, left2, right, right1 </span>or<span style="font-weight: bold;"> right2</span>. If this setting is missing, the name is centered by default. <span style="font-weight: bold;">Center</span>, <span style="font-weight: bold;">left</span> and <span style="font-weight: bold;">right</span> align the name relative to the whole menu. <span style="font-weight: bold;">Center1, left1 </span>and<span style="font-weight: bold;"> right1</span> align inside the first column, and <span style="font-weight: bold;">center2, left2 </span>and<span style="font-weight: bold;"> right2</span> align inside the second column.
+<br>
+<br>
+The user name is usually taken from the system. For systems that provide full name it will be something like "Smith, John". Otherwise it will be the login name like "jsmith". You can override the text from the settings, using the<span style="font-weight: bold;"> User name text</span> setting in the <span style="font-weight: bold;">Menu Look</span> tab.
+<br>
+<br>
+<br>
+<h2>Search box</h2>
+The icon next to the search box can be skinned to match the menu background. You need to provide one bitmap that contains 8 images like this:
+<br>
+<img style="width: 80px; height: 36px;" alt="Search icons" title="Search icons" src="images/search_icons.png">
+<br>
+The top row has 16x16 images and the bottom row has 20x20. Then specify the bitmap ID:
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">Search_bitmap=11</span><br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;"></span>
+<br>
+<h1><a name="win7"></a>Windows 7 style
+<br>
+</h1>
+The Windows 7 style (the .skin7 skins) have some additional requirements for the main menu.
+<br>
+<br>
+First, it requires 3 separate backgrounds to be set, <span style="font-weight: bold;">Main_bitmap</span> (as shown above), <span style="font-weight: bold;">Main_bitmap_search</span> (used during search) and <span style="font-weight: bold;">Main_bitmap_jump</span> (used when a jumplist is opened). It is recommended that the top and bottom padding for all 3 backgrounds are the same, otherwise the menu items may move around as the menu transitions between different modes.
+<br>
+<br>
+Second, the skin needs some new skin items to be defined, like <span style="font-weight: bold;">Shutdown</span>, <span style="font-weight: bold;">List</span>, <span style="font-weight: bold;">Programs</span>, etc. For the complete list see the reference section at the end.
+<br>
+<br>
+There are some additional bitmap resources that need to be defined, also listed in the reference section. These include the background around the search box in various modes, custom pin icon, etc.
+<br>
+<br>
+<br>
+<h1><a name="submenu"></a>Sub-menus</h1>
+For sub-menus the parameters are similar to a simple main menu:
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;"></span><span style="font-family: monospace; font-weight: bold;"></span><span style="font-family: monospace; font-weight: bold;">Submenu_padding=2,2,2,2
+<br>
+Submenu_thin_frame=1</span>
+<br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;"></span><span style="font-family: monospace; font-weight: bold;"></span><span style="font-family: monospace; font-weight: bold;">Submenu_font="Segoe UI",normal,-9</span><br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;">Submenu_background=#FFFFFF</span><br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;">Submenu_text_color=#000000,#000000,#7F7F7F,#7F7F7F</span><br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;"></span><span style="font-family: monospace; font-weight: bold;">Submenu_selection=2</span><br style="font-family: monospace; font-weight: bold;"> <span style="font-family: monospace; font-weight: bold;">Submenu_selection_slices_X=3,1,3</span><br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;">Submenu_selection_slices_Y=4,66,4</span><br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;">Submenu_separator=3</span>
+<br style="font-family: monospace; font-weight: bold;"> <span style="font-family: monospace; font-weight: bold;">Submenu_separator_slices_X=3,34,3</span>
+<br>
+<span style="font-weight: bold; font-family: monospace;">.......</span>
+<br>
+<br>
+Sub-menus can also have a vertical separator. It is used when a menu has more than one column:
+<br>
+<span style="font-weight: bold; font-family: monospace;">Submenu_separatorV=12&nbsp;</span><span style="font-style: italic;">– bitmap to use as a vertical separator between multiple columns</span>
+<br>
+<span style="font-weight: bold; font-family: monospace;">Submenu_separator_slices_Y=2,16,2&nbsp;</span><span style="font-style: italic;">– vertical slices for Submenu_separatorV</span>
+<br>
+<br>
+<br>
+<h1><a name="about"></a>About box</h1>
+In the settings of the start menu there is a button <span style="font-weight: bold;">About This Skin</span> that opens a message box. Use it to provide information about the skin and about yourself. List any requirements of your skin – Does it require Aero? Is it intended for Vista only?
+<br>
+<br>
+The parameters are:
+<br>
+<span style="font-weight: bold; font-family: monospace;">About=Some text</span><span style="font-style: italic;">&nbsp;– the text you want displayed</span>
+<br>
+<span style="font-weight: bold; font-family: monospace;">AboutIcon=1</span><span style="font-style: italic;">&nbsp;– the icon resource to use in the About box</span>
+<br>
+<br>
+In the text you can use <span style="font-weight: bold;">\n</span> as a line break, like <span style="font-weight: bold;">"Line1\nLine2"</span>. The text also supports hyperlinks in the format <span style="font-weight: bold;">&lt;A HREF="www.mycoolsite.com"&gt;Visit my site&lt;/A&gt;</span>.
+<br>
+<br>
+The icon can be any icon resource you want displayed. If no icon is provided, the system "info" icon is used.
+<br>
+<br>
+<br>
+<h1><a name="variations"></a>Skin variations</h1>
+One skin file can contain multiple skins. The first one (defined in the SKIN resource with ID=1) is the main skin and the rest are variations. The variations are described in the main SKIN resource like this:
+<br>
+<span style="font-family: monospace; font-weight: bold;">Variation1=0, "Large Icons, With Caption"</span><br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;">Variation2=2, "Large Icons, No Caption"</span>
+<br>
+<br>
+Each variation has a resource ID and a text. The ID refers to a secondary SKIN resource, which contains overrides for some parameters (for example an alternative Main_bitmap, or Submenu_font). The text is the name of the skin variation that will be used in the Settings box.
+<br>
+<br>
+The skin variations make it possible to pack multiple skins into one file, which makes them easier to distribute together. Also all skins can share bitmap resources from the skin file, reducing the total size.
+<br>
+<br>
+<br>
+<h1><a name="options"></a>Skin options</h1>
+A skin can define a list of options for the user to pick. In the simple case an option is a checkbox that can be ON or OFF. The options are defined like this:
+<br>
+<big><span style="font-family: monospace; font-weight: bold;">OPTION CAPTION="Caption",1</span><br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;">OPTION SMALL_ICONS="Small Icons",0</span></big>
+<br style="font-family: monospace; font-weight: bold;">
+<br>
+First there is the word OPTION, then the name of the option (like CAPTION), then the label for the checkbox (like "Caption") and finally the default value (1 – ON, 0 – OFF).
+<br>
+<br>
+At the end of the skin file you can have one or more sections that provide overrides for some parameters. Each section has a condition, which is evaluated based on the options that the user has selected. The condition can be an expression that uses operations like <span style="font-weight: bold;">AND</span>, <span style="font-weight: bold;">OR</span> and <span style="font-weight: bold;">NOT</span> – like <span style="font-weight: bold;">OPTION1 AND (OPTION2 OR NOT OPTION3)</span>.
+<br>
+For example:
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">[NOT CAPTION]</span></big><span style="font-style: italic;">– this section will be used when CAPTION is OFF</span><br style="font-weight: bold; font-family: monospace;">
+<big><span style="font-weight: bold; font-family: monospace;">Main_bitmap_slices_X=0,0,0,15,1,13</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Main_padding=12,10,10,8</span></big>
+<br style="font-weight: bold; font-family: monospace;">
+<br style="font-weight: bold; font-family: monospace;">
+<big><span style="font-weight: bold; font-family: monospace;">[SMALL_ICONS]</span></big><span style="font-weight: bold; font-family: monospace;"></span><span style="font-style: italic;">– this section will be used when SMALL_ICONS is ON</span><br style="font-weight: bold; font-family: monospace;">
+<big><span style="font-weight: bold; font-family: monospace;">Main_large_icons=0</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Main_font="Segoe UI",normal,-9</span></big>
+<br style="font-weight: bold; font-family: monospace;">
+<br>
+Each section starts from its header and ends at the next section or the end of the file. So it is important to place the sections at the very end of the file.
+<br>
+<br>
+It is possible to disable an option depending on some other options. You do that by providing an expression for the option, as well as an alternate default value when the expression is false. For example:
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">OPTION USER_NAME="Show user name",0</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">OPTION CENTER_NAME="Center user name",1, <span style="color: rgb(204, 102, 0);">USER_NAME</span>, <span style="color: rgb(51, 204, 255);">0</span></span></big>
+<br style="font-weight: bold; font-family: monospace;">
+<br>
+The "Center user name" option will be disabled when <span style="color: rgb(204, 102, 0); font-weight: bold;">USER_NAME</span> is false (that is, when the "Show user name" option is unchecked). When the option is disabled, its value will be fixed to <span style="font-weight: bold; color: rgb(51, 204, 255);">0</span>. The idea is to make it clear for the user that if you don't show the user name then you can't center it.
+<br>
+<br>
+<span style="font-weight: bold;">Important Note:</span> An option can only depend on other options that are defined before it. So in this example <span style="font-weight: bold;">USER_NAME</span> must be defined after <span style="font-weight: bold;">CENTER_NAME</span>.
+<br>
+<br>
+<h2>Complex options</h2>
+More complex options can have an actual value in addition to being turned ON or OFF. The value can be a number, a text string, a color or an image.
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">
+<br>
+</span></big>This defines a color option named<span style="font-weight: bold;"> COLOR_CUSTOM</span>. The default value is <span style="font-weight: bold;">FFFFFF</span>. The condition for the option is <span style="font-weight: bold;">TRUE</span>, which makes it always enabled.
+<br>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">OPTION_COLOR COLOR_CUSTOM=Custom color,0,TRUE,FFFFFF</span></big>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">[COLOR_CUSTOM]</span>
+<br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Main_background=@COLOR_CUSTOM@</span><br style="font-weight: bold; font-family: monospace;">
+</big>
+<br>
+The option will be displayed as a checkbox and a color picker. When the checkbox is clicked, the value <span style="font-weight: bold;">COLOR_CUSTOM</span> will become true, which will enable the <span style="font-weight: bold;">[COLOR_CUSTOM]</span> section. The actual color value selected by the user will replace <span style="font-weight: bold;">@COLOR_CUSTOM@</span>.
+<br>
+<br>
+For number, text, or image options, use<span style="font-weight: bold;"> OPTION_NUMBER</span>, <span style="font-weight: bold;">OPTION_STRING</span> and <span style="font-weight: bold;">OPTION_IMAGE</span>.
+<br>
+<br>
+Check out the Metallic skin for many examples of complex options.
+<br>
+<br>
+<h2>Skin modes</h2>
+The classic skins (the ones stored in .skin files) can be used in 3 modes – "one column", "two columns" and "all programs". The first and the second are used depending on the current menu style. The last one is used on Windows 7 to show the All Programs sub-menu of the Windows start menu.
+<br>
+<br>
+The skin system defines 2 built-in options <span style="font-weight: bold;">TWO_COLUMNS</span> and <span style="font-weight: bold;">ALL_PROGRAMS</span>. The skin can use them to detect which of the modes is being requested. For example:
+<br>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">[ALL_PROGRAMS]</span></big> <span style="font-style: italic;">– this section will be used only for the All Programs menu</span>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">Submenu_text_color=#0000FF,#0000FF,#7F7F7F,#7F7F7F</span></big> <span style="font-style: italic;">– override the text color</span>
+<br>
+<br>
+Not all options make sense in all modes, so it is nice to hide them from the user. For example the caption settings can't be used in "two columns" mode, and any main menu settings are ignored in "all programs" mode.
+<br>
+You can define the following settings to restrict what options to show:
+<br>
+Classic1_options – a list of options to show in "one column" mode
+<br>
+Classic2_options – a list of options to show in "two columns" mode
+<br>
+AllPrograms_options– a list of options to show in "all programs" mode
+<br>
+<br>
+For example:
+<br>
+<code><big><span style="font-weight: bold;">Classic1_options=CAPTION, USER_IMAGE, USER_NAME, CENTER_NAME, SMALL_ICONS</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Classic2_options=NO_ICONS, SMALL_ICONS</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">AllPrograms_options=THICK_BORDER, SOLID_SELECTION</span></big>
+<br style="font-weight: bold;">
+</code>
+<br>
+<h2>Radio groups</h2>
+Sometimes you may want to present a set of options, such as only one option is active at a time. This is called a radio group. You define it like that:
+<br>
+<br>
+<code><big><span style="font-weight: bold;">OPTION RADIOGROUP=&lt;name of the group&gt;,0,&lt;option1&gt;|&lt;option2&gt;</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">OPTION &lt;option1&gt;=&lt;name1&gt;,1</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">OPTION &lt;option2&gt;=&lt;name2&gt;,0</span></big><br style="font-weight: bold;">
+</code>
+<br>
+The first option in the list defines the group. It has a name, then the value (which is ignored), then the list of the possible options.
+<br>
+The next few options define the possible selections. Exactly one of them must be set to 1 and that will be the default selection. When the user clicks on one of the options the rest will be set to 0 automatically.
+<br>
+<br>
+For example:
+<br>
+<br>
+<code><big><span style="font-weight: bold;">OPTION RADIOGROUP=Transparency,0,TRANSPARENT_LESS|TRANSPARENT_DEF|TRANSPARENT_MORE</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">OPTION TRANSPARENT_LESS=Less,0</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">OPTION TRANSPARENT_DEF=Default,1</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">OPTION TRANSPARENT_MORE=More,0</span></big>
+<br style="font-weight: bold;">
+</code>
+<br>
+<br>
+<h1><a name="scaling"></a>Scaling</h1>
+<h2>DPI scaling</h2>
+The skin parameters are authored for the default resolution of 96 DPI. When the skin is used at higher DPI setting you have the option to scale up some of the parameters. For example:
+<br>
+<br>
+<big><span style="font-family: monospace; font-weight: bold;">Main_arrow_padding=8,10,50%</span>
+<br>
+</big>
+<br>
+This means that the arrow padding will be scaled by 50% of the increase in DPI. If the current DPI is 120 (25% increase over 96 DPI), then the numbers will be scaled up by 50% of 25%, which is 12.5%. 8 will become 9 and 10 will become 11.25 (rounded to 11). If instead the skin was:
+<br>
+<br>
+<big><span style="font-family: monospace; font-weight: bold;">Main_arrow_padding=8,10,100%</span></big>
+<br>
+<br>
+Then the full 25% increase will be applied, so 8 will become 10 and 10 will become 12.5 (rounded to 13).
+<br>
+<br>
+It is also possible to use different scaling values for each number:
+<br>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">Main_icon_padding=4,4,3,4,100%,0%,100%,0%</span><br style="font-weight: bold; font-family: monospace;">
+</big>
+<br>
+In this case the first and third number will be scaled by 100% and the rest will not be scaled.
+<br>
+<br>
+Not all skin parameters support scaling. For example bitmap slices cannot be scaled because they represent portions of some bitmap resource. The parameters that can be scaled are marked as such in the reference section.
+<br>
+<br>
+<h2>Fonts</h2>
+By default the fonts are scaled with the DPI at 100%. You can overwrite that:
+<br>
+<br>
+<big style="font-family: monospace;"><span style="font-weight: bold;">Main_font="Segoe UI",normal,-9,50%</span><br style="font-weight: bold;">
+</big>
+<br>
+This will make the <span style="font-weight: bold;">Main_font</span> scale with half of the rate of the DPI increase.
+<br>
+<br>
+<span style="font-weight: bold;">Note: </span>One exception is the <span style="font-weight: bold;">User_font</span>. It is not scaled by default because it is intended to fit in the <span style="font-weight: bold;">User_name_position</span> box. If you want the font to scale, you should use the same scale for the user name position.
+<br>
+<br>
+<h2>High DPI parameters</h2>
+When the DPI is 144 or higher (text size 150% and up), the skin defines a setting HIGH_DPI, which allows you to provide alternative bitmap resources and other parameters that are intended to be used with higher resolutions. Use it for example to define larger graphical elements like arrows and icons.
+<br>
+<br>
+<h1><a name="localization"></a>Localization</h1>
+The built-in skins contain localizations for all their options and variations. Instead of providing the text directly in the skin file, the setting refers to a string in the localization DLL. For example:
+<br>
+<span style="font-family: monospace; font-weight: bold;">OPTION USER_IMAGE=#7014,1
+<br>
+OPTION SMALL_ICONS=#7011,0
+<br>
+<br>
+</span>#7014 means to look up string number #7014 in the DLL. Custom skins can use the strings that already exist in the DLL, but unfortunately new strings cannot be added by the skin itself.
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">
+<br>
+</span><h1><a name="custom"></a>Custom skin</h1>
+During development it can be a bother to have to Resource-Hack the skin file for every little change. That's why the start menu supports a special "custom" skin. Instead of packing all resources in a DLL, you can leave them as loose files in the Skins directory:
+<br>
+<br>
+<span style="font-weight: bold; font-family: monospace;">1.txt</span> <span style="font-style: italic;">– the main skin description</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">12.bmp</span> <span style="font-style: italic;">– bitmap used by 1.txt</span>
+<br>
+2.txt <span style="font-style: italic;">– a skin variation</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">7.ico</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">...</span><br style="font-weight: bold; font-family: monospace;">
+<br>
+The file name must be the resource ID of that asset in the skin file. For example <span style="font-weight: bold;">12.bmp</span> will go into a bitmap resource with ID 12. Edit them until you are ready to package them into a skin file.
+<br>
+<br>
+The "Custom" skin option is available in the settings only if the start menu can find the<span style="font-weight: bold;"> 1.txt</span> file.
+<br>
+<br>
+The custom skin has an additional parameter that is not available for other skins:
+<br>
+<span style="font-weight: bold; font-family: monospace;">ForceRTL=1</span><br style="font-weight: bold; font-family: monospace;">
+<br>
+This makes the start menu run in right-to-left mode. Use it to see how your background image will look on an Arabic OS. <span style="font-weight: bold;">Note:</span> The RTL emulation is not perfect. One notable difference is that all menu icons are mirrored. On a real RTL Windows they will not be.
+<br>
+<br>
+<br>
+<h1><a name="errors"></a>Troubleshooting</h1>
+If your skin is causing an error, the start menu will drop it and use the Default skin instead. The reason can range from a missing resource to an incompatible version to a bitmap with wrong size, and so on.
+<br>
+<br>
+To figure out the cause of the problem turn on "Report Skin Errors" in the start menu settings. Then you'll see a popup like this:
+<br>
+<img style="width: 400px; height: 260px;" alt="Skin error" title="Skin error" src="images/error_balloon.png">
+<br>
+<br>
+Note that only errors related to the current skin variation and the current skin options will be reported. So test your skin with every combination to ensure it works in all conditions.
+<br>
+<br>
+<br>
+<h1><a name="reference"></a>Skin reference</h1>
+This section describes all possible settings that can be used in a skin file. Before we can define the individual settings we need to define the types that a setting can have. A setting can be one of the following types: text, number (or multiple numbers), color (or multiple colors), font, icon, bitmap, background or skin item. Some settings like background or skin item have multiple sub-settings described below. The names of the sub-settings begin with the name of the parent setting.
+<br>
+<br>
+Here are the types in more detail:
+<br>
+<br>
+<span style="font-weight: bold;">A color</span> is represented in the hexadecimal format #RRGGBB, where each color component takes 2 hex digits. For example:
+<br>
+<code><span style="font-weight: bold;">Caption_text_color=#00FF00</span><br style="font-weight: bold;">
+</code>
+<br>
+It can also be a named color. The actual value will depend on the currnt system settings:
+<br>
+<code><span style="font-weight: bold;">Caption_text_color=$StartHighlight
+<br>
+<br>
+</span></code>These are the main system colors that are available on all versions of Windows:
+<br><span style="font-weight: bold;">$SystemScrollbar</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemBackground</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemActiveCaption</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemInactiveCaption</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemMenu</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemWindow</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemWindowFrame</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemMenuText</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemWindowText</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemCaptionText</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemActiveBorder</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemInactiveBorder</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemAppWorkspace</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemHighlight</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemHighlightText</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemBtnFace</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemBtnShadow</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemGrayText</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemBtnText</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemInactiveCaptionText</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemBtnHighlight</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$System3DDKShadow</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$System3DLight</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemInfoText</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemInfoBK</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemHotLight</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemGradientActiveCaption</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemGradientInactiveCaption</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemMenuHilight</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemMenuBar</span><br style="font-weight: bold;">
+For Windows 8 and later you can use many more named colors from the Metro palette. Use the<span style="font-weight: bold;"> Classic Shell Utility</span> to view the full list.
+<br>
+<br>
+<br>
+<span style="font-weight: bold;">A font</span> selects the font's name, size, and weight (normal or bold). For example:
+<br>
+<code><span style="font-weight: bold;">Main_font="Segoe UI",normal,-10
+<br>
+<br>
+<br>
+</span></code><span style="font-weight: bold;">An icon</span> is a reference to an icon resource number in the skin file:
+<br>
+About=1
+<br>
+<br>
+<br>
+<span style="font-weight: bold;">A bitmap</span> is a reference to a bitmap resource number in the skin file. It can have an optional mask that determines how to mix the bitmap resource with the tint colors. The mask can be another bitmap or it can be a solid color:
+<br>
+<code><span style="font-weight: bold;">Main_bitmap=2</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_bitmap_mask=#FF0000
+<br>
+Main_bitmap_tint1=#E0E000
+<br>
+</span></code>
+<br>
+<br>
+<span style="font-weight: bold;">A background</span> is a bitmap that can be resized to the necessary size. It consists of a bitmap resource and slice numbers. The number of slices depends on the actual background. Some are 3x3, some are 3x1, some 6x3.
+<br>
+<br>
+Possible settings for a background with a given &lt;name&gt;:
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+<tbody><tr><td style="vertical-align: top; font-weight: bold;">Name</td>
+      <td style="vertical-align: top; font-weight: bold;">Type
+<br>
+      </td>
+      <td style="vertical-align: top; font-weight: bold;">Notes
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">&lt;name&gt;
+<br>
+</span></td>
+      <td style="vertical-align: top;">number or color
+<br>
+      </td>
+      <td style="vertical-align: top;">The main image. It can be a BITMAP or IMAGE resource identifier, or a #RRGGBB color
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">&lt;name&gt;_mask</span></td>
+      <td style="vertical-align: top;">number or color
+<br>
+      </td>
+      <td style="vertical-align: top;">The color mask. It can be a bitmap resource identifier or a #RRGGBB color. If it is a bitmap then it must have the same size as the original bitmap
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">&lt;name&gt;_slices_X</span></td>
+      <td style="vertical-align: top;">numbers
+<br>
+      </td>
+      <td style="vertical-align: top;">The sizes for the horizontal slices. The sum of the numbers must not exceed the width of the bitmap
+<br>
+      </td>
+    </tr><tr>
+      <td style="vertical-align: top;"><span style="color: black;">&lt;name&gt;_slices_Y</span></td>
+      <td style="vertical-align: top;">numbers</td>
+      <td style="vertical-align: top;">The sizes for the vertical slices. The sum of the numbers must not exceed the height of the bitmap</td>
+    </tr><tr>
+      <td style="vertical-align: top;">&lt;name&gt;_tint1
+<br>
+      </td>
+      <td style="vertical-align: top;">color
+<br>
+      </td>
+      <td style="vertical-align: top;">The first tint color. It will be blended with the main image according to the Red channel of the mask. By default it is the glass color
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_tint2</td>
+      <td style="vertical-align: top;">color</td>
+      <td style="vertical-align: top;">The second tint color. It will be blended with the main image according to the Green channel of the mask. By default it is the menu background color
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_tint3</td>
+      <td style="vertical-align: top;">color</td>
+      <td style="vertical-align: top;">The third tint color. It will be blended with the main image according to the Blue channel of the mask. By default it is black</td>
+    </tr>
+    </tbody>
+</table>
+<br>
+<br>
+<span style="font-weight: bold;">A skin item</span> controls the complete look for individual menu elements. It sets the font, colors, and other settings.
+<br>
+<br>
+Possible settings for skin item with a given &lt;name&gt;:
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+<tbody><tr><td style="vertical-align: top; font-weight: bold;">Name</td><td style="vertical-align: top; font-weight: bold;">Type
+<br>
+      </td><td style="vertical-align: top; font-weight: bold;">Notes
+<br>
+      </td></tr><tr>
+      <td style="vertical-align: top;">&lt;name&gt;_font
+<br>
+      </td>
+      <td style="vertical-align: top;">font
+<br>
+      </td>
+      <td style="vertical-align: top;">The font for the item's text
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_text_color
+<br>
+      </td>
+      <td style="vertical-align: top;">4 colors
+<br>
+      </td>
+      <td style="vertical-align: top;">Colors for the text – normal, selected, disabled, disabled+selected
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_glow_size
+<br>
+      </td>
+      <td style="vertical-align: top;">number
+<br>
+      </td>
+      <td style="vertical-align: top;">Size of the glow in pixels (only supported on Windows 7)
+     </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_text_padding
+<br>
+      </td>
+      <td style="vertical-align: top;">4 numbers (with scale)
+      </td>
+      <td style="vertical-align: top;">Padding on the left, top, right, bottom around the item's text
+<br>
+</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_icon_padding
+<br>
+      </td>
+      <td style="vertical-align: top;">4 numbers (with scale)
+      </td>
+      <td style="vertical-align: top;">Padding on the left, top, right, bottom around the icon
+   </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_selection
+<br>
+      </td>
+      <td style="vertical-align: top;">background or color
+<br>
+      </td>
+      <td style="vertical-align: top;">Background for the item when it is selected (can also be a solid color)
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_arrow_color
+<br>
+      </td>
+      <td style="vertical-align: top;">2 colors
+<br>
+      </td>
+      <td style="vertical-align: top;">The arrow colors – normal and selected (when the arrow is solid color)
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_arrow
+<br>
+      </td>
+      <td style="vertical-align: top;">bitmap
+<br>
+      </td>
+      <td style="vertical-align: top;">The arrow bitmap (when the arrow is a bitmap). The bitmap must contain 2 images, the top one is normal and the bottom is selected
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_arrow_padding
+<br>
+      </td>
+      <td style="vertical-align: top;">2 numbers (with scale)
+      </td>
+      <td style="vertical-align: top;">Padding on the left and right side of the arrow
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_icon_frame
+<br>
+      </td>
+      <td style="vertical-align: top;">background
+<br>
+      </td>
+      <td style="vertical-align: top;">Background for the icon frame
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_icon_frame_offset
+<br>
+      </td>
+      <td style="vertical-align: top;">2 numbers (with scale)
+      </td>
+      <td style="vertical-align: top;">Horizontal and vertical padding between the icon and the frame
+      </td>
+    </tr>
+</tbody>
+</table>
+<br>
+<br>
+Now that we know how to define settings of different types, here is a list of all settings used by the menu skins:
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; font-weight: bold;">Name
+     </td>
+      <td style="vertical-align: top; font-weight: bold;">Type
+<br>
+      </td>
+      <td style="vertical-align: top; font-weight: bold;">Notes
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">About
+<br>
+</span></td>
+      <td style="vertical-align: top;">text
+<br>
+      </td>
+      <td style="vertical-align: top;">The text to display in the About box
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">AboutIcon</span>
+     </td>
+      <td style="vertical-align: top;">icon
+<br>
+      </td>
+      <td style="vertical-align: top;">The icon to display in the About box
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Version</span>
+     </td>
+      <td style="vertical-align: top;">number
+<br>
+      </td>
+      <td style="vertical-align: top;">Use version 2
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;" colspan="3" align="center"><span style="font-weight: bold;">Caption</span>
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Caption_font</span>
+     </td>
+      <td style="vertical-align: top;">font
+<br>
+      </td>
+      <td style="vertical-align: top;">The font to use in the caption on the side of the main menu
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Caption_text_color</span></td>
+      <td style="vertical-align: top;">color
+<br>
+      </td>
+      <td style="vertical-align: top;">Color for the caption text
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Caption_glow_color</span></td>
+      <td style="vertical-align: top;">color
+<br>
+      </td>
+      <td style="vertical-align: top;">Color for the caption text glow
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Caption_glow_size</span></td>
+      <td style="vertical-align: top;">number
+<br>
+      </td>
+      <td style="vertical-align: top;">Size of the glow in pixels (only supported on Windows 7)
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Caption_padding</span></td>
+      <td style="vertical-align: top;">4 numbers (with scale)
+      </td>
+      <td style="vertical-align: top;">Padding on the left, top, right, bottom around the caption text
+<br>
+      </td>
+    </tr>
+    <tr align="center">
+      <td colspan="3" style="vertical-align: top;"><span style="font-weight: bold;">Patterns</span>
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Pattern1 through Pattern4
+<br>
+      </td>
+      <td style="vertical-align: top;">background
+<br>
+      </td>
+      <td style="vertical-align: top;">Tileable image for the main menu
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_emblem1 through Main_emblem10
+<br>
+      </td>
+      <td style="vertical-align: top;">background
+<br>
+      </td>
+      <td style="vertical-align: top;">Emblem images for the main menu
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_emblem1_padding
+<br>
+      </td>
+      <td style="vertical-align: top;">4 numbers (with scale)
+<br>
+      </td>
+      <td style="vertical-align: top;">Padding on the left, top, right, bottom around the emblem image
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_emblem1_alignH
+<br>
+      </td>
+      <td style="vertical-align: top;">string</td>
+      <td style="vertical-align: top;">Horizontal padding for the emblem – center, center1, center2, left, left1, left2, right, right1, right2, corner
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_emblem1_alignV
+<br>
+      </td>
+      <td style="vertical-align: top;">string
+<br>
+      </td>
+      <td style="vertical-align: top;">Vertical padding for the emblem – center, top, bottom, corner
+<br>
+      </td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;" colspan="3" align="center"><span style="font-weight: bold;">Main menu</span>
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_background</span></td>
+      <td style="vertical-align: top;">color
+<br>
+      </td>
+      <td style="vertical-align: top;">Background color for the main menu
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_bitmap</span></td>
+      <td style="vertical-align: top;">background
+<br>
+      </td>
+      <td style="vertical-align: top;">Background for the main menu. Needs 6 vertical and 3 horizontal slices
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_opacity</span></td>
+      <td style="vertical-align: top;">text</td>
+      <td style="vertical-align: top;">Opacity of the main menu – solid, region, alpha, glass, fullalpha, fullglass
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_large_icons</span></td>
+      <td style="vertical-align: top;">number
+<br>
+      </td>
+      <td style="vertical-align: top;">Set to 1 to use large icons in the main menu
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_thin_frame</span></td>
+      <td style="vertical-align: top;">number
+<br>
+      </td>
+      <td style="vertical-align: top;">Set to 1 to use a thin border (as opposed to thick 3D border). Only applies to Classic theme in Windows 7
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_padding</span></td>
+      <td style="vertical-align: top;">4 numbers (with scale)
+      </td>
+      <td style="vertical-align: top;">Padding on the left, top, right, bottom around the items in the main menu
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the normal items in the main menu
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_split</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the split items in the main menu. Inherits from Main</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_new</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the highlighted items (like new programs) in the main menu. Inherits from Main</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_separator</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the text in the separators in the main menu. Inherits from Main
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_separator</span></td>
+      <td style="vertical-align: top;">background</td>
+      <td style="vertical-align: top;">The bitmap for the horizontal separators in the main menu
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_separatorV</span></td>
+      <td style="vertical-align: top;">background
+<br>
+      </td>
+      <td style="vertical-align: top;">The vertical separator between the two columns of the main menu
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_pager</span></td>
+      <td style="vertical-align: top;">background
+<br>
+      </td>
+      <td style="vertical-align: top;">The background for the main menu pager. Requires 2 pictures, the top one is normal state, the bottom is highlighted state
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_pager_arrows</span></td>
+      <td style="vertical-align: top;">bitmap
+<br>
+      </td>
+      <td style="vertical-align: top;">The arrow for the pager. Requires 2x2 grid with up, down, normal and hot states
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_hint_font</span></td>
+      <td style="vertical-align: top;">font
+<br>
+      </td>
+      <td style="vertical-align: top;">The font for the hint text in the search box
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_pattern_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">bitmap
+<br>
+      </td>
+      <td style="vertical-align: top;">A bitmap mask that controls the placement of the patterns in the main menu (must match the size of the Main_bitmap)
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_emblem_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">bitmap
+<br>
+      </td>
+      <td style="vertical-align: top;">A bitmap mask that controls the placement of the emblems in the main menu (must match the size of the Main_bitmap)</td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;" colspan="3" align="center"><span style="font-weight: bold;">Two-column main menu</span>
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main2_opacity</span></td>
+      <td style="vertical-align: top;">text</td>
+      <td style="vertical-align: top;">Opacity for the second column of the main menu
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_no_icons2</span></td>
+      <td style="vertical-align: top;">number
+<br>
+      </td>
+      <td style="vertical-align: top;">Set to 1 to hide the icons in the second column
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main2_padding</span></td>
+      <td style="vertical-align: top;">4 numbers (with scale)
+      </td>
+      <td style="vertical-align: top;">Padding on the left, top, right, bottom around the items in the second column
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main2</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the normal items in the second column. Inherits from Main
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main2_split</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the split items in the second column. Inherits from Main2
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main2_new</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the highlighted items in the second column. Inherits from Main2
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main2_separator</span></td>
+      <td style="vertical-align: top;">background
+<br>
+      </td>
+      <td style="vertical-align: top;">Horizontal separator for the second column. Inherits from <span style="color: black;">Main_separator</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;" colspan="3" align="center"><span style="font-weight: bold;">Windows 7-style main menu</span>
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_bitmap_search</span></td>
+      <td style="vertical-align: top;">background</td>
+      <td style="vertical-align: top;">Background for the main menu in search mode
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_search_padding</span></td>
+      <td style="vertical-align: top;">4 numbers (with scale)
+      </td>
+      <td style="vertical-align: top;">Padding for the menu items in search mode
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_bitmap_jump</span></td>
+      <td style="vertical-align: top;">background</td>
+      <td style="vertical-align: top;">Background for the main menu in jumplist mode
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_jump_padding</span></td>
+      <td style="vertical-align: top;">4 numbers (with scale)
+      </td>
+      <td style="vertical-align: top;">Padding for the jumplist items
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_search_indent</span></td>
+      <td style="vertical-align: top;">number (with scale)
+      </td>
+      <td style="vertical-align: top;">The indent in pixels of the search results relative to the search headers
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_pattern_search_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">bitmap</td>
+      <td style="vertical-align: top;">Pattern mask for the main menu in search mode (must match the size of Main_bitmap_search)
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_pattern_jump_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">bitmap</td>
+      <td style="vertical-align: top;">Pattern mask for the main menu in jumplist mode (must match the size of Main_bitmap_jump)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_emblem_search_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">bitmap</td>
+      <td style="vertical-align: top;">Emblem mask for the main menu in search mode (must match the size of Main_bitmap_search)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_emblem_jump_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">bitmap</td>
+      <td style="vertical-align: top;">Emblem mask for the main menu in jumplist mode (must match the size of Main_bitmap_jump)</td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;"><span style="color: black;">Shutdown</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the shutdown button. Inherits from Main
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Shutdown_search</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the shutdown button in search mode. Inherits from Shutdown
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Shutdown_jump</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the shutdown button in jumplist mode. Inherits from Shutdown
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Shutdown_padding</span></td>
+      <td style="vertical-align: top;">4 numbers (with scale)
+      </td>
+      <td style="vertical-align: top;">Padding around the shutdown button
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">List</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the search results and jumplist items. Inherits from Main
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">List_split</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the search results and jumplist items that are split in two parts. Inherits from List
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">List_separator</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the text in the separators in the search results and jumplists. Inherits from List
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">List_separator</span></td>
+      <td style="vertical-align: top;">background</td>
+      <td style="vertical-align: top;">Horizontal separator for the search results and jumplists Inherits from <span style="color: black;">Main_separator</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">List_separator_split</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the split separators in the search results. Inherits from List_split
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">List_separator_split</span></td>
+      <td style="vertical-align: top;">background</td>
+      <td style="vertical-align: top;">Horizontal split separator for the search results and jumplists Inherits from <span style="color: black;">Main_separator</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Programs_icon</span></td>
+      <td style="vertical-align: top;">bitmap
+<br>
+      </td>
+      <td style="vertical-align: top;">The icon for the All Programs button. Requires 2 pictures, one for the normal state and one for the selected state
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Programs_button</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the All Programs button. Inherits from Main
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Programs_button_new</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the highlighted All Programs button. Inherits from Main
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_bitmap</span></td>
+      <td style="vertical-align: top;">bitmap
+<br>
+      </td>
+      <td style="vertical-align: top;">A bitmap with various icons used by the search box
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_arrow</span></td>
+      <td style="vertical-align: top;">bitmap
+<br>
+      </td>
+      <td style="vertical-align: top;">A bitmap for the arrow in the search separators. Requires 2 pictures, one for the minimized and one for the maximized state
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_padding</span></td>
+      <td style="vertical-align: top;">4 numbers (with scale)
+      </td>
+      <td style="vertical-align: top;">Padding around the search box
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_frame</span></td>
+      <td style="vertical-align: top;">number
+<br>
+      </td>
+      <td style="vertical-align: top;">Set to 0 to disable the black frame of the search box, for example if Search_background has a built-in border
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_background</span></td>
+      <td style="vertical-align: top;">background
+<br>
+      </td>
+      <td style="vertical-align: top;">Background around the search box
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_background_padding</span></td>
+      <td style="vertical-align: top;">4 numbers (with scale)
+      </td>
+      <td style="vertical-align: top;">Padding around the search background
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_background_search</span></td>
+      <td style="vertical-align: top;">background
+<br>
+      </td>
+      <td style="vertical-align: top;">Background around the search box in search mode
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_background_search_padding</span></td>
+      <td style="vertical-align: top;">4 numbers (with scale)</td>
+      <td style="vertical-align: top;">Padding around the search background in search mode
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_background_jump</span></td>
+      <td style="vertical-align: top;">background</td>
+      <td style="vertical-align: top;">Background around the search box in jumplist mode</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_background_jump_padding</span></td>
+      <td style="vertical-align: top;">4 numbers (with scale)</td>
+      <td style="vertical-align: top;">Padding around the search background in jumplist mode</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Search_pattern_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">bitmap
+<br>
+      </td>
+      <td style="vertical-align: top;">Pattern mask around the search box (must match the size of Search_background)
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Search_pattern_search_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">bitmap</td>
+      <td style="vertical-align: top;">Pattern mask around the search box in search mode (must match the size of Search_background_search)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Search_pattern_jump_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">bitmap</td>
+      <td style="vertical-align: top;">Pattern mask around the search box in jumplist mode (must match the size of Search_background_jump)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Search_emblem_mask</td>
+      <td style="vertical-align: top;">bitmap</td>
+      <td style="vertical-align: top;">Emblem mask around the search box (must match the size of Search_background)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Search_emblem_search_mask</td>
+      <td style="vertical-align: top;">bitmap</td>
+      <td style="vertical-align: top;">Emblem mask around the search box in search mode (must match the size of Search_background_search)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Search_emblem_jump_mask</td>
+      <td style="vertical-align: top;">bitmap</td>
+      <td style="vertical-align: top;">Emblem mask around the search box in jumplist mode (must match the size of Search_background_jump)</td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;"><span style="color: black;">Pin_bitmap</span></td>
+      <td style="vertical-align: top;">bitmap
+<br>
+      </td>
+      <td style="vertical-align: top;">Icon for pinned and unpinned items. Requires 2x2 grid with pinned, unpinned, normal and selected states
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">More_bitmap</span></td>
+      <td style="vertical-align: top;">bitmap
+<br>
+      </td>
+      <td style="vertical-align: top;">Icon for the "More results" item. Requires 2 pictures, one for normal and one for selected state
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Shutdown_bitmap</span></td>
+      <td style="vertical-align: top;">bitmap
+<br>
+      </td>
+      <td style="vertical-align: top;">Icon that is added to the shutdown button when there are updates to be installed
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Programs_background</span></td>
+      <td style="vertical-align: top;">color
+<br>
+      </td>
+      <td style="vertical-align: top;">Background color for the programs tree
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Programs</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the items in the programs tree. Inherits from Main
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Programs_new</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the highlighted items in the programs tree. Inherits from Programs
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Programs_indent</span></td>
+      <td style="vertical-align: top;">number (with scale)
+      </td>
+      <td style="vertical-align: top;">Additional indentation (positive or negative) for the nested items in the programs tree
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;" colspan="3" align="center"><span style="font-weight: bold;">User Picture (Classic style)</span>
+</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_bitmap</span></td>
+      <td style="vertical-align: top;">bitmap
+<br>
+      </td>
+      <td style="vertical-align: top;">The frame for the user bitmap
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_image_offset</span></td>
+      <td style="vertical-align: top;">2 numbers</td>
+      <td style="vertical-align: top;">The offset of the user picture inside the frame</td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_image_size
+<br>
+      </span></td>
+      <td style="vertical-align: top;">number (with scale)
+      </td>
+      <td style="vertical-align: top;">The size of the user image
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_image_alpha</span><span style="color: black;"></span></td>
+      <td style="vertical-align: top;">number</td>
+      <td style="vertical-align: top;">Opacity between 0 and 255 for the user picture inside the frame
+<br>
+      </td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_frame_position</span><span style="color: black;"></span></td>
+      <td style="vertical-align: top;">2 values (with scale)
+      </td>
+      <td style="vertical-align: top;">The horizontal and vertical position of the frame. The horizontal can be also "center", "center1", or "center2"</td>
+    </tr>
+    <tr align="center">
+      <td colspan="3" rowspan="1" style="vertical-align: top;"><span style="font-weight: bold;">User Picture (Windows 7 style)</span>
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_bitmap</span></td>
+      <td style="vertical-align: top;">bitmap</td>
+      <td style="vertical-align: top;">The frame for the user bitmap. Must be 64x64 or larger</td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_image_offset</span></td>
+      <td style="vertical-align: top;">2 numbers
+<br>
+      </td>
+      <td style="vertical-align: top;">The offset of the user picture inside the frame
+<br>
+</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_image_size</span></td>
+      <td style="vertical-align: top;">number</td>
+      <td style="vertical-align: top;">The size of the user image (should be no less than the size of User_bitmap). The default is 48</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_image_padding</span></td>
+      <td style="vertical-align: top;">2 numbers (with scale)</td>
+      <td style="vertical-align: top;">Top and bottom padding around the user frame</td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_bitmap_outside</span><span style="color: black;"></span></td>
+      <td style="vertical-align: top;">number</td>
+      <td style="vertical-align: top;">Set to 1 for the user bitmap to appear partially outside of the main menu (only when the menu is at the bottom)</td>    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_frame_position</span><span style="color: black;"></span></td>
+      <td style="vertical-align: top;">number (with scale)</td>
+      <td style="vertical-align: top;">The amount by which the user frame is partially inside the main menu. The default is 36
+<br>
+      </td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;" colspan="3" align="center"><span style="font-weight: bold;">User Name (only for Classic style)
+<br>
+</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_name_position</span></td>
+      <td style="vertical-align: top;">4 numbers
+<br>
+      </td>
+      <td style="vertical-align: top;">Position of the user name
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_name_align</span></td>
+      <td style="vertical-align: top;">string
+<br>
+      </td>
+      <td style="vertical-align: top;">Alignment of the user name – center, center1, center2, left, left1, left2, right, right1, right2
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_font</span></td>
+      <td style="vertical-align: top;">font
+<br>
+      </td>
+      <td style="vertical-align: top;">The font for the user name. By default this font is not scaled with the DPI
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_text_color</span></td>
+      <td style="vertical-align: top;">color
+<br>
+      </td>
+      <td style="vertical-align: top;">The color for the user name
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_glow_color</span></td>
+      <td style="vertical-align: top;">color
+<br>
+      </td>
+      <td style="vertical-align: top;">The glow color for the user name
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_glow_size</span></td>
+      <td style="vertical-align: top;">number
+<br>
+      </td>
+      <td style="vertical-align: top;">The glow size in pixels (only supported on Windows 7)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;" colspan="3" align="center"><span style="font-weight: bold;">Sub-Menu</span>
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_background</span></td>
+      <td style="vertical-align: top;">color
+<br>
+      </td>
+      <td style="vertical-align: top;">Background color for the sub-menus
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_bitmap</span></td>
+      <td style="vertical-align: top;">background
+<br>
+      </td>
+      <td style="vertical-align: top;">Background image for the sub-menus
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_opacity</span></td>
+      <td style="vertical-align: top;">text</td>
+      <td style="vertical-align: top;">Opacity for the sub-menus
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the items in the sub-menus
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_split</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the split items in the sub-menus. Inherits from Submenu
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_new</span></td>
+      <td style="vertical-align: top;">skin item
+<br>
+      </td>
+      <td style="vertical-align: top;">The look for the highlighted items in the sub-menus. Inherits from Submenu
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_separator</span></td>
+      <td style="vertical-align: top;">background</td>
+      <td style="vertical-align: top;">The bitmap for the separators in the submenus
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_separator</span></td>
+      <td style="vertical-align: top;">skin item</td>
+      <td style="vertical-align: top;">The look for the text in the separators in the sub-menus. Inherits from Submenu</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_separator_split</span></td>
+      <td style="vertical-align: top;">background</td>
+      <td style="vertical-align: top;">The bitmap for the split separators in the submenus. Inherits from <span style="color: black;">Submenu_separator</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_separator_split</span></td>
+      <td style="vertical-align: top;">skin item</td>
+      <td style="vertical-align: top;">The look for the text in the split separators items in the sub-menus. Inherits from Submenu_split</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_padding</span></td>
+      <td style="vertical-align: top;">4 numbers (with scale)
+      </td>
+      <td style="vertical-align: top;">Padding on all sides of the sub-menu items
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_offset</span></td>
+      <td style="vertical-align: top;">number (with scale)
+      </td>
+      <td style="vertical-align: top;">Additional horizontal offset (positive or negative) for sub-menus relative to their parent menu
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_thin_frame</span></td>
+      <td style="vertical-align: top;">number
+<br>
+      </td>
+      <td style="vertical-align: top;">Set to 1 to use a thin border (as opposed to thick 3D border). Only applies to Classic theme in Windows 7</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_separatorV</span></td>
+      <td style="vertical-align: top;">background
+<br>
+      </td>
+      <td style="vertical-align: top;">Vertical separators between the columns of the sub-menus
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_pager</span></td>
+      <td style="vertical-align: top;">background</td>
+      <td style="vertical-align: top;">The background for the sub-menu pager. Requires 2 pictures, the top one is normal state, the bottom is highlighted state</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_pager_arrows</span></td>
+      <td style="vertical-align: top;">bitmap
+<br>
+      </td>
+      <td style="vertical-align: top;">The arrow for the pager. Requires 2x2 grid with up, down, normal and hot states</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">AllPrograms_offset</span></td>
+      <td style="vertical-align: top;">number (with scale)
+      </td>
+      <td style="vertical-align: top;">additional horizontal offset (positive or negative) for the first sub-menu in All Programs mode </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

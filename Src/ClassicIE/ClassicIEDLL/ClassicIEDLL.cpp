@@ -4,7 +4,7 @@
 
 #include "stdafx.h"
 #include "resource.h"
-#include "ClassicIEDLL_i.h"
+#include "ClassicIEDLL_h.h"
 #include "ClassicIEDLL.h"
 #include "Settings.h"
 #include "dllmain.h"

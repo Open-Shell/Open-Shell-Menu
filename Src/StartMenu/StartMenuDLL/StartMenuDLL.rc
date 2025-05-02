@@ -349,6 +349,8 @@ END
 // remains consistent on all systems.
 IDI_APPICON             ICON                    "..\\..\\Setup\\OpenShell.ico"
 IDI_APPSICON            ICON                    "apps.ico"
+IDI_APPSICON10          ICON                    "apps10.ico"
+IDI_APPSICON11          ICON                    "apps11.ico"
 IDI_BTN_CLASSIC         ICON                    "btn_aero.ico"
 IDI_START               ICON                    "start.ico"
 IDI_START10             ICON                    "start10.ico"
@@ -427,7 +429,7 @@ BEGIN
     IDS_SKIN_ERR_LOAD_FILE  "Failed to load the variation skin file %s.\r\n"
     IDS_SKIN_ERR_LOAD       "Error loading %s\n%s"
     IDS_SKIN_ERR_VERSION    "The selected skin is not compatible with this version of the start menu.\r\n"
-    IDS_MENU_TITLE          "== Open-Shell Menu =="
+    IDS_MENU_TITLE          "Open-Shell Menu %d.%d.%d"
     IDS_DEFAULT_SKIN        "<No Skin>"
     IDS_CONTROLS_SETTINGS   "Controls"
     IDS_OPEN_NOTHING        "Nothing"
@@ -637,6 +639,10 @@ BEGIN
     IDS_MENU_USERNAME       "User name text"
     IDS_MENU_USERNAME_TIP   "Enter the text you want to see in the user-name portion of the menu (for skins that show the user name)"
     IDS_PIC_COMMAND         "User picture command"
+    IDS_ENABLE_ACCELERATORS "Enable accelerators"
+    IDS_ENABLE_ACCELERATORS_TIP "Use keyboard accelerators to execute menu commands"
+    IDS_ALT_ACCELERATORS    "Require Alt key for accelerators"
+    IDS_ALT_ACCELERATORS_TIP "Keyboard accelerators will be triggered only if Alt key is pressed"
 END
 
 STRINGTABLE 
@@ -644,6 +650,12 @@ BEGIN
     IDS_PIC_COMMAND_TIP     "Enter the command you want to run when you click on the user picture"
     IDS_NAME_COMMAND        "User name command"
     IDS_NAME_COMMAND_TIP    "Enter the command you want to run when you click on the user name"
+    IDS_ALIGN_WORK_AREA     "Align start menu to working area"
+    IDS_ALIGN_WORK_AREA_TIP "Align the start menu to the working area instead of to the taskbar. Use with custom taskbars"
+    IDS_HOR_OFFSET          "Horizontal position offset"
+    IDS_HOR_OFFSET_TIP      "Offset the start menu horizontally by the amount of pixels specified"
+    IDS_VERT_OFFSET         "Vertical position offset"
+    IDS_VERT_OFFSET_TIP     "Offset the start menu vertically by the amount of pixels specified"
     IDS_SMALL_SIZE_SM       "Small icon size"
     IDS_SMALL_SIZE_SM_TIP   "Set the small icon size. The default is 16 for DPI<=96, 20 for 96<DPI<=120 and 24 for DPI>120"
     IDS_LARGE_SIZE_SM       "Large icon size"
@@ -1038,7 +1050,7 @@ BEGIN
     IDS_FOLDERS_FIRST       "Show folders first"
     IDS_FOLDERS_FIRST_TIP   "When this is checked, the All Programs tree will show the folders first and the programs last"
     IDS_PINNED_PROGRAMS     "Pinned Programs folder"
-    IDS_PINNED_PROGRAMS_TIP "Select the location to store the pinned programs"
+    IDS_PINNED_PROGRAMS_TIP "Select the location to store pinned programs. After updating this setting, close this window in order to pin items through the context menu again"
     IDS_FAST_ITEMS          "Use Start Menu folder"
 END
 
@@ -1076,7 +1088,7 @@ BEGIN
     IDS_MIN_HEIGHT_TIP      "The main menu will be at least as tall as this many search results"
     IDS_GLASS_OVERRIDE      "Override glass color"
     IDS_GLASS_OVERRIDE_TIP  "Check this to override the system glass color to use in the menu"
-    IDS_GLASS_COLOR         "Menu glass color"
+    IDS_GLASS_COLOR         "Menu glass color (RRGGBB)"
     IDS_GLASS_COLOR_TIP     "Select the glass color to use in the menu. How much this color affects the menu will depend on the selected skin"
     IDS_GLASS_INTENSITY     "Menu glass intensity"
     IDS_GLASS_INTENSITY_TIP "Select the intensity (brightness) for the glass color in the menu (0 - dark, 100 - bright)"
@@ -1138,37 +1150,45 @@ BEGIN
     IDS_STRING7024          "Shadows on glass#The text and the arrows in the second column of the main menu will have a drop shadow"
     IDS_STRING7025          "Opaque"
     IDS_STRING7026          "Main menu color"
-    IDS_STRING7027          "Custom color#Select custom color for the main menu"
+    IDS_STRING7027          "Custom color (RRGGBB)#Select custom color for the main menu"
     IDS_STRING7028          "Sub-menu color"
-    IDS_STRING7029          "Custom color#Select custom color for the sub-menus"
+    IDS_STRING7029          "Custom color (RRGGBB)#Select custom color for the sub-menus"
     IDS_STRING7030          "Silver"
     IDS_STRING7031          "Gold"
     IDS_STRING7032          "Steel"
     IDS_STRING7033          "Titanium"
     IDS_STRING7034          "Image for first column#Select custom image for the first column of the main menu"
     IDS_STRING7035          "Image for second column#Select custom image for the second column of the main menu"
-    IDS_STRING7036          "Text color for first column#Select custom color for the first column of the main menu text"
-    IDS_STRING7037          "Text color for second column#Select custom color for the second column of the main menu text"
+    IDS_STRING7036          "Text color for first column (RRGGBB)#Select custom color for the first column of the main menu text"
+    IDS_STRING7037          "Text color for second column (RRGGBB)#Select custom color for the second column of the main menu text"
     IDS_STRING7038          "Text size#Select custom size for the main menu text"
+    IDS_STRING7039          "Menu theme"
+    IDS_STRING7040          "Light"
+    IDS_STRING7041          "Dark"
+    IDS_STRING7042          "Use system setting"
+    IDS_STRING7043          "Transparency style"
+    IDS_STRING7044          "Two-tone#The main section of the menu will use system light/dark colors while additional surfaces use transparent glass with accent color."
+    IDS_STRING7045          "Full glass#The entire main menu will use transparent glass with accent color."
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_STRING7100          "This is the default skin when no other skin is selected or if the selected skin fails to load.\n\nPart of <A HREF=""http://www.classicshell.net/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
-    IDS_STRING7101          "Windows Aero skin\n\nDefault skin to use for the Windows Aero theme.\n\nPart of <A HREF=""http://www.classicshell.net/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
-    IDS_STRING7102          "Windows Basic skin\n\nDefault skin to use for the Windows Basic theme.\n\nPart of <A HREF=""http://www.classicshell.net/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
-    IDS_STRING7103          "Classic skin\n\nClassic look with large or small icons.\n\nPart of <A HREF=""http://www.classicshell.net/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
+    IDS_STRING7100          "This is the default skin when no other skin is selected or if the selected skin fails to load.\n\nPart of <A HREF=""https://github.com/Open-Shell/Open-Shell-Menu/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
+    IDS_STRING7101          "Windows Aero skin\n\nDefault skin to use for the Windows Aero theme.\n\nPart of <A HREF=""https://github.com/Open-Shell/Open-Shell-Menu/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
+    IDS_STRING7102          "Windows Basic skin\n\nDefault skin to use for the Windows Basic theme.\n\nPart of <A HREF=""https://github.com/Open-Shell/Open-Shell-Menu/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
+    IDS_STRING7103          "Classic skin\n\nClassic look with large or small icons.\n\nPart of <A HREF=""https://github.com/Open-Shell/Open-Shell-Menu/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_STRING7104          "Full Glass skin\n\nTransparent menu with large or small icons.\n\nPart of <A HREF=""http://www.classicshell.net/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
-    IDS_STRING7105          "Smoked Glass skin\n\nSimple transparent menu with dark background.\n\nPart of <A HREF=""http://www.classicshell.net/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
-    IDS_STRING7106          "Windows XP Luna skin\n\nA start menu similar to the one in Windows XP.\n\nPart of <A HREF=""http://www.classicshell.net/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
-    IDS_STRING7107          "Windows 8 skin\n\nDefault skin to use for Windows 8.\n\nPart of <A HREF=""http://www.classicshell.net/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
-    IDS_STRING7108          "Midnight skin\n\nSkin with dark background.\n\nPart of <A HREF=""http://www.classicshell.net/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
-    IDS_STRING7109          "Metro skin\n\nSkin that uses the start screen colors.\n\nPart of <A HREF=""http://www.classicshell.net/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
-    IDS_STRING7110          "Metallic skin\n\nA start menu skin with metallic look.\n\nPart of <A HREF=""http://www.classicshell.net/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
+    IDS_STRING7104          "Full Glass skin\n\nTransparent menu with large or small icons.\n\nPart of <A HREF=""https://github.com/Open-Shell/Open-Shell-Menu/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
+    IDS_STRING7105          "Smoked Glass skin\n\nSimple transparent menu with dark background.\n\nPart of <A HREF=""https://github.com/Open-Shell/Open-Shell-Menu/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
+    IDS_STRING7106          "Windows XP Luna skin\n\nA start menu similar to the one in Windows XP.\n\nPart of <A HREF=""https://github.com/Open-Shell/Open-Shell-Menu/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
+    IDS_STRING7107          "Windows 8 skin\n\nDefault skin to use for Windows 8.\n\nPart of <A HREF=""https://github.com/Open-Shell/Open-Shell-Menu/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
+    IDS_STRING7108          "Midnight skin\n\nSkin with dark background.\n\nPart of <A HREF=""https://github.com/Open-Shell/Open-Shell-Menu/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
+    IDS_STRING7109          "Metro skin\n\nSkin that uses the start screen colors.\n\nPart of <A HREF=""https://github.com/Open-Shell/Open-Shell-Menu/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
+    IDS_STRING7110          "Metallic skin\n\nA start menu skin with metallic look.\n\nPart of <A HREF=""https://github.com/Open-Shell/Open-Shell-Menu/"">Open-Shell</A> (c) 2009-2017, Ivo Beltchev"
+    IDS_STRING7111          "Immersive skin\n\nA skin that uses immersive colors and modern visual elements in the style of Windows 10.\n\nPart of <A HREF=""https://github.com/Open-Shell/Open-Shell-Menu/"">Open-Shell</A> (c) 2023, The Open-Shell Team"
 END
 
 STRINGTABLE 
@@ -1219,8 +1239,8 @@ BEGIN
     IDS_SHOW_APPS_MENU_TIP2 "Enable the Apps menu\nWarning: You don't have the Apps item in your custom menu, so this setting will be ignored"
     IDS_SKIN_ERR_METRO_COLOR 
                             "The selected skin is not compatible with Windows 7.\r\n"
-    IDS_BUTTON_ALIGN        "Align to corner of the screen"
-    IDS_BUTTON_ALIGN_TIP    "When this is checked, the button will be aligned to the corner of the screen instead of the middle of the taskbar"
+    IDS_BUTTON_ALIGN        "Align to edge of taskbar"
+    IDS_BUTTON_ALIGN_TIP    "When this is checked, the button will be aligned to the edge the taskbar instead of the middle of the taskbar"
     IDS_MENU_GLASS2         "Enable menu glass"
     IDS_MENU_GLASS2_TIP     "Check this to use glass transparency in the menu"
     IDS_GLASS_OPACITY       "Glass opacity"
@@ -1243,7 +1263,7 @@ BEGIN
     IDS_TASK_AEROGLASS_TIP  "The taskbar will have glass transparency that is compatible with the Aero Glass mod"
     IDS_TASK_OPACITY        "Taskbar opacity"
     IDS_TASK_OPACITY_TIP    "Set the opacity for the taskbar (0 - transparent, 100 - opaque)"
-    IDS_TASK_COLOR          "Taskbar color"
+    IDS_TASK_COLOR          "Taskbar color (RRGGBB)"
     IDS_TASK_COLOR_TIP      "Set the color for the taskbar"
     IDS_PCSETTINGS          "Settings"
     IDS_PCSETTINGS_TIP      "Shows the modern Settings window"
@@ -1282,11 +1302,39 @@ BEGIN
     IDS_TASK_BORDERS        "Border sizes"
     IDS_TASK_BORDERS_TIP    "Select how many pixel on each side of the texture to exclude from stretching"
     IDS_TASKBAR_SETTINGS    "Taskbar"
-    IDS_TASK_TEXTCOLOR      "Taskbar text color"
+    IDS_TASK_TEXTCOLOR      "Taskbar text color (RRGGBB)"
     IDS_TASK_TEXTCOLOR_TIP  "Select the color for the text on the taskbar"
     IDS_SELECT_LAST         "Select the last item in shutdown menu"
     IDS_SELECT_LAST_TIP     "When this is checked, the last item will be selected by default when the shutdown menu is opened with the keyboard"
     IDS_CLEAR_CACHE         "Clear cached information"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_NO_DBLCLICK         "Single-click to open folder shortcuts"
+    IDS_NO_DBLCLICK_TIP     "When this is checked, single-clicking shortcuts (links) to folders will open them in explorer. Hovering over the shortcut will still expand sub-menus"
+    IDS_BOLD_SETTINGS       "Highlight modified settings"
+    IDS_BOLD_SETTINGS_TIP   "When this is checked, settings that have been modified will be highlighted in bold"
+    IDS_SEARCH_HINT         "Custom search hint"
+    IDS_SEARCH_HINT_TIP     "When this is checked, the hint text in the search box will be replaced"
+    IDS_NEW_SEARCH_HINT     "Custom search hint text"
+    IDS_NEW_SEARCH_HINT_TIP "The text to replace the search hint with. Empty text is a valid option"
+    IDS_MORE_RESULTS        "Enable ""See more results"" option"
+    IDS_MORE_RESULTS_TIP    "When this is checked, the search results will include an option to do a more advanced search"
+    IDS_OPEN_CMD            "Custom command"
+    IDS_OPEN_CMD_TIP        "The action will run a user-defined command"
+    IDS_OPEN_CMD_TEXT       "Command to run"
+    IDS_OPEN_CMD_TEXT_TIP   "Enter the command to run when you use this control"
+    IDS_ITEM_LINKS          "Display as a list of links"
+    IDS_ITEM_LINKS_TIP      "This item will appear as a sub-menu showing only its top-level contents"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_OPEN_TRUE_PATH      "Open pinned folders to their true path"
+    IDS_OPEN_TRUE_PATH_TIP  "When this is checked, pinned folders will open to their true path instead of the path to their shortcut in the Pinned Programs folder"
+    IDS_PINNED_PATH         "Pinned folder path"
+    IDS_PINNED_PATH_TIP     "The path to use as the Pinned folder. If the path does not exist, it will be created (if possible) after opening the start menu. Close this window after updating this setting to update your context menu.\n\nNote: If you do not have permissions for the selected path, you will not be able to pin items until you take ownership of the new folder"
 END
 
 #endif    // English (U.S.) resources

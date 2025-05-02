@@ -6,11 +6,11 @@ Default Font=微軟正黑體,10,0
 Default topic=Main.html
 Display compile progress=Yes
 Language=0x404 中文 (繁體，台灣)
-
+Title=Open-Shell Help
 
 [FILES]
 ClassicExplorer.html
-Menu.html
+StartMenu.html
 ClassicIE.html
 
 [INFOTYPES]

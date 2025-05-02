@@ -168,7 +168,7 @@ namespace DesktopNotificationManagerCompat
         ComPtr<IToastNotificationHistory> nativeHistory;
         RETURN_IF_FAILED(toastStatics2->get_History(&nativeHistory));
 
-        *history = std::unique_ptr<DesktopNotificationHistoryCompat>(new DesktopNotificationHistoryCompat(s_aumid.c_str(), nativeHistory));
+        *history = std::make_unique<DesktopNotificationHistoryCompat>(s_aumid.c_str(), nativeHistory);
         return S_OK;
     }
 
@@ -224,7 +224,7 @@ namespace DesktopNotificationManagerCompat
 DesktopNotificationHistoryCompat::DesktopNotificationHistoryCompat(const wchar_t *aumid, ComPtr<IToastNotificationHistory> history)
 {
     m_aumid = std::wstring(aumid);
-    m_history = history;
+    m_history = std::move(history);
 }
 
 HRESULT DesktopNotificationHistoryCompat::Clear()

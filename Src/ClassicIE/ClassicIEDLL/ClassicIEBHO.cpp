@@ -3,7 +3,7 @@
 // Confidential information of Ivo Beltchev. Not for disclosure or distribution without prior written consent from the author
 
 #include "stdafx.h"
-#include "ClassicIEDLL_i.h"
+#include "ClassicIEDLL_h.h"
 #include "ClassicIEBHO.h"
 #include "ClassicIEDLL.h"
 #include "Settings.h"

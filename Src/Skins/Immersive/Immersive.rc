@@ -1,0 +1,102 @@
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+1      ICON    "..\\..\\Setup\\OpenShell.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// SKIN
+//
+
+1      SKIN    "SkinDescription.txt"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Image
+//
+
+1      IMAGE   "fullglass1.png"
+2      IMAGE   "submenu.png"
+3      IMAGE   "submenu_vertsep.png"
+4      IMAGE   "fullglass_pager.png"
+5      IMAGE   "pager_arrows.png"
+6      IMAGE   "pager_arrows144.png"
+7      IMAGE   "separator.png"
+8      IMAGE   "arrow.png"
+9      IMAGE   "search.png"
+10     IMAGE   "twotone_pager.png"
+11     IMAGE   "pin.png"
+12     IMAGE   "user.png"
+13     IMAGE   "user144.png"
+14     IMAGE   "fullglass2.png"
+15     IMAGE   "fullglass3.png"
+16     IMAGE   "fullglass4.png"
+17     IMAGE   "fullglass_selector.png"
+18     IMAGE   "fullglass_splitsel.png"
+19     IMAGE   "newsel.png"
+20     IMAGE   "submenu_selector.png"
+21     IMAGE   "submenu_splitsel.png"
+22     IMAGE   "arrow144.png"
+23     IMAGE   "submenu_pager.png"
+24     IMAGE   "search_arrow.png"
+25     IMAGE   "search_arrow144.png"
+26     IMAGE   "pin144.png"
+27     IMAGE   "fullglass_vertsep.png"
+28     IMAGE   "separator144.png"
+29     IMAGE   "submenu_vertsep144.png"
+30     IMAGE   "pager_arrows120.png"
+32     IMAGE   "arrow120.png"
+33     IMAGE   "search120.png"
+34     IMAGE   "pin120.png"
+36     IMAGE   "search_arrow120.png"
+37     IMAGE   "user120.png"
+38     IMAGE   "arrow_mask.png"
+39     IMAGE   "arrow_mask120.png"
+40     IMAGE   "arrow_mask144.png"
+41     IMAGE   "twotone1.png"
+42     IMAGE   "twotone2.png"
+43     IMAGE   "twotone3.png"
+44     IMAGE   "twotone4.png"
+45     IMAGE   "twotone5.png"
+46     IMAGE   "twotone6.png"
+47     IMAGE   "twotone7.png"
+48     IMAGE   "twotone8.png"
+49     IMAGE   "twotone9.png"
+50     IMAGE   "twotone10.png"
+51     IMAGE   "twotone11.png"
+52     IMAGE   "twotone12.png"
+53     IMAGE   "twotone13.png"
+54     IMAGE   "twotone14.png"
+55     IMAGE   "twotone_selector.png"
+56     IMAGE   "twotone_splitsel.png"
+57     IMAGE   "twotone15.png"
+58     IMAGE   "twotone16.png"
+59     IMAGE   "twotone17.png"
+60     IMAGE   "twotone18.png"
+61     IMAGE   "twotone19.png"
+62     IMAGE   "twotone20.png"
+63     IMAGE   "twotone21.png"
+64     IMAGE   "twotone22.png"
+65     IMAGE   "twotone23.png"
+66     IMAGE   "twotone24.png"
+67     IMAGE   "twotone25.png"
+68     IMAGE   "twotone26.png"
+69     IMAGE   "twotone27.png"
+70     IMAGE   "twotone28.png"
+71     IMAGE   "twotone29.png"
+72     IMAGE   "twotone30.png"
+73     IMAGE   "twotone31.png"
+74     IMAGE   "twotone32.png"
+75     IMAGE   "twotone33.png"
+76     IMAGE   "twotone34.png"
+77     IMAGE   "twotone35.png"
+78     IMAGE   "pin192.png"
+79     IMAGE   "arrow192.png"
+80     IMAGE   "arrow_mask192.png"
+81     IMAGE   "pager_arrows192.png"
+82     IMAGE   "search_arrow192.png"
+83     IMAGE   "search192.png"

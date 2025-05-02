@@ -60,3 +60,17 @@ bool IsFakeFolder( const wchar_t *fname )
 	}
 	return false;
 }
+
+bool GetFakeFolder( wchar_t *dst, int len, const wchar_t *src )
+{
+	Sprintf(dst,len,L"%s\\target.lnk",src);
+	if (GetFileAttributes(dst)!=INVALID_FILE_ATTRIBUTES)
+	{
+		wchar_t path[_MAX_PATH];
+		Sprintf(path,_countof(path),L"%s\\desktop.ini",src);
+		DWORD attrib=GetFileAttributes(path);
+		if (attrib!=INVALID_FILE_ATTRIBUTES && (attrib&FILE_ATTRIBUTE_SYSTEM))
+			return true;
+	}
+	return false;
+}

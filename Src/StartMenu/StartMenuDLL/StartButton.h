@@ -12,7 +12,7 @@ enum TStartButtonType
 //	START_BUTTON_METRO,
 };
 
-HWND CreateStartButton( int taskbarId, HWND taskBar, HWND rebar, const RECT &rcTask );
+HWND CreateStartButton( int taskbarId, HWND taskBar, HWND rebar );
 void DestroyStartButton( int taskbarId );
 void UpdateStartButton( int taskbarId );
 void PressStartButton( int taskbarId, bool bPressed );

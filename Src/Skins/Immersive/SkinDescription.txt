@@ -1,0 +1,716 @@
+; Immersive skin
+
+; About - text to use in the About box for this skin. use \n for new line
+About=#7111
+
+; AboutIcon - the ID of an icon resource to use in the About box
+AboutIcon=1
+
+; Version - version of the required skin engine. Set to 2 if the skin uses any of the new features introduced in Open-Shell 1.9.0:
+;    * full glass
+;    * skinnable sub-menus
+;    * skinnable pager buttons
+;    * skinnable arrows
+; Set to 3 if the skin uses any of the new features introduced in Open-Shell 4.2.1:
+;    * skinnable scrollbars
+;    * tint colors
+;    * start screen colors
+Version=3
+
+Main_opacity=region
+Main2_opacity=region
+Main_large_icons=1
+
+Main_bitmap=$StartPrimaryText
+Main_bitmap_tint2=$ImmersiveSystemBackground|$StartPrimaryText
+Main_bitmap_tint3=#808080
+Main_bitmap_mask=1
+Main_bitmap_slices_X=2,1,2,2,1,2
+Main_bitmap_slices_Y=2,8,2
+Main_padding=7,7,7,7,100%
+
+Main_text_padding=5,2,8,2,100%
+Main_icon_padding=4,4,4,4,100%
+
+Main_font="Segoe UI",normal,-9
+
+Main_text_color=$StartPrimaryText,$StartSelectionPrimaryText,$StartPrimaryText,$StartSelectionPrimaryText
+
+Main_selection=$StartPrimaryText
+Main_selection_mask=17
+Main_selection_tint1=$StartPrimaryText
+Main_selection_slices_X=2,2,2
+Main_selection_slices_Y=2,2,2
+
+Main_split_selection=$StartPrimaryText
+Main_split_selection_mask=18
+Main_split_selection_tint1=$StartPrimaryText
+Main_split_selection_slices_X=2,2,2,2,2,2
+Main_split_selection_slices_Y=2,2,2
+
+Caption_font="Segoe UI",normal,18
+Caption_text_color=$StartPrimaryText
+Caption_padding=3,3,3,12,100%
+
+
+; Main_pager - a bitmap that contains the background for the pager buttons (the ones that scroll menus up and down)
+Main_pager=$SystemAccentDark1|$StartBackground
+Main_pager_tint1=$StartPrimaryText
+Main_pager_tint2=$StartPrimaryText
+Main_pager_mask=4
+Main_pager_slices_X=3,10,3
+Main_pager_slices_Y=3,9,3
+Main_pager_arrows=$SystemAccentDark1|$StartBackground
+Main_pager_arrows_tint1=$StartPrimaryText
+Main_pager_arrows_tint2=$StartPrimaryText
+Main_pager_arrows_mask=5
+
+; Main_arrows - bitmap for the sub-menu arrows. The top half of the image is the normal arrow and the bottom half is the selected arrow
+Main_arrow=8
+Main_arrow_mask=38
+Main_arrow_tint1=$StartPrimaryText
+Main_arrow_tint2=#000000
+Main_arrow_padding=6,9,100%
+Main_split_arrow_padding=8,9,100%
+
+; Main_separator - ID of a bitmap resource to use for the main menu separator. If no value is set the system separator is used
+Main_separator=$SystemAccentDark1|$StartBackground
+Main_separator_tint1=$StartPrimaryText
+Main_separator_mask=7
+Main_separator_slices_X=12,9,12
+Main_search_indent=16
+Main_new_selection=$SystemAccentDark1|$StartBackground
+Main_new_selection_tint1=$LightInlineErrorText
+Main_new_selection_mask=19
+Main_new_selection_slices_X=2,2,2
+Main_new_selection_slices_Y=2,2,2
+
+; Second column
+
+Main2_text_color=$StartPrimaryText,$StartSelectionPrimaryText,$StartPrimaryText,$StartSelectionPrimaryText
+Main2_text_padding=5,2,8,2,100%
+Main2_padding=6,7,5,7,84%,100%,100%,100%
+Main2_icon_padding=4,4,4,4,100%
+Main2_arrow=8
+Main2_arrow_mask=38
+Main2_arrow_tint1=$StartPrimaryText
+Main2_arrow_tint2=#000000
+Main2_arrow_padding=6,7,100%
+Main2_selection=$StartPrimaryText
+Main2_selection_mask=17
+Main2_selection_tint1=$StartPrimaryText
+Main2_selection_slices_X=2,2,2
+Main2_selection_slices_Y=2,2,2
+Main2_split_selection=$StartPrimaryText
+Main2_split_selection_mask=18
+Main2_split_selection_tint1=$StartPrimaryText
+Main2_split_selection_slices_X=2,2,2,2,2,2
+Main2_split_selection_slices_Y=2,2,2
+Main2_new_selection=$SystemAccentDark1|$StartBackground
+Main2_new_selection_tint1=$LightInlineErrorText
+Main2_new_selection_mask=19
+Main2_new_selection_slices_X=2,2,2
+Main2_new_selection_slices_Y=2,2,2
+Main2_separator_mask=7
+Main2_separator_slices_X=12,9,12
+Main2_separator=$SystemAccentDark1|$StartBackground
+Main2_separator_tint1=$StartPrimaryText
+
+; More_bitmap - a bitmap for the "more" button in search categories. set to 0 to use the default icon. set to "none" to hide the button
+More_bitmap=none
+Pin_bitmap=11
+Pin_bitmap_tint1=$ImmersiveSystemText|#000000
+Pin_bitmap_mask=#FF0000
+
+
+Search_padding=0,5,0,5,100%
+Search_hint_font="Segoe UI",normal,-9
+Search_text_color=$ImmersiveSystemText|#000000,#808080
+Search_text_background=$SystemAccentDark1|$StartBackground
+Search_text_background_tint1=$ImmersiveSystemBackground|$StartPrimaryText
+Search_text_background_tint2=$StartPrimaryText
+Search_text_background_mask=#FF1700
+Search_bitmap=9
+Search_bitmap_tint1=$StartPrimaryText
+Search_bitmap_tint2=#000000
+Search_bitmap_mask=#DF2000
+
+Search_arrow=24
+Search_arrow_mask=38
+Search_arrow_tint1=$ImmersiveSystemText|#000000
+Search_arrow_tint2=$ImmersiveSystemBackground|$StartPrimaryText
+
+;SUB-MENU SECTION - describes the look of the sub-menus
+
+; The width of the standard window border is subtracted from all sides
+Submenu_padding=3,5,3,5,100%
+Submenu_text_padding=0,2,8,2,100%
+Submenu_icon_padding=8,3,8,3,100%
+
+; These have the same meaning as the Main_... properties
+Submenu_opacity=region
+Submenu_bitmap=$ImmersiveSystemBackground|$StartPrimaryText
+Submenu_bitmap_tint1=#A0A0A0
+Submenu_bitmap_tint2=#808080
+Submenu_bitmap_tint3=$StartPrimaryText
+Submenu_bitmap_mask=2
+Submenu_bitmap_slices_X=4,4,4
+Submenu_bitmap_slices_Y=4,4,4
+
+Submenu_font="Segoe UI",normal,-9
+Submenu_text_color=$ImmersiveSystemText|#000000,$ImmersiveSystemText|#000000,#7F7F7F,#7F7F7F
+Submenu_selection=$ImmersiveSystemBackground|$StartPrimaryText
+Submenu_selection_mask=20
+Submenu_selection_slices_X=2,2,2
+Submenu_selection_slices_Y=2,2,2
+Submenu_selection_tint1=$StartPrimaryText
+Submenu_selection_tint2=$ImmersiveSystemText|#000000
+Submenu_split_selection=$ImmersiveSystemBackground|$StartPrimaryText
+Submenu_split_selection_mask=21
+Submenu_split_selection_slices_X=2,2,2,2,2,2
+Submenu_split_selection_slices_Y=2,2,2
+Submenu_split_selection_tint1=$StartPrimaryText
+
+Submenu_pager=$ImmersiveSystemBackground|$StartPrimaryText
+Submenu_pager_tint1=$StartPrimaryText
+Submenu_pager_tint2=$ImmersiveSystemText|#000000
+Submenu_pager_mask=23
+Submenu_pager_slices_X=3,10,3
+Submenu_pager_slices_Y=3,9,3
+Submenu_pager_arrows=$SystemAccentDark1|$StartBackground
+Submenu_pager_arrows_tint1=$ImmersiveSystemText|#000000
+Submenu_pager_arrows_tint2=$ImmersiveSystemText|#000000
+Submenu_pager_arrows_mask=5
+
+Submenu_arrow=8
+Submenu_arrow_mask=38
+Submenu_arrow_tint1=$ImmersiveSystemText|#000000
+Submenu_arrow_tint2=$ImmersiveSystemBackground|$StartPrimaryText
+Submenu_arrow_padding=3,6,100%
+Submenu_split_arrow_padding=5,6,100%
+Submenu_separator=$SystemAccentDark1|$StartBackground
+Submenu_separator_tint1=$ImmersiveSystemText|#000000
+Submenu_separator_mask=7
+Submenu_separator_slices_X=12,9,12
+Submenu_separator_font="Segoe UI Semibold",normal,-9
+Submenu_separator_text_padding=8,3,0,5,100%
+Submenu_separator_text_color=$ImmersiveSystemText|#000000,$ImmersiveSystemText|#000000
+Submenu_separator_icon_padding=10,0,2,0,100%
+Submenu_separator_split_font="Segoe UI Semibold",normal,-9
+Submenu_new_selection=$SystemAccentDark1|$StartBackground
+Submenu_new_selection_tint1=$LightInlineErrorText
+Submenu_new_selection_mask=19
+Submenu_new_selection_slices_X=2,2,2
+Submenu_new_selection_slices_Y=2,2,2
+
+Submenu_separatorV=$SystemAccentDark1|$StartBackground
+Submenu_separatorV_tint1=$ImmersiveSystemText|#000000
+Submenu_separatorV_mask=3
+Submenu_separatorV_slices_Y=12,9,12
+
+
+; OPTIONS
+
+OPTION RADIOGROUP=#7039,0,LIGHT|DARK|AUTO
+OPTION LIGHT=#7040,0
+OPTION DARK=#7041,0
+OPTION AUTO=#7042,1
+OPTION NO_ICONS=#7008,1, TWO_COLUMNS
+OPTION CAPTION=#7003,0, NOT TWO_COLUMNS, 0
+OPTION USER_IMAGE=#7014,0
+OPTION USER_NAME=#7015,1
+OPTION CENTER_NAME=#7004,0, USER_NAME, 0
+OPTION SMALL_ICONS=#7011,0
+OPTION OPAQUE=#7009,0
+OPTION DISABLE_MASK=#7005,0
+OPTION_NUMBER CUSTOM_TEXT_SIZE=#7038,0,TRUE,12
+OPTION BLACK_TEXT=#7002,0
+OPTION BLACK_FRAMES=#7001,0
+OPTION RADIOGROUP=#7043,0,TRANSPARENT_LESS|TRANSPARENT_MORE
+OPTION TRANSPARENT_LESS=#7044,1
+OPTION TRANSPARENT_MORE=#7045,0
+
+Classic1_options=LIGHT, DARK, AUTO, CAPTION, USER_IMAGE, USER_NAME, CENTER_NAME, SMALL_ICONS, OPAQUE, DISABLE_MASK, CUSTOM_TEXT_SIZE, BLACK_TEXT, BLACK_FRAMES, TRANSPARENT_LESS, TRANSPARENT_MORE
+Classic2_options=LIGHT, DARK, AUTO, NO_ICONS, USER_IMAGE, USER_NAME, CENTER_NAME, SMALL_ICONS, OPAQUE, DISABLE_MASK, CUSTOM_TEXT_SIZE, BLACK_TEXT, BLACK_FRAMES, TRANSPARENT_LESS, TRANSPARENT_MORE
+AllPrograms_options=CUSTOM_TEXT_SIZE
+
+[NOT CAPTION]
+Main_bitmap_mask=14
+Main_bitmap_slices_X=0,0,0,4,4,4
+
+
+[SMALL_ICONS]
+Main_large_icons=0
+
+
+[TWO_COLUMNS]
+Main_bitmap_mask=14
+Main_bitmap_slices_X=2,2,2,2,2,2
+Main_separatorV=$SystemAccentDark1|$StartBackground
+Main_separatorV_tint1=$StartPrimaryText
+Main_separatorV_mask=27
+Main_separatorV_slices_Y=12,9,12
+
+
+[USER_IMAGE]
+; User_image_size - the size of the user image to use. Default is 0, which means the user image is not displayed
+; The size must be compatible with the size of the frame bitmap User_bitmap. The value is usually 48
+User_image_size=48
+User_mask=12
+
+; User_frame_position - horizontal and vertical position of the user image frame in the main menu.
+; Positive numbers mean offset from the left and the top. Negative numbers mean offset from the bottom and the right
+; The horizontal position can also be "center", "center1" and "center2" to center the image relative to the whole menu or to the first or second column
+User_frame_position=10,10,100%
+
+[USER_NAME]
+User_name_position=75,10,-10,50,100%
+User_name_align=left
+User_text_color=$StartPrimaryText
+User_font="Segoe UI Semibold",normal,18,100%
+User_glow_size=0
+
+[120_DPI]
+Main_pager_arrows_mask=30
+Submenu_pager_arrows_mask=30
+Main_arrow=32
+Main2_arrow=32
+Submenu_arrow=32
+Search_arrow=36
+Pin_bitmap=34
+Search_bitmap=33
+Main_arrow_mask=39
+Main2_arrow_mask=39
+Search_arrow_mask=39
+Submenu_arrow_mask=39
+
+[120_DPI AND USER_IMAGE]
+User_mask=37
+User_image_size=60
+
+[HIGH_DPI]
+Main_pager_arrows_mask=6
+Submenu_pager_arrows_mask=6
+Main_arrow=22
+Main2_arrow=22
+Submenu_arrow=22
+Search_arrow=25
+Pin_bitmap=26
+Main_separator_mask=28
+Main2_separator_mask=28
+Submenu_separator_mask=28
+Submenu_separatorV_mask=29
+Main_arrow_mask=40
+Main2_arrow_mask=40
+Search_arrow_mask=40
+Submenu_arrow_mask=40
+User_frame_position=10,15,100%,0%
+
+[HIGH_DPI AND USER_IMAGE]
+User_mask=13
+User_image_size=72
+
+[USER_NAME AND HIGH_DPI]
+User_name_position=75,15,-10,75,100%,0%,100%,0%
+
+
+; NO CAPTION
+[USER_IMAGE]
+Main_padding=7,73,7,7,100%
+User_name_position=70,15,-15,55,100%
+
+[USER_NAME AND NOT USER_IMAGE]
+Main_padding=7,47,7,7,100%
+User_name_position=15,5,-15,45,100%
+
+[USER_IMAGE AND HIGH_DPI]
+Main_padding=7,110,7,7,100%,0%,100%,100%
+User_name_position=90,23,-15,83,31%,0%,100%,0%
+
+[USER_NAME AND NOT USER_IMAGE AND HIGH_DPI]
+Main_padding=7,71,7,7,100%,0%,100%,100%
+User_name_position=15,8,-15,68,100%,0%,100%,0%
+
+
+; CAPTION
+[USER_IMAGE AND NOT TWO_COLUMNS AND CAPTION]
+User_frame_position=39,10,100%
+User_name_position=99,15,-15,55,100%
+Main_padding=7,73,7,7,100%
+
+[USER_NAME AND NOT USER_IMAGE AND NOT TWO_COLUMNS AND CAPTION]
+User_name_position=44,5,-15,45,100%
+Main_padding=7,47,7,7,100%
+
+[USER_IMAGE AND NOT TWO_COLUMNS AND CAPTION AND HIGH_DPI]
+User_frame_position=39,15,100%,0%
+User_name_position=117,23,-15,83,51%,0%,100%,0%
+Main_padding=7,110,7,7,100%,0%,100%,100%
+
+[USER_NAME AND NOT USER_IMAGE AND NOT TWO_COLUMNS AND CAPTION AND HIGH_DPI]
+User_name_position=44,8,-15,68,100%,0%,100%,0%
+Main_padding=7,71,7,7,100%,0%,100%,100%
+
+
+; TWO COLUMNS
+[USER_IMAGE AND TWO_COLUMNS]
+Main2_padding=6,73,5,7,84%,100%,100%,100%
+
+[USER_NAME AND NOT USER_IMAGE AND TWO_COLUMNS]
+Main2_padding=6,47,5,7,84%,100%,100%,100%
+
+[USER_IMAGE AND TWO_COLUMNS AND HIGH_DPI]
+Main2_padding=6,110,5,7,84%,0%,100%,100%
+
+[USER_NAME AND NOT USER_IMAGE AND TWO_COLUMNS AND HIGH_DPI]
+Main2_padding=6,71,5,7,84%,0%,100%,100%
+
+
+[CENTER_NAME]
+User_name_align=center
+
+[NOT USER_NAME]
+User_name_position=0,0,0,0
+
+[USER_NAME AND 240_DPI]
+User_font="Segoe UI Semibold",normal,45
+
+[NO_ICONS]
+Main_no_icons2=1
+Main2_text_padding=1,8,8,9,100%
+Main2_icon_padding=4,4,3,4,100%
+
+[NO_ICONS AND SMALL_ICONS]
+Main2_text_padding=1,4,8,5,100%
+
+[TOUCH_ENABLED AND NOT SMALL_ICONS]
+Submenu_separator_icon_padding=10,8,2,8,100%
+Main_arrow_padding=7,10,100%
+Main_split_arrow_padding=9,10,100%
+Main2_arrow_padding=9,10,100%
+
+[NOT OPAQUE]
+Main_opacity=fullglass
+Main2_opacity=fullglass
+
+Main_bitmap_mask=15
+
+[NOT OPAQUE AND NOT CAPTION]
+Main_bitmap_mask=16
+
+[NOT OPAQUE AND TWO_COLUMNS]
+Main_bitmap_mask=16
+
+[DISABLE_MASK]
+Main_bitmap_tint1=#545454
+
+[CUSTOM_TEXT_SIZE]
+Main_font="Segoe UI",normal,@CUSTOM_TEXT_SIZE@
+Search_hint_font="Segoe UI",normal,@CUSTOM_TEXT_SIZE@
+Submenu_font="Segoe UI",normal,@CUSTOM_TEXT_SIZE@
+Submenu_separator_font="Segoe UI Semibold",normal,@CUSTOM_TEXT_SIZE@
+Submenu_separator_split_font="Segoe UI Semibold",normal,@CUSTOM_TEXT_SIZE@
+
+[BLACK_TEXT]
+Main_text_color=#000000,#000000,#000000,#000000
+Main2_text_color=#000000,#000000,#000000,#000000
+Caption_text_color=#000000
+User_text_color=#000000
+Main_arrow_tint1=#000000
+Main_arrow_tint2=$StartPrimaryText
+Main2_arrow_tint1=#000000
+Main2_arrow_tint2=$StartPrimaryText
+Search_bitmap_tint1=#000000
+Search_bitmap_tint2=$StartPrimaryText
+Main_separator_tint1=#000000
+Main_separatorV_tint1=#000000
+Main_pager_arrows_tint1=#000000
+Main_pager_arrows_tint2=#000000
+Main2_separator_tint1=#000000
+
+[BLACK_FRAMES]
+Main_bitmap=#000000
+Main_selection=#000000
+Main_split_selection=#000000
+Main2_selection=#000000
+Main2_split_selection=#000000
+Main_pager_tint2=#000000
+
+
+[TRANSPARENT_LESS]
+Main_text_color=$ImmersiveSystemText|#000000,$ImmersiveSystemText|#000000,#7F7F7F,#7F7F7F
+Main_separator_tint1=$ImmersiveSystemText|#000000
+Main_arrow_tint1=$ImmersiveSystemText|#000000
+Main_arrow_tint2=$ImmersiveSystemBackground|$StartPrimaryText
+Main_pager_arrows_tint1=$ImmersiveSystemText|#000000
+Main_pager_arrows_tint2=$ImmersiveSystemText|#000000
+Main_bitmap=$StartPrimaryText
+Search_bitmap_tint1=$ImmersiveSystemText|#000000
+Search_bitmap_tint2=$ImmersiveSystemBackground|$StartPrimaryText
+Main_separatorV=none
+Main_separatorV_mask=none
+User_text_color=$ImmersiveSystemText|#000000
+Main_selection=$ImmersiveSystemBackground|$StartPrimaryText
+Main_split_selection=$ImmersiveSystemBackground|$StartPrimaryText
+Main_selection_mask=55
+Main_split_selection_mask=56
+Main_bitmap_mask=57
+Main_pager_mask=10
+Main_pager=$ImmersiveSystemBackground|$StartPrimaryText
+Main_pager_tint1=$StartPrimaryText
+
+[TRANSPARENT_LESS AND NOT OPAQUE]
+Main_opacity=glass
+Main2_opacity=fullglass
+Main_bitmap_mask=58
+
+[TRANSPARENT_LESS AND NOT CAPTION]
+Main_bitmap_mask=71
+
+[TRANSPARENT_LESS AND TWO_COLUMNS]
+Main_bitmap_mask=41
+Main2_padding=5,7,5,7,100%
+
+[TRANSPARENT_LESS AND TWO_COLUMNS AND NOT OPAQUE]
+Main_bitmap_mask=42
+
+
+
+
+
+
+[TRANSPARENT_LESS AND USER_NAME AND NOT USER_IMAGE]
+Main_bitmap_slices_Y=49,8,2
+Main_bitmap_mask=59
+Main_padding=7,54,7,7,100%
+
+[TRANSPARENT_LESS AND USER_NAME AND NOT USER_IMAGE AND NOT OPAQUE]
+Main_bitmap_mask=60
+
+[TRANSPARENT_LESS AND USER_IMAGE]
+Main_bitmap_slices_Y=75,8,2
+Main_padding=7,80,7,7,100%
+Main_bitmap_mask=61
+
+[TRANSPARENT_LESS AND USER_IMAGE AND NOT OPAQUE]
+Main_bitmap_mask=62
+
+
+
+
+
+
+[TRANSPARENT_LESS AND USER_NAME AND NOT USER_IMAGE AND 120_DPI]
+Main_bitmap_slices_Y=61,8,2
+Main_bitmap_mask=63
+
+[TRANSPARENT_LESS AND USER_NAME AND NOT USER_IMAGE AND NOT OPAQUE AND 120_DPI]
+Main_bitmap_mask=64
+
+[TRANSPARENT_LESS AND USER_IMAGE AND 120_DPI]
+Main_bitmap_slices_Y=93,8,2
+Main_bitmap_mask=65
+
+[TRANSPARENT_LESS AND USER_IMAGE AND NOT OPAQUE AND 120_DPI]
+Main_bitmap_mask=66
+
+
+
+
+
+
+[TRANSPARENT_LESS AND USER_NAME AND NOT USER_IMAGE AND HIGH_DPI]
+Main_bitmap_slices_Y=73,8,2
+Main_padding=7,78,7,7,100%,9%,100%,100%
+Main_bitmap_mask=67
+
+[TRANSPARENT_LESS AND USER_NAME AND NOT USER_IMAGE AND NOT OPAQUE AND HIGH_DPI]
+Main_bitmap_mask=68
+
+[TRANSPARENT_LESS AND USER_IMAGE AND HIGH_DPI]
+Main_bitmap_slices_Y=112,8,2
+Main_padding=7,117,7,7,100%,6%,100%,100%
+Main_bitmap_mask=69
+
+[TRANSPARENT_LESS AND USER_IMAGE AND NOT OPAQUE AND HIGH_DPI]
+Main_bitmap_mask=70
+
+
+
+
+
+
+[TRANSPARENT_LESS AND USER_NAME AND NOT USER_IMAGE AND NOT CAPTION]
+Main_bitmap_mask=72
+
+[TRANSPARENT_LESS AND USER_IMAGE AND NOT CAPTION]
+Main_bitmap_mask=73
+
+
+
+
+
+
+[TRANSPARENT_LESS AND USER_NAME AND NOT USER_IMAGE AND 120_DPI AND NOT CAPTION]
+Main_bitmap_mask=74
+
+[TRANSPARENT_LESS AND USER_IMAGE AND 120_DPI AND NOT CAPTION]
+Main_bitmap_mask=75
+
+
+
+
+
+
+[TRANSPARENT_LESS AND USER_NAME AND NOT USER_IMAGE AND HIGH_DPI AND NOT CAPTION]
+Main_bitmap_mask=76
+
+[TRANSPARENT_LESS AND USER_IMAGE AND HIGH_DPI AND NOT CAPTION]
+Main_bitmap_mask=77
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[TRANSPARENT_LESS AND TWO_COLUMNS AND USER_NAME AND NOT USER_IMAGE]
+Main2_padding=5,54,5,7,100%
+Main_bitmap_mask=43
+
+[TRANSPARENT_LESS AND TWO_COLUMNS AND USER_NAME AND NOT USER_IMAGE AND NOT OPAQUE]
+Main_bitmap_mask=44
+
+[TRANSPARENT_LESS AND TWO_COLUMNS AND USER_IMAGE]
+Main2_padding=5,80,5,7,100%
+Main_bitmap_mask=45
+
+[TRANSPARENT_LESS AND TWO_COLUMNS AND USER_IMAGE AND NOT OPAQUE]
+Main_bitmap_mask=46
+
+
+[TRANSPARENT_LESS AND TWO_COLUMNS AND USER_NAME AND NOT USER_IMAGE AND 120_DPI]
+Main_bitmap_mask=47
+
+[TRANSPARENT_LESS AND TWO_COLUMNS AND USER_NAME AND NOT USER_IMAGE AND NOT OPAQUE AND 120_DPI]
+Main_bitmap_mask=48
+
+[TRANSPARENT_LESS AND TWO_COLUMNS AND USER_IMAGE AND 120_DPI]
+Main_bitmap_mask=49
+
+[TRANSPARENT_LESS AND TWO_COLUMNS AND USER_IMAGE AND NOT OPAQUE AND 120_DPI]
+Main_bitmap_mask=50
+
+
+[TRANSPARENT_LESS AND TWO_COLUMNS AND USER_NAME AND NOT USER_IMAGE AND HIGH_DPI]
+Main2_padding=5,78,5,7,100%,9%,100%,100%
+Main_bitmap_mask=51
+
+[TRANSPARENT_LESS AND TWO_COLUMNS AND USER_NAME AND NOT USER_IMAGE AND NOT OPAQUE AND HIGH_DPI]
+Main_bitmap_mask=52
+
+[TRANSPARENT_LESS AND TWO_COLUMNS AND USER_IMAGE AND HIGH_DPI]
+Main2_padding=5,117,5,7,100%,6%,100%,100%
+Main_bitmap_mask=53
+
+[TRANSPARENT_LESS AND TWO_COLUMNS AND USER_IMAGE AND NOT OPAQUE AND HIGH_DPI]
+Main_bitmap_mask=54
+
+
+[HIGH_DPI AND NOT 144_DPI AND NOT 168_DPI]
+Pin_bitmap=78
+Main_arrow=79
+Main2_arrow=79
+Submenu_arrow=79
+Main_arrow_mask=80
+Main2_arrow_mask=80
+Submenu_arrow_mask=80
+Main_pager_arrows_mask=81
+Submenu_pager_arrows_mask=81
+Search_arrow=82
+Search_arrow_mask=80
+Search_bitmap=83
+
+
+[LIGHT]
+Main_bitmap_tint2=#FFFFFF
+Search_text_background_tint1=#FFFFFF
+Search_arrow_tint2=#FFFFFF
+Submenu_bitmap=#FFFFFF
+Submenu_selection=#FFFFFF
+Submenu_split_selection=#FFFFFF
+Submenu_pager=#FFFFFF
+Submenu_arrow_tint2=#FFFFFF
+Pin_bitmap_tint1=#000000
+Search_text_color=#000000,#808080
+Search_arrow_tint1=#000000
+Submenu_text_color=#000000,#000000,#7F7F7F,#7F7F7F
+Submenu_selection_tint2=#000000
+Submenu_pager_tint2=#000000
+Submenu_pager_arrows_tint1=#000000
+Submenu_pager_arrows_tint2=#000000
+Submenu_arrow_tint1=#000000
+Submenu_separator_tint1=#000000
+Submenu_separator_text_color=#000000,#000000
+Submenu_separatorV_tint1=#000000
+
+[LIGHT AND TRANSPARENT_LESS]
+Main_arrow_tint2=#FFFFFF
+Search_bitmap_tint2=#FFFFFF
+Main_selection=#FFFFFF
+Main_split_selection=#FFFFFF
+Main_pager=#FFFFFF
+Main_text_color=#000000,#000000,#7F7F7F,#7F7F7F
+Main_separator_tint1=#000000
+Main_arrow_tint1=#000000
+Main_pager_arrows_tint1=#000000
+Main_pager_arrows_tint2=#000000
+Search_bitmap_tint1=#000000
+User_text_color=#000000
+
+[DARK]
+Main_bitmap_tint2=#000000
+Search_text_background_tint1=#000000
+Search_arrow_tint2=#000000
+Submenu_bitmap=#000000
+Submenu_selection=#000000
+Submenu_split_selection=#000000
+Submenu_pager=#000000
+Submenu_arrow_tint2=#000000
+Pin_bitmap_tint1=#FFFFFF
+Search_text_color=#FFFFFF,#808080
+Search_arrow_tint1=#FFFFFF
+Submenu_text_color=#FFFFFF,#FFFFFF,#7F7F7F,#7F7F7F
+Submenu_selection_tint2=#FFFFFF
+Submenu_pager_tint2=#FFFFFF
+Submenu_pager_arrows_tint1=#FFFFFF
+Submenu_pager_arrows_tint2=#FFFFFF
+Submenu_arrow_tint1=#FFFFFF
+Submenu_separator_tint1=#FFFFFF
+Submenu_separator_text_color=#FFFFFF,#FFFFFF
+Submenu_separatorV_tint1=#FFFFFF
+
+[DARK AND TRANSPARENT_LESS]
+Main_arrow_tint2=#000000
+Search_bitmap_tint2=#000000
+Main_selection=#000000
+Main_split_selection=#000000
+Main_pager=#000000
+Main_text_color=#FFFFFF,#FFFFFF,#7F7F7F,#7F7F7F
+Main_separator_tint1=#FFFFFF
+Main_arrow_tint1=#FFFFFF
+Main_pager_arrows_tint1=#FFFFFF
+Main_pager_arrows_tint2=#FFFFFF
+Search_bitmap_tint1=#FFFFFF
+User_text_color=#FFFFFF

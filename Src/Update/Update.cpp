@@ -44,11 +44,6 @@ void UpdateSettings( void )
 	UpdateSetting(L"Language",language,false);
 }
 
-const wchar_t *GetDocRelativePath( void )
-{
-	return NULL;
-}
-
 static int g_LoadDialogs[]=
 {
 	IDD_UPDATE,0x04000000,
@@ -103,7 +98,6 @@ public:
 
 	void Run( void );
 	void UpdateData( void );
-	bool HasNewLanguage( void ) { return (m_Data.bNewLanguage && !m_Data.bIgnoreLanguage) && !(m_Data.bNewVersion && !m_Data.bIgnoreVersion); }
 
 protected:
 	// Handler prototypes:
@@ -149,7 +143,7 @@ LRESULT CUpdateDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	HDC hdc=::GetDC(NULL);
 	int dpi=GetDeviceCaps(hdc,LOGPIXELSY);
 	::ReleaseDC(NULL,hdc);
-	m_Font=CreateFont(-9*dpi/72,0,0,0,FW_NORMAL,0,0,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,FIXED_PITCH,L"Consolas");
+	m_Font=CreateFont(-MulDiv(9,dpi,72),0,0,0,FW_NORMAL,0,0,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,FIXED_PITCH,L"Consolas");
 	if (m_Font)
 		GetDlgItem(IDC_EDITTEXT).SetFont(m_Font);
 	m_Tooltip.Create(TOOLTIPS_CLASS,m_hWnd,NULL,NULL,WS_POPUP|TTS_NOPREFIX);
@@ -204,7 +198,7 @@ LRESULT CUpdateDlg::OnCancel( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 
 LRESULT CUpdateDlg::OnColorStatic( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	if ((m_Data.bNewVersion || m_Data.bNewLanguage) && lParam==(LPARAM)GetDlgItem(IDC_STATICLATEST).m_hWnd)
+	if (m_Data.bNewVersion && lParam==(LPARAM)GetDlgItem(IDC_STATICLATEST).m_hWnd)
 	{
 		HDC hdc=(HDC)wParam;
 		SetTextColor(hdc,0xFF);
@@ -288,37 +282,6 @@ LRESULT CUpdateDlg::OnDownload( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 			}
 		}
 	}
-	else if (m_Data.bNewLanguage)
-	{
-		for (std::vector<LanguageVersionData>::const_iterator it=m_Data.languages.begin();it!=m_Data.languages.end();++it)
-		{
-			if (_wcsicmp(m_Data.newLanguage,it->language)==0)
-			{
-				CString error;
-				DWORD res=DownloadLanguageDll(m_hWnd,COMPONENT_UPDATE,*it,error);
-				if (res==2)
-					return 0;
-				if (res)
-				{
-					MessageBox(LoadStringEx(it->bBasic?IDS_LANGUAGE_SUCCESS2:IDS_LANGUAGE_SUCCESS),LoadStringEx(IDS_UPDATE_TITLE),MB_OK|(it->bBasic?MB_ICONWARNING:MB_ICONINFORMATION));
-					SetDlgItemText(IDC_STATICLATEST,L"");
-				}
-				else
-				{
-					error+=LoadStringEx(IDS_DOWNLOAD_TIP)+L"\r\n\r\n"+m_Data.languageLink;
-					TASKDIALOGCONFIG task={sizeof(task),m_hWnd,NULL,TDF_ENABLE_HYPERLINKS|TDF_ALLOW_DIALOG_CANCELLATION|TDF_USE_HICON_MAIN,TDCBF_OK_BUTTON};
-					CString title=LoadStringEx(IDS_UPDATE_TITLE);
-					task.pszWindowTitle=title;
-					task.pszContent=error;
-					task.hMainIcon=LoadIcon(NULL,IDI_ERROR);
-					task.pfCallback=TaskDialogCallbackProc;
-					TaskDialogIndirect(&task,NULL,NULL,NULL);
-				}
-				return 0;
-			}
-		}
-		Assert(0); // NEWLanguage is not in the list
-	}
 	return 0;
 }
 
@@ -331,11 +294,6 @@ LRESULT CUpdateDlg::OnDontRemind( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 	{
 		m_Data.bIgnoreVersion=(IsDlgButtonChecked(IDC_CHECKDONT)==BST_CHECKED);
 		regKey.SetDWORDValue(L"RemindedVersion",m_Data.bIgnoreVersion?m_Data.newVersion:0);
-	}
-	else if (m_Data.bNewLanguage)
-	{
-		m_Data.bIgnoreLanguage=(IsDlgButtonChecked(IDC_CHECKDONT)==BST_CHECKED);
-		regKey.SetDWORDValue(L"RemindedLangVersion",m_Data.bIgnoreLanguage?m_Data.encodedLangVersion:0);
 	}
 	return 0;
 }
@@ -376,28 +334,6 @@ void CUpdateDlg::UpdateUI( void )
 			CheckDlgButton(IDC_CHECKDONT,m_Data.bIgnoreVersion?BST_CHECKED:BST_UNCHECKED);
 			TOOLINFO tool={sizeof(tool),TTF_SUBCLASS|TTF_IDISHWND,m_hWnd,(UINT_PTR)GetDlgItem(IDC_BUTTONDOWNLOAD).m_hWnd};
 			tool.lpszText=(LPWSTR)(LPCWSTR)m_Data.downloadUrl;
-			m_Tooltip.SendMessage(TTM_ADDTOOL,0,(LPARAM)&tool);
-		}
-		else if (m_Data.bNewLanguage)
-		{
-			SetDlgItemText(IDC_STATICLATEST,LoadStringEx(IDS_LANG_OUTOFDATE));
-			SetDlgItemText(IDC_EDITTEXT,L"");
-			GetDlgItem(IDC_EDITTEXT).ShowWindow(SW_HIDE);
-			GetDlgItem(IDC_BUTTONDOWNLOAD).ShowWindow(SW_SHOW);
-			bool check=true;
-			if (g_Settings[SETTING_UPDATE].value.vt==VT_I4)
-				check=g_Settings[SETTING_UPDATE].value.intVal!=0;
-			GetDlgItem(IDC_CHECKDONT).ShowWindow(check?SW_SHOW:SW_HIDE);
-			CheckDlgButton(IDC_CHECKDONT,m_Data.bIgnoreLanguage?BST_CHECKED:BST_UNCHECKED);
-			TOOLINFO tool={sizeof(tool),TTF_SUBCLASS|TTF_IDISHWND,m_hWnd,(UINT_PTR)GetDlgItem(IDC_BUTTONDOWNLOAD).m_hWnd};
-			for (std::vector<LanguageVersionData>::const_iterator it=m_Data.languages.begin();it!=m_Data.languages.end();++it)
-			{
-				if (_wcsicmp(m_Data.newLanguage,it->language)==0)
-				{
-					tool.lpszText=(LPWSTR)(LPCWSTR)it->url;
-					break;
-				}
-			}
 			m_Tooltip.SendMessage(TTM_ADDTOOL,0,(LPARAM)&tool);
 		}
 		else
@@ -550,7 +486,7 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrC
 			Sleep(sleep);
 
 		auto title = LoadStringEx(IDS_UPDATE_TITLE);
-		auto message = LoadStringEx(g_UpdateDlg.HasNewLanguage() ? IDS_LANG_NEWVERSION : IDS_NEWVERSION);
+		auto message = LoadStringEx(IDS_NEWVERSION);
 
 		if (toasts)
 		{

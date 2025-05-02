@@ -36,7 +36,7 @@ public:
 
 	struct SearchCategory
 	{
-		SearchCategory( void ) {}
+		SearchCategory( void ) = default;
 		SearchCategory( const SearchCategory &cat )
 		{
 			search.Clone(cat.search);

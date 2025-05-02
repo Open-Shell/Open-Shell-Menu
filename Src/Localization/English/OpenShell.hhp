@@ -5,12 +5,11 @@ Contents file=OpenShellTOC.hhc
 Default topic=Main.html
 Display compile progress=Yes
 Language=0x409 English (United States)
-
+Title=Open-Shell Help
 
 [FILES]
 ClassicExplorer.html
-Menu.html
+StartMenu.html
 ClassicIE.html
 
 [INFOTYPES]
-

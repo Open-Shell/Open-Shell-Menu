@@ -78,9 +78,9 @@ if %ARCH%==ARM64 (
 REM ********* Build MSI Checksums
 echo --- MSI Checksums
 if %ARCH%==ARM64 (
-	Utility\Release\Utility.exe crcarm64msi Temp
+	..\..\build\bin\Release\Utility.exe crcarm64msi Temp
 ) else (
-	Utility\Release\Utility.exe crcmsi Temp
+	..\..\build\bin\Release\Utility.exe crcmsi Temp
 )
 @if ERRORLEVEL 1 exit /b 1
 
@@ -94,10 +94,10 @@ for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio
 if exist Final\%CS_INSTALLER_NAME%.exe del Final\%CS_INSTALLER_NAME%.exe > nul
 md Final 1> nul 2>&1
 
-copy /B %CS_SETUP_DIR%\Setup.exe Final\%CS_INSTALLER_NAME%.exe > nul
+copy /B ..\..\build\bin\Release\Setup.exe Final\%CS_INSTALLER_NAME%.exe > nul
 
 if defined APPVEYOR (
-	appveyor PushArtifact %CS_SETUP_DIR%\Setup.exe -FileName %CS_INSTALLER_NAME%.exe
+	appveyor PushArtifact Final\%CS_INSTALLER_NAME%.exe
 )
 
 SET CS_LANG_FOLDER=

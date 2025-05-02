@@ -45,11 +45,6 @@ static int g_LoadDialogs[]=
 	0
 };
 
-const wchar_t *GetDocRelativePath( void )
-{
-	return DOC_PATH;
-}
-
 static HANDLE g_DllInitThread;
 
 static DWORD CALLBACK DllInitThread( void* )
@@ -62,7 +57,7 @@ static DWORD CALLBACK DllInitThread( void* )
 	*PathFindFileName(path)=0;
 
 	wchar_t fname[_MAX_PATH];
-	Sprintf(fname,_countof(fname),L"%s" INI_PATH L"StartMenuL10N.ini",path);
+	Sprintf(fname,_countof(fname),L"%sStartMenuL10N.ini",path);
 	CString language=GetSettingString(L"Language");
 	ParseTranslations(fname,language);
 

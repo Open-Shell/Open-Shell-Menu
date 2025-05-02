@@ -1,0 +1,143 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+  <title>Custom Start Buttons</title>
+  <style type="text/css">
+h1 {
+  color: #0078d4;
+  font-family: "Segoe UI",Tahoma,sans-serif;
+  font-weight: 600;
+}
+h2 {
+  color: #005a9e;
+  font-family: "Segoe UI",Tahoma,sans-serif;
+  font-weight: 600;
+}
+h3 {
+  color: #005a9e;
+  font-weight: 600;
+}
+body {
+  font-family: "Segoe UI",Tahoma,sans-serif;
+}
+  </style></head>
+<body>
+<h1>Custom Start Buttons Tutorial</h1>
+<br>
+<h2>Simple Start Buttons</h2>
+A custom start button requires an image that contains 3 distinct parts – one for the normal state of the button, one for the hot state (when the mouse is over the button), and one for the pressed state. The 3 parts must be the same size.
+<br>
+<br>
+<img src="images/button0.png">
+<br>
+<br>
+By default the width of the start button equals the width of the image. The height of the button is the height of the image divided by 3. You can scale the image by overriding the width of the button from the Open-Shell settings. The height will be adjusted to preserve the aspect ratio.
+<br>
+<br>
+The image must be saved in either PNG or BMP format (including 32-bit BMP files). For best results use an image editor that supports transparency, like Photoshop, Gimp or Paint .NET.
+<br>
+<br>
+<h3>Where to download</h3>
+You can find many start button images on the Internet. Here are some of the places:
+<br>
+<a href="http://www.classicshell.net/forum/viewforum.php?f=18">http://www.classicshell.net/forum/viewforum.php?f=18</a>
+<br>
+<a href="https://www.sevenforums.com/themes-styles/34951-custom-start-menu-button-collection.html">https://www.sevenforums.com/themes-styles/34951-custom-start-menu-button-collection.html</a>
+<br>
+<a href="https://www.sevenforums.com/customization/78291-big-group-custom-start-orbs.html">https://www.sevenforums.com/customization/78291-big-group-custom-start-orbs.html</a>
+<br>
+<a href="https://tutoriales13.deviantart.com/art/Orbs-153450418">https://tutoriales13.deviantart.com/art/Orbs-153450418</a>
+<br>
+<a href="https://www.deviantart.com/?q=start+button+orb">https://www.deviantart.com/?q=start+button+orb</a>
+<br>
+<br>
+<h2>Animated Buttons</h2>
+Open-Shell does support animated start buttons. They contain animated transitions between the different states.
+<br>
+<br>
+The animated image consists of one or more rows of pixels that describe the animation, followed by one or more button frames. The description rows need to be fully opaque (A=255). The frames are counted from 0 – frame0, frame1, .... All frames must be the same size.
+<br>
+<br>
+<img src="images/button1.png">
+<br>
+<br>
+<h3>Main information (stored in the first 6 pixels)</h3>
+The first two pixels of the first row need to be:
+<br>
+<span style="font-weight: bold;"> Pixel 0:</span> color R=65, G=78, B=77 (This is the text ANM in ASCII)
+<br>
+<span style="font-weight: bold;"> Pixel 1:</span> color R=66, G=84, B=78 (This is the text BTN in ASCII)
+<br>
+They allow the start button to recognize that this image contains animation.
+<br>
+<br>
+The next pixel describes the number of frames and the number of description rows:
+<br>
+<span style="font-weight: bold;"> Pixel 2:</span> The red channel contains the number of description rows (usually 1). The blue channel contains the number of total frames in the bitmap (this limits the number of frames to 255).
+<br>
+If one row is not enough to describe the animations, it can continue on two or more rows.
+<br>
+The contents of this pixel and the total size of the image determine the size of the individual frame. The number of description rows (red channel) is subtracted by the total height of the image, and then it is divided by the number of frames (blue channel).
+<br>
+<br>
+The next 3 pixels contain the frames for the 3 distinct states of the start button – Normal, Hot and Pressed.
+<br>
+<span style="font-weight: bold;"> Pixel 3:</span> The blue channel contains the index of the frame for the Normal state (usually 0)
+<br>
+<span style="font-weight: bold;"> Pixel 4:</span> The blue channel contains the index of the frame for the Hot state
+<br>
+<span style="font-weight: bold;"> Pixel 5:</span> The blue channel contains the index of the frame for the Pressed state
+<br>
+<br>
+<img src="images/button2.png">
+<br>
+<br>
+<h3>Transitions</h3>
+The rest of the pixels describe the transitions between the different states, in this order:
+<br>
+<ol>
+  <li>Normal to Hot</li>
+  <li>Hot to Normal</li>
+  <li>Normal to Pressed</li>
+  <li>Pressed to Normal</li>
+  <li>Hot to Pressed</li>
+  <li>Pressed to Hot</li>
+</ol>
+The blue channel of the first pixel of each transition contains the duration of the animation in 1/60th of a second (so 60 means 1 second). If this is 0, then there is no transition.
+<br>
+The green channel contains the number of frame ranges that follow. If this is 0, then the transition is a direct transition from the start state to the end state.
+<br>
+The red channel is 1 for the default behavior to cross-blend between frames and 0 to disable blending.
+<br>
+<br>
+The next few pixels contain pairs or frame ranges that make up the animation between the states. Their count is in the green channel of the first pixel of the transition. The first frame in the range is in the blue channel and the last frame is in the red channel. If the first and last frame of the range are different, then both frames and all frames between them are included.
+<br>
+<br>
+If the first and the last frame are the same, then the range identifies a single frame. This allows for precise selection of each frame of the animation.
+<br>
+<br>
+<img src="images/button3.png">
+<br>
+<br>
+In this example the Normal to Hot animation contains frames from 0 to 10. They play for 0.3 seconds and allow blending between frames. The Hot to Normal animation is the same but in reverse – it plays from frame 10 to frame 0.
+<br>
+The other 4 transitions are empty.
+<br>
+<br>
+<h2>Open-Shell Limitations</h2>
+While the format is very flexible and allows for custom animations between all states, Open-Shell does not support all features.
+<br>
+<ol>
+<li>It only supports animations between the Normal and Hot states. Any transitions involving the Pressed state are instant to improve responsiveness
+<br>
+<br>
+</li>
+<li>The animations between Normal and Hot must use the same (or similar) frames in both directions. Potentially the two transitions can play at different speed. The reason is that at any point during the animation it can be interrupted and the opposite animation will start from the current frame. This can happen when the mouse moves in and out of the start button
+<br>
+</li>
+</ol>
+<br>
+The system also allows you to create a button with a single image. Just set pixels from 3 to 11 to 0. Then frame 0 will be used for all states.
+<br>
+</body>
+</html>

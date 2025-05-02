@@ -315,6 +315,7 @@ bool CMenuContainer::s_bShowTopEmpty=false;
 bool CMenuContainer::s_bNoDragDrop=false;
 bool CMenuContainer::s_bNoContextMenu=false;
 bool CMenuContainer::s_bExpandLinks=false;
+bool CMenuContainer::s_bSingleClickFolders=false;
 bool CMenuContainer::s_bLogicalSort=false;
 bool CMenuContainer::s_bExtensionSort=false;
 bool CMenuContainer::s_bAllPrograms=false;
@@ -343,7 +344,8 @@ bool CMenuContainer::s_bMRULoaded=false;
 const CItemManager::ItemInfo *CMenuContainer::s_JumpAppInfo;
 CJumpList CMenuContainer::s_JumpList;
 int CMenuContainer::s_TaskBarId;
-HWND CMenuContainer::s_TaskBar, CMenuContainer::s_StartButton;
+HWND CMenuContainer::s_TaskBar;
+HWND CMenuContainer::s_StartButton;	// custom start button (if any)
 UINT CMenuContainer::s_TaskBarEdge;
 RECT CMenuContainer::s_StartRect;
 HWND CMenuContainer::s_LastFGWindow;
@@ -443,7 +445,10 @@ LRESULT CALLBACK CMenuContainer::SubclassSearchBox( HWND hWnd, UINT uMsg, WPARAM
 			SetBkColor(hdc,GetSysColor(COLOR_WINDOW));
 			SetBkMode(hdc,TRANSPARENT);
 			SetTextColor(hdc,s_Skin.Search_text_colors[1]);
-			DrawText(hdc,pParent->m_Items[pParent->m_SearchIndex].name,-1,&rc,DT_SINGLELINE|DT_EDITCONTROL|(s_bRTL?DT_RIGHT:DT_LEFT));
+			if (GetSettingBool(L"SearchHint"))
+				DrawText(hdc,GetSettingString(L"SearchHintText"),-1,&rc,DT_SINGLELINE|DT_EDITCONTROL|(s_bRTL?DT_RIGHT:DT_LEFT));
+			else
+				DrawText(hdc,pParent->m_Items[pParent->m_SearchIndex].name,-1,&rc,DT_SINGLELINE|DT_EDITCONTROL|(s_bRTL?DT_RIGHT:DT_LEFT));
 			SelectObject(hdc,font0);
 		}
 		return res;
@@ -563,7 +568,7 @@ LRESULT CALLBACK CMenuContainer::SubclassSearchBox( HWND hWnd, UINT uMsg, WPARAM
 		{
 			pParent->SendMessage(WM_SYSKEYDOWN,wParam,lParam);
 			if (wParam==VK_MENU)
-				pParent->ShowKeyboardCues();
+				pParent->ShowKeyboardCues(true);
 		}
 		else
 		{
@@ -1066,7 +1071,7 @@ void CMenuContainer::AddStandardItems( void )
 		const StdMenuItem *pInlineParent=NULL;
 		int searchProviderIndex=-1;
 		m_SearchProvidersCount=0;
-		MenuSkin::TIconSize mainIconSize=s_Skin.Main_icon_size;
+		bool bSecondColumn=false;
 		for (const StdMenuItem *pStdItem=m_pStdItem;;pStdItem++)
 		{
 			if (pStdItem->id==MENU_LAST)
@@ -1084,8 +1089,8 @@ void CMenuContainer::AddStandardItems( void )
 			if (m_bSubMenu && pStdItem->id==s_ShutdownCommand)
 				continue;
 
-			if (pStdItem->id==MENU_COLUMN_BREAK && m_bTwoColumns)
-				mainIconSize=s_Skin.Main2_icon_size;
+			if (pStdItem->id==MENU_COLUMN_BREAK && !m_bSubMenu && s_Skin.TwoColumns)
+				bSecondColumn=true;
 
 			int stdOptions=GetStdOptions(pStdItem->id);
 			if (!(stdOptions&MENU_ENABLED)) continue;
@@ -1266,6 +1271,10 @@ void CMenuContainer::AddStandardItems( void )
 			item.bSplit=item.bFolder && (item.pStdItem->settings&StdMenuItem::MENU_SPLIT_BUTTON)!=0;
 
 			// get icon
+			MenuSkin::TIconSize mainIconSize=!bSecondColumn ? s_Skin.Main_icon_size : s_Skin.Main2_icon_size;
+			if (item.bInline && mainIconSize==MenuSkin::ICON_SIZE_NONE)
+				mainIconSize=s_Skin.Main_icon_size;
+			
 			CItemManager::TIconSizeType iconSizeType;
 			int refreshFlags;
 			if (bSearchProvider7 || m_bSubMenu)
@@ -1578,6 +1587,23 @@ static const wchar_t *g_MfuIgnoreExes[]={
 	L"WLRMDR.EXE",
 	L"WUAPP.EXE",
 };
+
+static bool IgnoreUserAssistItem(const UserAssistItem& uaItem)
+{
+	static constexpr const wchar_t* ignoredNames[] =
+	{
+		DESKTOP_APP_ID,
+		L"Microsoft.Windows.ShellExperienceHost_cw5n1h2txyewy!App",
+	};
+
+	for (const auto& name : ignoredNames)
+	{
+		if (_wcsicmp(uaItem.name, name) == 0)
+			return true;
+	}
+
+	return false;
+}
 
 void CMenuContainer::GetRecentPrograms( std::vector<MenuItem> &items, int maxCount )
 {
@@ -1931,9 +1957,9 @@ void CMenuContainer::GetRecentPrograms( std::vector<MenuItem> &items, int maxCou
 					continue;
 				}
 
-				if (_wcsicmp(uaItem.name,DESKTOP_APP_ID)==0)
+				if (IgnoreUserAssistItem(uaItem))
 				{
-					LOG_MENU(LOG_MFU,L"UserAssist: Dropping: Ignore desktop");
+					LOG_MENU(LOG_MFU,L"UserAssist: Dropping: Ignore '%s'",uaItem.name);
 					continue;
 				}
 
@@ -2237,7 +2263,7 @@ void CMenuContainer::AddJumpListItems( std::vector<MenuItem> &items )
 							{
 								ILFree(item.pItem1);
 								item.pItem1=pidl2.Detach();
-								pItem=pItem2;
+								pItem=std::move(pItem2);
 							}
 						}
 					}
@@ -2499,9 +2525,9 @@ void CMenuContainer::InitItems( void )
 		m_Items.resize(MAX_MENU_ITEMS);
 	}
 
-	if (m_Options&CONTAINER_CONTROLPANEL)
+	if (m_Options&CONTAINER_CONTROLPANEL && !(m_Options&CONTAINER_NOSUBFOLDERS))
 	{
-		// expand Administrative Tools. must be done after the sorting because we don't want the folder to jump to the top
+		// expand Administrative Tools when displaying as a menu. must be done after the sorting because we don't want the folder to jump to the top
 		unsigned int AdminToolsHash=CalcFNVHash(L"::{D20EA4E1-3957-11D2-A40B-0C5020524153}");
 		for (std::vector<MenuItem>::iterator it=m_Items.begin();it!=m_Items.end();++it)
 			if (it->nameHash==AdminToolsHash)
@@ -2740,7 +2766,7 @@ bool CMenuContainer::InitSearchItems( void )
 	{
 		sepHeight=s_Skin.ItemSettings[s_Skin.More_bitmap_Size.cx?MenuSkin::LIST_SEPARATOR_SPLIT:MenuSkin::LIST_SEPARATOR].itemHeight;
 		itemHeight=s_Skin.ItemSettings[MenuSkin::LIST_ITEM].itemHeight;
-		// total height minus the search box and the "more results"/"search internet"
+		// total height minus the search box and the "more results"/"search internet", if present
 		maxHeight=m_Items[m_SearchIndex].itemRect.top-s_Skin.Main_search_padding.top-s_Skin.Search_padding.top;
 		maxHeight-=itemHeight*(m_SearchItemCount-1);
 		if (!s_SearchResults.bSearching && !HasMoreResults())
@@ -5083,8 +5109,14 @@ void CMenuContainer::UpdateSearchResults( bool bForceShowAll )
 }
 
 // Turn on the keyboard cues from now on. This is done when a keyboard action is detected
-void CMenuContainer::ShowKeyboardCues( void )
+void CMenuContainer::ShowKeyboardCues( bool alt )
 {
+	if (!GetSettingBool(L"EnableAccelerators"))
+		return;
+
+	if (GetSettingBool(L"AltAccelerators") && !alt)
+		return;
+
 	if (!s_bKeyboardCues)
 	{
 		s_bKeyboardCues=true;
@@ -5116,7 +5148,7 @@ LRESULT CMenuContainer::OnSysCommand( UINT uMsg, WPARAM wParam, LPARAM lParam, B
 	if ((wParam&0xFFF0)==SC_KEYMENU)
 	{
 		// stops Alt from activating the window menu
-		ShowKeyboardCues();
+		ShowKeyboardCues(true);
 		s_bOverrideFirstDown=false;
 	}
 	else
@@ -5459,7 +5491,7 @@ bool CMenuContainer::CanSelectItem( int index, bool bKeyboard )
 
 LRESULT CMenuContainer::OnKeyDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	ShowKeyboardCues();
+	ShowKeyboardCues((HIWORD(lParam)&KF_ALTDOWN)!=0);
 	bool bOldOverride=s_bOverrideFirstDown;
 	s_bOverrideFirstDown=false;
 
@@ -6079,6 +6111,12 @@ LRESULT CMenuContainer::OnSysKeyDown( UINT uMsg, WPARAM wParam, LPARAM lParam, B
 
 LRESULT CMenuContainer::OnChar( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
+	if (!GetSettingBool(L"EnableAccelerators"))
+		return TRUE;
+
+	if (GetSettingBool(L"AltAccelerators") && !(HIWORD(lParam) & KF_ALTDOWN))
+		return TRUE;
+
 	if (wParam>=0xD800 && wParam<=0xDBFF)
 		return TRUE; // don't support supplementary characters
 
@@ -6798,7 +6836,7 @@ LRESULT CMenuContainer::OnLButtonDblClick( UINT uMsg, WPARAM wParam, LPARAM lPar
 	ClientToScreen(&pt);
 	if (s_bWin7Style && item.id==MENU_PROGRAMS) // only single clicks for All Programs
 		OnLButtonDown(WM_LBUTTONDOWN,wParam,lParam,bHandled);
-	else if (!bArrow) // ignore double-click on the split arrow
+	else if (!bArrow && item.id!=MENU_APPS) // ignore double-click on the split arrow and Apps folder
 		ActivateItem(index,ACTIVATE_EXECUTE,&pt);
 	return 0;
 }
@@ -6822,7 +6860,7 @@ LRESULT CMenuContainer::OnLButtonUp( UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 	const MenuItem &item=m_Items[index];
 	POINT pt2=pt;
 	ClientToScreen(&pt2);
-	if (!item.bFolder)
+	if (!item.bFolder || (s_bSingleClickFolders && item.id!=MENU_PROGRAMS && item.id!=MENU_APPS && !bArrow)) // never open All Programs, Apps folder, or jumplists with single click
 	{
 		if (item.jumpIndex>=0 && m_bHotArrow)
 		{
@@ -7395,41 +7433,52 @@ static void CreateStartScreenFile( const wchar_t *fname )
 bool CMenuContainer::HasMoreResults( void )
 {
 	if (s_HasMoreResults==-1)
-		s_HasMoreResults=(GetSettingBool(L"SearchFiles") && HasSearchService())?1:0;
+		s_HasMoreResults=(GetSettingBool(L"MoreResults") && GetSettingBool(L"SearchFiles") && HasSearchService())?1:0;
 	return s_HasMoreResults!=0;
 }
 
 RECT CMenuContainer::CalculateWorkArea( const RECT &taskbarRect )
 {
-	RECT rc=s_MenuLimits;
-	if ((s_TaskBarEdge==ABE_LEFT || s_TaskBarEdge==ABE_RIGHT) && GetSettingBool(L"ShowNextToTaskbar"))
+	RECT rc;
+	if (!GetSettingBool(L"AlignToWorkArea"))
 	{
-		// when the taskbar is on the side and the menu is not on top of it
-		// the start button is assumed at the top
-		if (s_TaskBarEdge==ABE_LEFT)
-			rc.left=taskbarRect.right;
+		rc = s_MenuLimits;
+		if ((s_TaskBarEdge == ABE_LEFT || s_TaskBarEdge == ABE_RIGHT) && GetSettingBool(L"ShowNextToTaskbar"))
+		{
+			// when the taskbar is on the side and the menu is not on top of it
+			// the start button is assumed at the top
+			if (s_TaskBarEdge == ABE_LEFT)
+				rc.left = taskbarRect.right;
+			else
+				rc.right = taskbarRect.left;
+		}
 		else
-			rc.right=taskbarRect.left;
+		{
+			if (s_TaskBarEdge == ABE_BOTTOM)
+			{
+				// taskbar is at the bottom
+				rc.bottom = taskbarRect.top;
+			}
+			else if (s_TaskBarEdge == ABE_TOP)
+			{
+				// taskbar is at the top
+				rc.top = taskbarRect.bottom;
+			}
+			else
+			{
+				// taskbar is on the side, start button must be at the top
+				rc.top = s_StartRect.bottom;
+			}
+		}
 	}
 	else
 	{
-		if (s_TaskBarEdge==ABE_BOTTOM)
-		{
-			// taskbar is at the bottom
-			rc.bottom=taskbarRect.top;
-		}
-		else if (s_TaskBarEdge==ABE_TOP)
-		{
-			// taskbar is at the top
-			rc.top=taskbarRect.bottom;
-		}
-		else
-		{
-			// taskbar is on the side, start button must be at the top
-			rc.top=s_StartRect.bottom;
-		}
+		// Get working area of the monitor the specified taskbar is on
+		MONITORINFO info{ sizeof(MONITORINFO) };
+		HMONITOR mon = MonitorFromRect(&taskbarRect, 0);
+		GetMonitorInfo(mon, &info);
+		rc = info.rcWork;
 	}
-
 	if (!s_bLockWorkArea)
 	{
 		// exclude floating keyboard
@@ -7455,9 +7504,11 @@ RECT CMenuContainer::CalculateWorkArea( const RECT &taskbarRect )
 			}
 		}
 	}
+
 	return rc;
 }
 
+// Calculates start menu position
 POINT CMenuContainer::CalculateCorner( void )
 {
 	RECT margin={0,0,0,0};
@@ -7466,19 +7517,22 @@ POINT CMenuContainer::CalculateCorner( void )
 
 	POINT corner;
 	if (m_Options&CONTAINER_LEFT)
-		corner.x=s_MainMenuLimits.left+margin.left;
+		corner.x=max(s_MainMenuLimits.left,s_StartRect.left)+margin.left;
 	else
-		corner.x=s_MainMenuLimits.right+margin.right;
+		corner.x=min(s_MainMenuLimits.right,s_StartRect.right)+margin.right;
 
 	if (m_Options&CONTAINER_TOP)
 	{
 		if (s_bBehindTaskbar)
-			corner.y=s_MainMenuLimits.top+margin.top;
+			corner.y=max(s_MainMenuLimits.top,s_StartRect.top)+margin.top;
 		else
-			corner.y=s_MainMenuLimits.top;
+			corner.y=max(s_MainMenuLimits.top,s_StartRect.top);
 	}
 	else
 		corner.y=s_MainMenuLimits.bottom+margin.bottom;
+
+	corner.x+=GetSettingInt(L"HorizontalMenuOffset");
+	corner.y+=GetSettingInt(L"VerticalMenuOffset");
 
 	return corner;
 }
@@ -7587,6 +7641,9 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 	// initialize all settings
 	bool bErr=false;
 	HMONITOR initialMonitor=MonitorFromWindow(s_TaskBar,MONITOR_DEFAULTTONEAREST);
+	// note: GetTaskbarPosition properly identifies monitor in case of multi-monitor setup and automatic taskbar hiding
+	GetTaskbarPosition(s_TaskBar,NULL,&initialMonitor,NULL);
+
 	int dpi=CItemManager::GetDPI(true);
 	if (!CItemManager::GetDPIOverride() && GetWinVersion()>=WIN_VER_WIN81)
 	{
@@ -7634,6 +7691,7 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 	g_ItemManager.ResetTempIcons();
 	s_ScrollMenus=GetSettingInt(L"ScrollType");
 	s_bExpandLinks=GetSettingBool(L"ExpandFolderLinks");
+	s_bSingleClickFolders=GetSettingBool(L"SingleClickFolders");
 	s_bLogicalSort=GetSettingBool(L"NumericSort");
 	s_MaxRecentDocuments=GetSettingInt(L"MaxRecentDocuments");
 	s_ShellFormat=RegisterClipboardFormat(CFSTR_SHELLIDLIST);
@@ -7997,7 +8055,7 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 
 	s_bNoDragDrop=!GetSettingBool(L"EnableDragDrop");
 	s_bNoContextMenu=!GetSettingBool(L"EnableContextMenu");
-	s_bKeyboardCues=bKeyboard;
+	s_bKeyboardCues=bKeyboard&&GetSettingBool(L"EnableAccelerators")&&!GetSettingBool(L"AltAccelerators");
 	s_RecentPrograms=(TRecentPrograms)GetSettingInt(L"RecentPrograms");
 	if (s_RecentPrograms!=RECENT_PROGRAMS_NONE)
 		LoadMRUShortcuts();
@@ -8019,7 +8077,8 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 	}
 	else
 	{
-		wchar_t path[_MAX_PATH]=START_MENU_PINNED_ROOT;
+		wchar_t path[_MAX_PATH];
+		Strcpy(path,_countof(path),GetSettingString(L"PinnedItemsPath"));
 		DoEnvironmentSubst(path,_countof(path));
 		SHCreateDirectory(NULL,path);
 		s_PinFolder=path;
@@ -8031,7 +8090,8 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 	{
 		bool bPinned=GetSettingInt(L"PinnedPrograms")==PINNED_PROGRAMS_PINNED;
 		bool bShortcut=GetSettingBool(L"StartScreenShortcut");
-		wchar_t path[_MAX_PATH]=START_MENU_PINNED_ROOT L"\\" STARTSCREEN_COMMAND;
+		wchar_t path[_MAX_PATH];
+		Sprintf(path,_countof(path),L"%s\\%s",GetSettingString(L"PinnedItemsPath"),STARTSCREEN_COMMAND);
 		DoEnvironmentSubst(path,_countof(path));
 		if (bPinned)
 		{
@@ -8162,7 +8222,7 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 		s_UserPicture.Init(pStartMenu);
 	}
 	dummyRc.right++;
-	pStartMenu->SetWindowPos(NULL,&dummyRc,SWP_NOZORDER);
+	pStartMenu->SetWindowPos(NULL,&dummyRc,SWP_NOZORDER|SWP_NOACTIVATE);
 
 	memset(&s_StartRect,0,sizeof(s_StartRect));
 
@@ -8491,7 +8551,7 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 	// reposition start menu
 	if (bTopMost || !s_bBehindTaskbar)
 		animFlags|=AW_TOPMOST;
-	pStartMenu->SetWindowPos((animFlags&AW_TOPMOST)?HWND_TOPMOST:HWND_TOP,corner.x,corner.y,0,0,(initialMonitor!=s_MenuMonitor && !bAllPrograms)?SWP_NOMOVE|SWP_NOSIZE:0);
+	pStartMenu->SetWindowPos((animFlags&AW_TOPMOST)?HWND_TOPMOST:HWND_TOP,corner.x,corner.y,0,0,((initialMonitor!=s_MenuMonitor && !bAllPrograms)?SWP_NOMOVE|SWP_NOSIZE:0)|SWP_NOACTIVATE);
 
 	pStartMenu->InitItems();
 	pStartMenu->m_MaxWidth=s_MainMenuLimits.right-s_MainMenuLimits.left;

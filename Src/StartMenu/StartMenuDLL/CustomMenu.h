@@ -15,6 +15,7 @@ struct CStdCommand7
 		ITEM_SINGLE=1, // this item never has sub-menu
 		ITEM_FOLDER=2, // this item always has sub-menu
 		ITEM_COMPUTER=4, // this item can be expanded only one level
+		ITEM_NODRIVES=8, // this item can never be expanded only one level
 	};
 	const wchar_t *command;
 	int nameID;

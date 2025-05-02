@@ -11,6 +11,7 @@
 #include "Settings.h"
 #include "SettingsUI.h"
 #include "SettingsUIHelper.h"
+#include "FileHelper.h"
 #include "Translations.h"
 #include "LogManager.h"
 #include "FNVHash.h"
@@ -60,17 +61,24 @@ static INT_PTR CALLBACK RenameDlgProc( HWND hwndDlg, UINT uMsg, WPARAM wParam, L
 	return FALSE;
 }
 
-static void SetShutdownPrivileges( void )
+static bool SetShutdownPrivileges()
 {
+	bool retval = false;
+
 	HANDLE hToken;
-	if (OpenProcessToken(GetCurrentProcess(),TOKEN_ADJUST_PRIVILEGES|TOKEN_QUERY,&hToken))
+	if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES|TOKEN_QUERY, &hToken))
 	{
 		TOKEN_PRIVILEGES tp={1};
-		if (LookupPrivilegeValue(NULL,L"SeShutdownPrivilege",&tp.Privileges[0].Luid))
-			tp.Privileges[0].Attributes=SE_PRIVILEGE_ENABLED;
-		AdjustTokenPrivileges(hToken,FALSE,&tp,sizeof(TOKEN_PRIVILEGES),NULL,NULL); 
+		if (LookupPrivilegeValue(NULL, L"SeShutdownPrivilege", &tp.Privileges[0].Luid))
+		{
+			tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+			if (AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL) && GetLastError() == ERROR_SUCCESS)
+				retval = true;
+		}
 		CloseHandle(hToken);
 	}
+
+	return retval;
 }
 
 static void DoSearchSubst( wchar_t *buf, int size, const wchar_t *search )
@@ -657,10 +665,337 @@ private:
 	bool m_bArmed;
 };
 
-#ifndef EWX_HYBRID_SHUTDOWN
-#define EWX_HYBRID_SHUTDOWN 0x00400000
-#endif
-#define EWX_INSTALL_UPDATES 0x00100000 // undocumented switch to install updates on shutdown
+// Win10
+MIDL_INTERFACE("833EE9A0-2999-432C-8EF2-87A8EC2D748D")
+IUxUpdateManager_Win10 : public IUnknown
+{
+	STDMETHOD(GetUxStateVariableBOOL)(enum UxUpdateStateVariable, int*, int*);
+	STDMETHOD(GetUxStateVariableDWORD)(UxUpdateStateVariable, DWORD*, int*);
+	STDMETHOD(GetUxStateVariableSYSTEMTIME)(UxUpdateStateVariable, SYSTEMTIME*, int*);
+	STDMETHOD(SetUxStateVariableBOOL)(UxUpdateStateVariable, int);
+	STDMETHOD(SetUxStateVariableDWORD)(UxUpdateStateVariable, DWORD);
+	STDMETHOD(SetUxStateVariableSYSTEMTIME)(UxUpdateStateVariable, SYSTEMTIME);
+	STDMETHOD(DeleteUxStateVariable)(UxUpdateStateVariable);
+	STDMETHOD(GetNextRebootTaskRunTime)(int*, SYSTEMTIME*);
+	STDMETHOD(CreateRebootTasks)(const wchar_t*, SYSTEMTIME);
+	STDMETHOD(CreateUpdateResultsTaskSchedule)(void);
+	STDMETHOD(CreateMigrationResultsTaskSchedule)(void);
+	STDMETHOD(CreateUpdateLogonNotificationTaskSchedule)(void);
+	STDMETHOD(CreateUpdateNotificationTaskSchedule)(SYSTEMTIME);
+	STDMETHOD(CreateLogonRebootTaskSchedule)(void);
+	STDMETHOD(DidUXRebootTaskWakeUpDevice)(int*);
+	STDMETHOD(RemoveUpdateResultsTaskSchedule)(void);
+	STDMETHOD(RemoveLogonRebootTaskSchedule)(void);
+	STDMETHOD(RemoveMigrationResultsTaskSchedule)(void);
+	STDMETHOD(EnableRebootTasks)(void);
+	STDMETHOD(DisableRebootTasks)(void);
+	STDMETHOD(ValidateAndRecoverRebootTasks)(void);
+	STDMETHOD(RebootToCompleteInstall)(DWORD, int, DWORD*, short, short, DWORD);
+	STDMETHOD(IsRestartAllowed)(DWORD, int, DWORD, int*);
+	STDMETHOD(GetIsWaaSOutOfDate)(DWORD, int, int, int*, DWORD*);
+	STDMETHOD(GetWaaSHoursOutOfDate)(int, int, DWORD*);
+	STDMETHOD(GetCachedPolicy)(DWORD, VARIANT*, DWORD*, DWORD*);
+	STDMETHOD(GetEnterpriseCachedPolicy)(DWORD, VARIANT*, DWORD*, DWORD*);
+	STDMETHOD(GetCachedSettingValue)(DWORD, short, VARIANT*);
+	STDMETHOD(GetOptInToMU)(int*);
+	STDMETHOD(SetOptInToMU)(int);
+	STDMETHOD(SetAndModifyShutdownFlags)(DWORD, DWORD*);
+	STDMETHOD(GetIsFlightingEnabled)(int*);
+	STDMETHOD(GetIsCTA)(int*);
+	STDMETHOD(NotifyStateVariableChange)(void);
+	STDMETHOD(GetAlwaysAllowMeteredNetwork)(int*);
+};
+
+// Win11
+MIDL_INTERFACE("B96BA95F-9479-4656-B7A1-6F3A69091910")
+IUxUpdateManager_Win11 : public IUnknown
+{
+	STDMETHOD(GetUxStateVariableBOOL)(enum UxUpdateStateVariable, int*, int*);
+	STDMETHOD(GetUxStateVariableDWORD)(UxUpdateStateVariable, DWORD*, int*);
+	STDMETHOD(GetUxStateVariableSYSTEMTIME)(UxUpdateStateVariable, SYSTEMTIME*, int*);
+	STDMETHOD(SetUxStateVariableBOOL)(UxUpdateStateVariable, int);
+	STDMETHOD(SetUxStateVariableDWORD)(UxUpdateStateVariable, DWORD);
+	STDMETHOD(SetUxStateVariableSYSTEMTIME)(UxUpdateStateVariable, SYSTEMTIME);
+	STDMETHOD(DeleteUxStateVariable)(UxUpdateStateVariable);
+	STDMETHOD(GetNextScheduledRebootTaskRunTime)(SYSTEMTIME*);
+	STDMETHOD(GetIsRebootTaskScheduledToRun)(int*);
+	STDMETHOD(CreateRebootTasks)(const wchar_t*, SYSTEMTIME);
+	STDMETHOD(CreateUpdateResultsTaskSchedule)(void);
+	STDMETHOD(CreateMigrationResultsTaskSchedule)(void);
+	STDMETHOD(CreateUpdateLogonNotificationTaskSchedule)(void);
+	STDMETHOD(CreateUpdateNotificationTaskSchedule)(SYSTEMTIME);
+	STDMETHOD(CreateLogonRebootTaskSchedule)(void);
+	STDMETHOD(DidUXRebootTaskWakeUpDevice)(int*);
+	STDMETHOD(RemoveUpdateResultsTaskSchedule)(void);
+	STDMETHOD(RemoveLogonRebootTaskSchedule)(void);
+	STDMETHOD(RemoveMigrationResultsTaskSchedule)(void);
+	STDMETHOD(EnableRebootTasks)(void);
+	STDMETHOD(DisableRebootTasks)(void);
+	STDMETHOD(ValidateAndRecoverRebootTasks)(void);
+	STDMETHOD(RebootToCompleteInstall)(DWORD, int, DWORD*, int, int, double);
+	STDMETHOD(IsRestartAllowed)(DWORD, int, double, int*);
+	STDMETHOD(GetIsWaaSOutOfDate)(DWORD, int, int, int*, DWORD*);
+	STDMETHOD(GetWaaSHoursOutOfDate)(int, int, DWORD*);
+	STDMETHOD(GetDeviceEndOfServiceDate)(int, int*, FILETIME*);
+	STDMETHOD(GetCachedPolicy)(DWORD, VARIANT*, DWORD*, DWORD*);
+	STDMETHOD(GetEnterpriseCachedPolicy)(DWORD, VARIANT*, DWORD*, DWORD*);
+	STDMETHOD(GetOptInToMU)(int*);
+	STDMETHOD(SetOptInToMU)(int);
+	STDMETHOD(SetAndModifyShutdownFlags)(DWORD, DWORD*);
+	STDMETHOD(GetIsFlightingEnabled)(int*);
+	STDMETHOD(GetIsCTA)(int*);
+	STDMETHOD(NotifyStateVariableChange)(void);
+	STDMETHOD(GetAlwaysAllowMeteredNetwork)(int*);
+	STDMETHOD(SetInstallAtShutdown)(int);
+	STDMETHOD(GetUxStateVariableValueOrDefaultBOOL)(UxUpdateStateVariable, int, int*);
+	STDMETHOD(GetUxStateVariableValueOrDefaultDWORD)(UxUpdateStateVariable, DWORD, DWORD*);
+	STDMETHOD(GetUxStateVariableValueOrDefaultSYSTEMTIME)(UxUpdateStateVariable, SYSTEMTIME, SYSTEMTIME*);
+	STDMETHOD(GetSuggestedRebootTime)(int, SYSTEMTIME, SYSTEMTIME*, int*);
+	STDMETHOD(GetSuggestedActiveHours)(DWORD, DWORD*, DWORD*, int*);
+	STDMETHOD(GetIsIntervalAcceptableForActiveHours)(SYSTEMTIME, SYSTEMTIME, int*);
+	STDMETHOD(GetSmartScheduledPredictionsAccurate)(int*);
+	STDMETHOD(EvaluateAndStoreRebootDowntimePrediction)(void);
+	STDMETHOD(GetCachedRebootDowntimePrediction)(DWORD*);
+	STDMETHOD(GetAlwaysAllowCTADownload)(int*);
+};
+
+MIDL_INTERFACE("07F3AFAC-7C8A-4CE7-A5E0-3D24EE8A77E0")
+IUpdateSessionOrchestrator : public IUnknown
+{
+	STDMETHOD(CreateUpdateSession)(enum UpdateSessionType, const GUID&, void**);
+	STDMETHOD(GetCurrentActiveUpdateSessions)(class IUsoSessionCollection**);
+	STDMETHOD(LogTaskRunning)(const wchar_t*);
+	STDMETHOD(CreateUxUpdateManager)(IUnknown**);
+};
+
+DWORD WindowsUpdateAdjustShutdownFlags(DWORD flags)
+{
+	DWORD retval = flags;
+
+	{
+		// "EnhancedShutdownEnabled" value must exist if Windows updates are prepared
+		// otherwise there is no need to do anything
+
+		CRegKey key;
+		if (key.Open(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\WindowsUpdate\\Orchestrator", KEY_READ) != ERROR_SUCCESS)
+			return retval;
+
+		DWORD value;
+		if (key.QueryDWORDValue(L"EnhancedShutdownEnabled", value) != ERROR_SUCCESS)
+			return retval;
+	}
+
+	// this is what standard Windows shutdown handling does inside shutdownux!UsoCommitHelper::SetAndModifyShutdownFlags
+
+	static const GUID CLSID_UpdateSessionOrchestrator = { 0xb91d5831,0xb1bd,0x4608,{0x81,0x98,0xd7,0x2e,0x15,0x50,0x20,0xf7} };
+
+	CComPtr<IUpdateSessionOrchestrator> updateSessionOrchestrator;
+	if (SUCCEEDED(updateSessionOrchestrator.CoCreateInstance(CLSID_UpdateSessionOrchestrator, nullptr, CLSCTX_LOCAL_SERVER)))
+	{
+		CComPtr<IUnknown> mgr;
+		if (SUCCEEDED(updateSessionOrchestrator->CreateUxUpdateManager(&mgr)))
+		{
+			// call to IUxUpdateManager::SetAndModifyShutdownFlags will ensure that Windows updates will be dismissed if there is no `SHUTDOWN_INSTALL_UPDATES` flag provided
+			// it also provides recommended shutdown flags in some cases (so we will use them as advised)
+			//
+			// the method is implemented by `UxUpdateManager::SetAndModifyShutdownFlags` in `usosvc.dll` (Win10) / `usosvcimpl.dll` (Win11)
+
+			if (CComPtr<IUxUpdateManager_Win10> updateManager; SUCCEEDED(mgr.QueryInterface(&updateManager)))
+			{
+				DWORD newFlags;
+				if (SUCCEEDED(updateManager->SetAndModifyShutdownFlags(flags, &newFlags)))
+					retval = newFlags;
+			}
+			else if (CComPtr<IUxUpdateManager_Win11> updateManager; SUCCEEDED(mgr.QueryInterface(&updateManager)))
+			{
+				DWORD newFlags;
+				if (SUCCEEDED(updateManager->SetAndModifyShutdownFlags(flags, &newFlags)))
+					retval = newFlags;
+			}
+		}
+	}
+
+	return retval;
+}
+
+static TOKEN_ELEVATION_TYPE GetCurrentTokenElevationType()
+{
+	TOKEN_ELEVATION_TYPE retval = TokenElevationTypeDefault;
+
+	HANDLE token;
+	if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
+	{
+		TOKEN_ELEVATION_TYPE elevationType;
+		DWORD returnLength;
+		if (GetTokenInformation(token, TokenElevationType, &elevationType, sizeof(elevationType), &returnLength) && returnLength == sizeof(elevationType))
+			retval = elevationType;
+
+		CloseHandle(token);
+	}
+
+	return retval;
+}
+
+static BOOL WINAPI WinStationGetLoggedOnCount(ULONG* pUserSessions, ULONG* pDeviceSessions)
+{
+	static auto p = static_cast<decltype(&WinStationGetLoggedOnCount)>((void*)GetProcAddress(GetModuleHandle(L"winsta.dll"), "WinStationGetLoggedOnCount"));
+	if (p)
+		return p(pUserSessions, pDeviceSessions);
+
+	// fall-back
+	return FALSE;
+}
+
+static bool ProceedWithShutdown(DWORD flags)
+{
+	// this logic is inspired by user32!DisplayExitWindowsWarnings function (called from ExitWindowsEx)
+
+	ULONG userSessions = 0;
+	ULONG deviceSessions = 0;
+
+	WinStationGetLoggedOnCount(&userSessions, &deviceSessions);
+
+	// we can proceed if there is at most one user session and no device sessions
+	if (userSessions <= 1 && deviceSessions == 0)
+		return true;
+
+	// otherwise inform user that somebody else is using the machine and ask for confirmation
+
+	UINT msgId = 0;
+
+	if (flags & SHUTDOWN_RESTART)
+	{
+		if (userSessions <= 1)
+			msgId = 755;					// One or more devices on your network are using the computer resources. Restarting Windows might cause them to lose data.
+		else if (deviceSessions != 0)
+			msgId = 756;					// Other people and devices are using the computer resources. Restarting Windows might cause them to lose data.
+		else
+			msgId = 714;					// Other people are logged on to this computer. Restarting Windows might cause them to lose data.
+	}
+	else
+	{
+		if (userSessions <= 1)
+			msgId = 753;					// One or more devices on your network are using the computer resources.Shutting down Windows might cause them to lose data.
+		else if (deviceSessions != 0)
+			msgId = 754;					// Other people and devices are are using the computer resources. Shutting down Windows might cause them to lose data.
+		else
+			msgId = 713;					// Other people are logged on to this computer. Shutting down Windows might cause them to lose data.
+	}
+
+	WCHAR message[MAX_PATH]{};
+	LoadString(GetModuleHandle(L"user32.dll"), msgId, message, _countof(message));
+
+	return MessageBox(NULL, message, L"Open-Shell", MB_YESNO | MB_ICONEXCLAMATION | MB_DEFBUTTON1 | MB_SYSTEMMODAL | MB_SETFOREGROUND | MB_SERVICE_NOTIFICATION) != IDNO;
+}
+
+static bool ExecuteShutdownCommand(TMenuID menuCommand)
+{
+	DWORD flags = 0;
+
+	switch (menuCommand)
+	{
+	case MENU_RESTART: // restart
+	case MENU_RESTART_NOUPDATE:
+	case MENU_RESTART_UPDATE: // update and restart
+	case MENU_RESTART_ADVANCED: // advanced restart
+		flags = SHUTDOWN_RESTART;
+
+		if (menuCommand == MENU_RESTART_UPDATE)
+			flags |= SHUTDOWN_INSTALL_UPDATES;
+
+		if (menuCommand == MENU_RESTART_ADVANCED)
+			flags |= SHUTDOWN_RESTART_BOOTOPTIONS;
+
+		break;
+
+	case MENU_SHUTDOWN: // shutdown
+	case MENU_SHUTDOWN_NOUPDATE:
+	case MENU_SHUTDOWN_UPDATE: // update and shutdown
+	case MENU_SHUTDOWN_HYBRID: // hybrid shutdown
+		flags = SHUTDOWN_POWEROFF;
+
+		if (menuCommand == MENU_SHUTDOWN_UPDATE)
+			flags |= SHUTDOWN_INSTALL_UPDATES;
+
+		if (menuCommand == MENU_SHUTDOWN_HYBRID)
+		{
+			CRegKey regPower;
+			if (regPower.Open(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power", KEY_READ) == ERROR_SUCCESS)
+			{
+				DWORD val = 0;
+				if (regPower.QueryDWORDValue(L"HiberbootEnabled", val) == ERROR_SUCCESS && val == 1)
+					flags |= SHUTDOWN_HYBRID;
+			}
+		}
+		break;
+	}
+
+	if (flags)
+	{
+		if (!ProceedWithShutdown(flags))
+			return true;
+
+		flags |= SHUTDOWN_FORCE_OTHERS;
+
+		if (SetShutdownPrivileges())
+		{
+			flags = WindowsUpdateAdjustShutdownFlags(flags);
+			InitiateShutdown(NULL, NULL, 0, flags, SHTDN_REASON_FLAG_PLANNED);
+		}
+		else
+		{
+			// we don't have shutdown rights
+			// lets try silent elevate via SystemSettingsAdminFlows (for limited admin users only)
+			if (GetCurrentTokenElevationType() == TokenElevationTypeLimited)
+			{
+				flags = WindowsUpdateAdjustShutdownFlags(flags);
+
+				wchar_t cmdLine[32]{};
+				Sprintf(cmdLine, _countof(cmdLine), L"Shutdown %d %d", flags, SHTDN_REASON_FLAG_PLANNED);
+
+				SHELLEXECUTEINFO sei{};
+				sei.cbSize = sizeof(sei);
+				sei.lpFile = L"%systemroot%\\system32\\SystemSettingsAdminFlows.exe";
+				sei.lpParameters = cmdLine;
+				sei.lpVerb = L"runas";
+				sei.fMask = SEE_MASK_DOENVSUBST | SEE_MASK_FLAG_NO_UI;
+
+				ShellExecuteEx(&sei);
+			}
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+NTSTATUS
+NTAPI
+NtPowerInformation(
+	_In_ POWER_INFORMATION_LEVEL InformationLevel,
+	_In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,
+	_In_ ULONG InputBufferLength,
+	_Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
+	_In_ ULONG OutputBufferLength
+);
+
+static bool ConnectedStandby()
+{
+	SYSTEM_POWER_CAPABILITIES powerCaps{};
+	GetPwrCapabilities(&powerCaps);
+
+	if (powerCaps.AoAc)
+	{
+		static auto pNtPowerInformation = static_cast<decltype(&NtPowerInformation)>((void*)GetProcAddress(GetModuleHandle(L"ntdll.dll"), "NtPowerInformation"));
+		if (pNtPowerInformation)
+			pNtPowerInformation(ScreenOff, NULL, 0, NULL, 0);
+
+		return true;
+	}
+
+	return false;
+}
 
 static bool ExecuteSysCommand( TMenuID menuCommand )
 {
@@ -800,40 +1135,6 @@ static bool ExecuteSysCommand( TMenuID menuCommand )
 			}
 			return true;
 
-		case MENU_RESTART: // restart
-		case MENU_RESTART_NOUPDATE:
-			SetShutdownPrivileges();
-			ExitWindowsEx(EWX_REBOOT,SHTDN_REASON_FLAG_PLANNED);
-			return true;
-
-		case MENU_RESTART_ADVANCED: // advanced restart
-			if (GetWinVersion()>=WIN_VER_WIN8)
-			{
-				STARTUPINFO startupInfo={sizeof(startupInfo)};
-				PROCESS_INFORMATION processInfo;
-				memset(&processInfo,0,sizeof(processInfo));
-				wchar_t exe[_MAX_PATH]=L"%windir%\\system32\\shutdown.exe";
-				DoEnvironmentSubst(exe,_countof(exe));
-				if (CreateProcess(exe,(LPWSTR)L"shutdown.exe /r /o /t 0",NULL,NULL,FALSE,CREATE_NO_WINDOW,NULL,NULL,&startupInfo,&processInfo))
-				{
-					CloseHandle(processInfo.hThread);
-					CloseHandle(processInfo.hProcess);
-				}
-			}
-			else
-				ExitWindowsEx(EWX_REBOOT,SHTDN_REASON_FLAG_PLANNED);
-			return true;
-
-		case MENU_RESTART_UPDATE: // update and restart
-			{
-				UINT flags=EWX_REBOOT;
-				if (GetWinVersion()>=WIN_VER_WIN8)
-					flags|=EWX_INSTALL_UPDATES;
-				SetShutdownPrivileges();
-				ExitWindowsEx(flags,SHTDN_REASON_FLAG_PLANNED);
-			}
-			return true;
-
 		case MENU_SWITCHUSER: // switch_user
 			if (GetWinVersion()>=WIN_VER_WIN10)
 			{
@@ -849,42 +1150,14 @@ static bool ExecuteSysCommand( TMenuID menuCommand )
 			LockWorkStation();
 			return true;
 
-		case MENU_SHUTDOWN: // shutdown
-		case MENU_SHUTDOWN_NOUPDATE:
-			SetShutdownPrivileges();
-			ExitWindowsEx(EWX_SHUTDOWN,SHTDN_REASON_FLAG_PLANNED);
-			return true;
-
-		case MENU_SHUTDOWN_UPDATE: // update and shutdown
-			SetShutdownPrivileges();
-			ExitWindowsEx(EWX_SHUTDOWN|EWX_INSTALL_UPDATES,SHTDN_REASON_FLAG_PLANNED);
-			return true;
-
-		case MENU_SHUTDOWN_HYBRID: // hybrid shutdown
-			SetShutdownPrivileges();
-			{
-				UINT flags=EWX_SHUTDOWN;
-				if (GetWinVersion()>=WIN_VER_WIN8)
-				{
-					CRegKey regPower;
-					if (regPower.Open(HKEY_LOCAL_MACHINE,L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power",KEY_READ)==ERROR_SUCCESS)
-					{
-						DWORD val;
-						if (regPower.QueryDWORDValue(L"HiberbootEnabled",val)==ERROR_SUCCESS && val==1)
-							flags|=EWX_HYBRID_SHUTDOWN;
-					}
-				}
-				ExitWindowsEx(flags,SHTDN_REASON_FLAG_PLANNED);
-			}
-			return true;
-
 		case MENU_SLEEP:
 			if (GetSystemMetrics(SM_REMOTESESSION))
 			{
 				WTSDisconnectSession(WTS_CURRENT_SERVER_HANDLE,WTS_CURRENT_SESSION,FALSE);
 				Sleep(250);
 			}
-			CreateThread(NULL,0,SleepThread,(void*)FALSE,0,NULL);
+			if (!ConnectedStandby())
+				CreateThread(NULL,0,SleepThread,(void*)FALSE,0,NULL);
 			return true;
 
 		case MENU_HIBERNATE:
@@ -936,6 +1209,8 @@ static bool ExecuteSysCommand( TMenuID menuCommand )
 			return true;
 
 		default:
+			if (ExecuteShutdownCommand(menuCommand))
+				return true;
 			return false;
 	}
 }
@@ -2782,12 +3057,19 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 			info.lpVerb=MAKEINTRESOURCEA(res-verbOffset);
 			info.lpVerbW=MAKEINTRESOURCEW(res-verbOffset);
 			info.nShow=SW_SHOWNORMAL;
+			bool bOpenTruePath=false;
+			wchar_t targetlnkPath[_MAX_PATH]; // path to target.lnk in a fake folder
 			wchar_t dir[_MAX_PATH];
 			if (SHGetPathFromIDList(pItemPidl1,dir))
 			{
-				PathRemoveFileSpec(dir);
-				if (GetFileAttributes(dir)!=INVALID_FILE_ATTRIBUTES)
-					info.lpDirectoryW=dir;
+				if (_stricmp(command,"open")==0 && GetSettingBool(L"OpenTruePath") && GetFakeFolder(targetlnkPath,_countof(targetlnkPath),dir))
+					bOpenTruePath=true;
+				else
+				{
+					PathRemoveFileSpec(dir);
+					if (GetFileAttributes(dir)!=INVALID_FILE_ATTRIBUTES)
+						info.lpDirectoryW=dir;
+				}
 			}
 			if (pPt)
 			{
@@ -2802,6 +3084,10 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 
 			if (bRefresh || bRefreshMain)
 				info.fMask|=CMIC_MASK_NOASYNC; // wait for delete/link commands to finish so we can refresh the menu
+
+			// we don't want our virtual folder to appear in Explorer's frequent list
+			if (item.pItemInfo && wcsncmp(item.pItemInfo->PATH, L"::{82E749ED-B971-4550-BAF7-06AA2BF7E836}", 40) == 0)
+				info.fMask &= ~CMIC_MASK_FLAG_LOG_USAGE;
 
 			s_bPreventClosing=true;
 			for (auto& it : s_Menus)
@@ -2818,9 +3104,20 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 			::SetForegroundWindow(g_OwnerWindow);
 			::SetWindowPos(g_OwnerWindow,HWND_TOPMOST,rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,0);
 			LOG_MENU(LOG_EXECUTE,L"Invoke command, ptr=%p, command='%S'",this,command);
-			HRESULT hr=pInvokeMenu->InvokeCommand((LPCMINVOKECOMMANDINFO)&info);
-			LOG_MENU(LOG_EXECUTE,L"Invoke command, ptr=%p, res=%d",this,hr);
-			if (type==ACTIVATE_EXECUTE && SUCCEEDED(hr))
+			bool executeSuccess;
+			if (bOpenTruePath) // we are trying to open a fake folder, directly open target.lnk instead
+			{
+				HINSTANCE hinst=ShellExecute(NULL,NULL,targetlnkPath,NULL,NULL,SW_SHOWNORMAL);
+				LOG_MENU(LOG_EXECUTE,L"Invoke command, ptr=%p, res=%d",this,hinst);
+				executeSuccess=static_cast<int>(reinterpret_cast<uintptr_t>(hinst))>=32;
+			}
+			else
+			{
+				HRESULT hr=pInvokeMenu->InvokeCommand((LPCMINVOKECOMMANDINFO)&info);
+				LOG_MENU(LOG_EXECUTE,L"Invoke command, ptr=%p, res=%d",this,hr);
+				executeSuccess=SUCCEEDED(hr);
+			}
+			if (type==ACTIVATE_EXECUTE && executeSuccess)
 			{
 				if (bTrackRecent)
 				{

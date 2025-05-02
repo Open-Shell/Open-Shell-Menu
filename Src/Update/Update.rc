@@ -183,8 +183,6 @@ BEGIN
     IDS_OUTOFDATE           "There is a new version of Open-Shell"
     IDS_NEWVERSION          "There is a new version of Open-Shell.\nClick here to see what's new or to change the reminder settings."
     IDS_UPDATE_FAIL         "Failed to check for new version"
-    IDS_LANG_OUTOFDATE      "There is a new language file for this version of Open-Shell"
-    IDS_LANG_NEWVERSION     "There is a new language file for this version of Open-Shell.\nClick here to install it or to change the reminder settings."
 END
 
 #endif    // English (U.S.) resources

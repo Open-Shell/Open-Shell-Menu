@@ -1,0 +1,61 @@
+name: Bug report
+description: Create a report to help us improve
+labels: Bug
+
+body:
+- type: markdown
+  attributes:
+    value: |
+      **Please, make sure you are using [latest](https://github.com/Open-Shell/Open-Shell-Menu/releases) `Open-Shell` build before reporting a bug.**
+      Especially on `Windows 11` you should use 4.4.190 (or newer).
+- type: textarea
+  attributes:
+    label: Describe the bug
+    description: A clear and concise description of what the bug is. Screenshots are also encouraged.
+    placeholder: Please use English for reports and screenshots to allow maintainers to easily understand the issue.
+  validations:
+    required: true
+- type: dropdown
+  attributes:
+    label: Area of issue
+    description: What component(s) of Open-Shell does this involve? Select all that apply.
+    multiple: true
+    options:
+      - Start menu
+      - Taskbar
+      - Windows Explorer
+      - Internet Explorer
+      - Installation/Other
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: To reproduce
+    description: Steps to reproduce the behavior
+    placeholder: |
+      1. Go to '...'
+      2. Click on '....'
+      3. Scroll down to '....'
+      4. See error
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Expected behavior
+    placeholder: What did you expect to happen?
+- type: input
+  attributes:
+    label: Open-Shell version
+    placeholder: e.g. 4.4.170
+  validations:
+    required: true
+- type: input
+  attributes:
+    label: Windows version
+    placeholder: e.g. Windows 10 22H2
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Additional context
+    description: Add any other context about the problem here.

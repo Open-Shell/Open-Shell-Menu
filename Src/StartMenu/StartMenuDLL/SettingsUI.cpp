@@ -30,6 +30,19 @@ const int DEFAULT_TASK_OPACITY10=85; // 85%
 
 ///////////////////////////////////////////////////////////////////////////////
 
+CString RgbToBgr(const wchar_t* str)
+{
+	CString retval;
+	retval.Format(L"%06X", RgbToBgr(ParseColor(str)));
+
+	return retval;
+}
+
+CString BgrToRgb(const wchar_t* str)
+{
+	return RgbToBgr(str);
+}
+
 class CSkinSettingsDlg: public CResizeableDlg<CSkinSettingsDlg>
 {
 public:
@@ -422,7 +435,7 @@ void CSkinSettingsDlg::UpdateSkinSettings( void )
 			if (!option.bEnabled || bLocked)
 				image|=SETTING_STATE_DISABLED;
 			if (option.bValue && option.type>SKIN_OPTION_BOOL)
-				Sprintf(text,_countof(text),L"%s: %s",option.label,option.sValue);
+				Sprintf(text,_countof(text),L"%s: %s",option.label,(option.type==SKIN_OPTION_COLOR)?BgrToRgb(option.sValue):option.sValue);
 			else
 				Sprintf(text,_countof(text),L"%s",option.label);
 
@@ -482,9 +495,7 @@ LRESULT CSkinSettingsDlg::OnCustomDraw( int idCtrl, LPNMHDR pnmh, BOOL& bHandled
 			if (TreeView_GetItemRect(m_Tree,(HTREEITEM)pDraw->nmcd.dwItemSpec,&rc,TRUE))
 			{
 				const wchar_t *str=m_CurrentSkin.Options[pDraw->nmcd.lItemlParam].sValue;
-				wchar_t *end;
-				COLORREF color=wcstoul(str,&end,16);
-				SetDCBrushColor(pDraw->nmcd.hdc,color&0xFFFFFF);
+				SetDCBrushColor(pDraw->nmcd.hdc,ParseColor(str));
 				SelectObject(pDraw->nmcd.hdc,GetStockObject(DC_BRUSH));
 				SelectObject(pDraw->nmcd.hdc,GetStockObject(BLACK_PEN));
 				Rectangle(pDraw->nmcd.hdc,rc.right,rc.top,rc.right+rc.bottom-rc.top,rc.bottom-1);
@@ -690,15 +701,14 @@ LRESULT CSkinSettingsDlg::OnBrowse( WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
 		CString str;
 		m_EditBox.GetWindowText(str);
 		str.TrimLeft(); str.TrimRight();
-		wchar_t *end;
-		COLORREF val=wcstol(str,&end,16)&0xFFFFFF;
+		COLORREF val=RgbToBgr(ParseColor(str));
 		static COLORREF customColors[16];
 		CHOOSECOLOR choose={sizeof(choose),m_hWnd,NULL,val,customColors};
 		choose.Flags=CC_ANYCOLOR|CC_FULLOPEN|CC_RGBINIT;
 		if (ChooseColor(&choose))
 		{
 			wchar_t text[100];
-			Sprintf(text,_countof(text),L"%06X",choose.rgbResult);
+			Sprintf(text,_countof(text),L"%06X",BgrToRgb(choose.rgbResult));
 			m_EditBox.SetWindowText(text);
 			ApplyEditBox();
 			m_Tree.Invalidate();
@@ -717,7 +727,11 @@ void CSkinSettingsDlg::ApplyEditBox( void )
 		CString str;
 		m_EditBox.GetWindowText(str);
 		str.TrimLeft(); str.TrimRight();
-		m_CurrentSkin.Options[m_EditItemIndex].sValue=str;
+		auto& option=m_CurrentSkin.Options[m_EditItemIndex];
+		if (option.type==SKIN_OPTION_COLOR)
+			option.sValue=RgbToBgr(str);
+		else
+			option.sValue=str;
 		StoreSkinOptions();
 	}
 }
@@ -730,7 +744,7 @@ void CSkinSettingsDlg::ItemSelected( HTREEITEM hItem, int index, bool bEnabled )
 		const MenuSkin::Option &option=m_CurrentSkin.Options[m_EditItemIndex];
 		wchar_t text[256];
 		if (option.bValue && option.type>SKIN_OPTION_BOOL)
-			Sprintf(text,_countof(text),L"%s: %s",option.label,option.sValue);
+			Sprintf(text,_countof(text),L"%s: %s",option.label,(option.type==SKIN_OPTION_COLOR)?BgrToRgb(option.sValue):option.sValue);
 		else
 			Sprintf(text,_countof(text),L"%s",option.label);
 		TVITEM item={TVIF_TEXT,m_EditItem,0,0,text};
@@ -745,7 +759,10 @@ void CSkinSettingsDlg::ItemSelected( HTREEITEM hItem, int index, bool bEnabled )
 		const MenuSkin::Option &option=m_CurrentSkin.Options[index];
 		if (option.type>SKIN_OPTION_BOOL)
 			mode=option.type;
-		text=option.sValue;
+		if (option.type==SKIN_OPTION_COLOR)
+			text=BgrToRgb(option.sValue);
+		else
+			text=option.sValue;
 	}
 
 	RECT rc;
@@ -1106,7 +1123,7 @@ L"ControlPanelItem.Label=$Menu.ControlPanel\n"
 L"ControlPanelItem.Tip=$Menu.ControlPanelTip\n"
 L"ControlPanelItem.Settings=TRACK_RECENT\n"
 L"PCSettingsItem.Command=pc_settings\n"
-L"PCSettingsItem.Icon=%windir%\\ImmersiveControlPanel\\SystemSettings.exe,10\n"
+L"PCSettingsItem.Link=shell:appsfolder\\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel\n"
 L"PCSettingsItem.Label=$Menu.PCSettings\n"
 L"PCSettingsItem.Settings=TRACK_RECENT\n"
 L"SecurityItem.Command=windows_security\n"
@@ -1229,7 +1246,7 @@ L"ControlPanelItem.Label=$Menu.ControlPanel\n"
 L"ControlPanelItem.Tip=$Menu.ControlPanelTip\n"
 L"ControlPanelItem.Settings=TRACK_RECENT\n"
 L"PCSettingsItem.Command=pc_settings\n"
-L"PCSettingsItem.Icon=%windir%\\ImmersiveControlPanel\\SystemSettings.exe,10\n"
+L"PCSettingsItem.Link=shell:appsfolder\\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel\n"
 L"PCSettingsItem.Label=$Menu.PCSettings\n"
 L"PCSettingsItem.Settings=TRACK_RECENT\n"
 L"SecurityItem.Command=windows_security\n"
@@ -1742,7 +1759,7 @@ LRESULT CEditMenuDlg::OnBrowseLink( WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
 {
 	wchar_t text[_MAX_PATH];
 	GetDlgItemText(IDC_COMBOLINK,text,_countof(text));
-	if (BrowseLinkHelper(m_hWnd,text))
+	if (BrowseLinkHelper(m_hWnd,text,false))
 	{
 		SetDlgItemText(IDC_COMBOLINK,text);
 		SendMessage(WM_COMMAND,MAKEWPARAM(IDC_COMBOLINK,CBN_KILLFOCUS));
@@ -2437,7 +2454,7 @@ LRESULT CEditMenuDlg7::OnBrowseLink( WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 {
 	wchar_t text[_MAX_PATH];
 	GetDlgItemText(IDC_EDITLINK2,text,_countof(text));
-	if (BrowseLinkHelper(m_hWnd,text))
+	if (BrowseLinkHelper(m_hWnd,text,false))
 	{
 		SetDlgItemText(IDC_EDITLINK2,text);
 		SendMessage(WM_COMMAND,MAKEWPARAM(IDC_EDITLINK2,EN_KILLFOCUS));
@@ -2725,8 +2742,11 @@ void CCustomMenuDlg7::CItemList::UpdateItem( int index )
 		str=LoadStringEx(IDS_ITEM_SHOW2);
 	else if ((menuItem.settings&StdMenuItem::MENU_NOEXPAND) && !(g_StdCommands7[menuItem.stdItemIndex].flags&CStdCommand7::ITEM_FOLDER))
 		str=LoadStringEx(IDS_ITEM_SHOW);
-	else if ((menuItem.settings&StdMenuItem::MENU_SINGLE_EXPAND) && (g_StdCommands7[menuItem.stdItemIndex].flags&CStdCommand7::ITEM_COMPUTER))
-		str=LoadStringEx(IDS_ITEM_DRIVES);
+	else if ((menuItem.settings&StdMenuItem::MENU_SINGLE_EXPAND) && !(g_StdCommands7[menuItem.stdItemIndex].flags&CStdCommand7::ITEM_NODRIVES))
+		if (g_StdCommands7[menuItem.stdItemIndex].flags&CStdCommand7::ITEM_COMPUTER)
+			str=LoadStringEx(IDS_ITEM_DRIVES);
+		else
+			str=LoadStringEx(IDS_ITEM_LINKS);
 	else
 		str=LoadStringEx(IDS_ITEM_MENU);
 	ListView_SetItemText(m_hWnd,index,2,(wchar_t*)(const wchar_t*)str);
@@ -3155,13 +3175,12 @@ LRESULT CCustomMenuDlg7::CItemList::OnSelEndOk( WORD wNotifyCode, WORD wID, HWND
 	if (m_Column==2)
 	{
 		// state
-		CString str;
 		menuItem.settings&=~CEditMenuDlg7::SETTINGS_MASK;
 		if (sel==0)
 			menuItem.settings|=StdMenuItem::MENU_ITEM_DISABLED;
 		else if (sel==1 && !(g_StdCommands7[menuItem.stdItemIndex].flags&(CStdCommand7::ITEM_SINGLE|CStdCommand7::ITEM_FOLDER)))
 			menuItem.settings|=StdMenuItem::MENU_NOEXPAND;
-		else if (sel==3 && (g_StdCommands7[menuItem.stdItemIndex].flags&CStdCommand7::ITEM_COMPUTER))
+		else if (sel==3 && !(g_StdCommands7[menuItem.stdItemIndex].flags&CStdCommand7::ITEM_NODRIVES))
 			menuItem.settings|=StdMenuItem::MENU_SINGLE_EXPAND;
 	}
 	UpdateItem(m_Line);
@@ -3308,12 +3327,17 @@ void CCustomMenuDlg7::CItemList::CreateCombo( int line, int column )
 				str=LoadStringEx(IDS_ITEM_DRIVES);
 				m_Combo.SendMessage(CB_ADDSTRING,0,(LPARAM)(const wchar_t*)str);
 			}
+			else if (!(g_StdCommands7[menuItem.stdItemIndex].flags&CStdCommand7::ITEM_NODRIVES))
+			{
+				str=LoadStringEx(IDS_ITEM_LINKS);
+				m_Combo.SendMessage(CB_ADDSTRING,0,(LPARAM)(const wchar_t*)str);
+			}
 		}
 		if (menuItem.settings&StdMenuItem::MENU_ITEM_DISABLED)
 			m_Combo.SendMessage(CB_SETCURSEL,0);
 		else if ((g_StdCommands7[menuItem.stdItemIndex].flags&(CStdCommand7::ITEM_SINGLE|CStdCommand7::ITEM_FOLDER)) || (menuItem.settings&StdMenuItem::MENU_NOEXPAND))
 			m_Combo.SendMessage(CB_SETCURSEL,1);
-		else if ((g_StdCommands7[menuItem.stdItemIndex].flags&CStdCommand7::ITEM_COMPUTER) && (menuItem.settings&StdMenuItem::MENU_SINGLE_EXPAND))
+		else if (!(g_StdCommands7[menuItem.stdItemIndex].flags&CStdCommand7::ITEM_NODRIVES) && (menuItem.settings&StdMenuItem::MENU_SINGLE_EXPAND))
 			m_Combo.SendMessage(CB_SETCURSEL,3);
 		else
 			m_Combo.SendMessage(CB_SETCURSEL,2);
@@ -4140,38 +4164,50 @@ CSetting g_Settings[]={
 		{L"Nothing",CSetting::TYPE_RADIO,IDS_OPEN_NOTHING,IDS_OPEN_NOTHING_TIP},
 		{L"ClassicMenu",CSetting::TYPE_RADIO,IDS_OPEN_CSM,IDS_OPEN_CSM_TIP},
 		{L"WindowsMenu",CSetting::TYPE_RADIO,IDS_OPEN_WSM,IDS_OPEN_WSM_TIP},
+		{L"Command",CSetting::TYPE_RADIO,IDS_OPEN_CMD,IDS_OPEN_CMD_TIP},
 		{L"Both",CSetting::TYPE_RADIO,IDS_OPEN_BOTH,IDS_OPEN_BOTH_TIP,0,CSetting::FLAG_HIDDEN},
+	{L"MouseClickCommand",CSetting::TYPE_STRING,IDS_OPEN_CMD_TEXT,IDS_OPEN_CMD_TEXT_TIP,"%userprofile%",0,L"MouseClick=3",L"Command"},
 	{L"ShiftClick",CSetting::TYPE_INT,IDS_SHIFT_LCLICK,IDS_SHIFT_LCLICK_TIP,2,CSetting::FLAG_BASIC},
 		{L"Nothing",CSetting::TYPE_RADIO,IDS_OPEN_NOTHING,IDS_OPEN_NOTHING_TIP},
 		{L"ClassicMenu",CSetting::TYPE_RADIO,IDS_OPEN_CSM,IDS_OPEN_CSM_TIP},
 		{L"WindowsMenu",CSetting::TYPE_RADIO,IDS_OPEN_WSM,IDS_OPEN_WSM_TIP},
+		{L"Command",CSetting::TYPE_RADIO,IDS_OPEN_CMD,IDS_OPEN_CMD_TIP},
 		{L"Both",CSetting::TYPE_RADIO,IDS_OPEN_BOTH,IDS_OPEN_BOTH_TIP,0,CSetting::FLAG_HIDDEN},
 /*		{L"Desktop",CSetting::TYPE_RADIO,IDS_OPEN_DESKTOP,IDS_OPEN_DESKTOP_TIP,0,CSetting::FLAG_HIDDEN},
 		{L"Cortana",CSetting::TYPE_RADIO,IDS_OPEN_CORTANA,IDS_OPEN_CORTANA_TIP},*/
+	{L"ShiftClickCommand",CSetting::TYPE_STRING,IDS_OPEN_CMD_TEXT,IDS_OPEN_CMD_TEXT_TIP,"%systemdrive%",0,L"ShiftClick=3",L"Command"},
 	{L"WinKey",CSetting::TYPE_INT,IDS_WIN_KEY,IDS_WIN_KEY_TIP,1,CSetting::FLAG_BASIC},
 		{L"Nothing",CSetting::TYPE_RADIO,IDS_OPEN_NOTHING,IDS_OPEN_NOTHING_TIP},
 		{L"ClassicMenu",CSetting::TYPE_RADIO,IDS_OPEN_CSM,IDS_OPEN_CSM_TIP},
 		{L"WindowsMenu",CSetting::TYPE_RADIO,IDS_OPEN_WSM,IDS_OPEN_WSM_TIP},
+		{L"Command",CSetting::TYPE_RADIO,IDS_OPEN_CMD,IDS_OPEN_CMD_TIP},
 		{L"Both",CSetting::TYPE_RADIO,IDS_OPEN_BOTH,IDS_OPEN_BOTH_TIP},
 		{L"Desktop",CSetting::TYPE_RADIO,IDS_OPEN_DESKTOP,IDS_OPEN_DESKTOP_TIP},
+	{L"WinKeyCommand",CSetting::TYPE_STRING,IDS_OPEN_CMD_TEXT,IDS_OPEN_CMD_TEXT_TIP,"cmd",0,L"WinKey=3",L"Command"},
 	{L"ShiftWin",CSetting::TYPE_INT,IDS_SHIFT_WIN,IDS_SHIFT_WIN_TIP,2,CSetting::FLAG_BASIC},
 		{L"Nothing",CSetting::TYPE_RADIO,IDS_OPEN_NOTHING,IDS_OPEN_NOTHING_TIP},
 		{L"ClassicMenu",CSetting::TYPE_RADIO,IDS_OPEN_CSM,IDS_OPEN_CSM_TIP},
 		{L"WindowsMenu",CSetting::TYPE_RADIO,IDS_OPEN_WSM,IDS_OPEN_WSM_TIP},
+		{L"Command",CSetting::TYPE_RADIO,IDS_OPEN_CMD,IDS_OPEN_CMD_TIP},
 		{L"Both",CSetting::TYPE_RADIO,IDS_OPEN_BOTH,IDS_OPEN_BOTH_TIP},
 /*		{L"Desktop",CSetting::TYPE_RADIO,IDS_OPEN_DESKTOP,IDS_OPEN_DESKTOP_TIP,0,CSetting::FLAG_HIDDEN},
 		{L"Cortana",CSetting::TYPE_RADIO,IDS_OPEN_CORTANA,IDS_OPEN_CORTANA_TIP},*/
+	{L"ShiftWinCommand",CSetting::TYPE_STRING,IDS_OPEN_CMD_TEXT,IDS_OPEN_CMD_TEXT_TIP,"powershell",0,L"ShiftWin=3",L"Command"},
 	{L"MiddleClick",CSetting::TYPE_INT,IDS_MCLICK,IDS_MCLICK_TIP,0},
 		{L"Nothing",CSetting::TYPE_RADIO,IDS_OPEN_NOTHING,IDS_OPEN_NOTHING_TIP},
 		{L"ClassicMenu",CSetting::TYPE_RADIO,IDS_OPEN_CSM,IDS_OPEN_CSM_TIP},
 		{L"WindowsMenu",CSetting::TYPE_RADIO,IDS_OPEN_WSM,IDS_OPEN_WSM_TIP},
+		{L"Command",CSetting::TYPE_RADIO,IDS_OPEN_CMD,IDS_OPEN_CMD_TIP},
 /*		{L"Both",CSetting::TYPE_RADIO,IDS_OPEN_BOTH,IDS_OPEN_BOTH_TIP,0,CSetting::FLAG_HIDDEN},
 		{L"Desktop",CSetting::TYPE_RADIO,IDS_OPEN_DESKTOP,IDS_OPEN_DESKTOP_TIP,0,CSetting::FLAG_HIDDEN},
 		{L"Cortana",CSetting::TYPE_RADIO,IDS_OPEN_CORTANA,IDS_OPEN_CORTANA_TIP},*/
+	{L"MiddleClickCommand",CSetting::TYPE_STRING,IDS_OPEN_CMD_TEXT,IDS_OPEN_CMD_TEXT_TIP,"taskmgr",0,L"MiddleClick=3",L"Command"},
 	{L"Hover",CSetting::TYPE_INT,IDS_HOVER,IDS_HOVER_TIP,0},
 		{L"Nothing",CSetting::TYPE_RADIO,IDS_OPEN_NOTHING,IDS_OPEN_NOTHING_TIP},
 		{L"ClassicMenu",CSetting::TYPE_RADIO,IDS_OPEN_CSM,IDS_OPEN_CSM_TIP},
 		{L"WindowsMenu",CSetting::TYPE_RADIO,IDS_OPEN_WSM,IDS_OPEN_WSM_TIP},
+		{L"Command",CSetting::TYPE_RADIO,IDS_OPEN_CMD,IDS_OPEN_CMD_TIP},
+	{L"HoverCommand",CSetting::TYPE_STRING,IDS_OPEN_CMD_TEXT,IDS_OPEN_CMD_TEXT_TIP,"",0,L"Hover=3",L"Command"},
 	{L"StartHoverDelay",CSetting::TYPE_INT,IDS_HOVER_DELAY,IDS_HOVER_DELAY_TIP,1000,0,L"Hover",L"Hover"},
 	{L"ShiftRight",CSetting::TYPE_BOOL,IDS_RIGHT_SHIFT,IDS_RIGHT_SHIFT_TIP,0},
 	{L"CSMHotkey",CSetting::TYPE_HOTKEY,IDS_CSM_HOTKEY,IDS_CSM_HOTKEY_TIP,0},
@@ -4246,6 +4282,7 @@ CSetting g_Settings[]={
 	{L"PinnedPrograms",CSetting::TYPE_INT,IDS_PINNED_PROGRAMS,IDS_PINNED_PROGRAMS_TIP,PINNED_PROGRAMS_PINNED},
 		{L"FastItems",CSetting::TYPE_RADIO,IDS_FAST_ITEMS,IDS_FAST_ITEMS_TIP},
 		{L"PinnedItems",CSetting::TYPE_RADIO,IDS_PINNED_ITEMS,IDS_PINNED_ITEMS_TIP},
+	{L"PinnedItemsPath",CSetting::TYPE_DIRECTORY,IDS_PINNED_PATH,IDS_PINNED_PATH_TIP,L"%APPDATA%\\OpenShell\\Pinned",0,L"PinnedPrograms=1",L"PinnedItems"},
 	{L"RecentPrograms",CSetting::TYPE_INT,IDS_RECENT_PROGRAMS,IDS_RECENT_PROGRAMS_TIP,RECENT_PROGRAMS_RECENT,CSetting::FLAG_BASIC},
 		{L"None",CSetting::TYPE_RADIO,IDS_NO_RECENT,IDS_NO_RECENT_TIP},
 		{L"Recent",CSetting::TYPE_RADIO,IDS_SHOW_RECENT,IDS_SHOW_RECENT_TIP},
@@ -4314,12 +4351,17 @@ CSetting g_Settings[]={
 	{L"UserNameCommand",CSetting::TYPE_STRING,IDS_NAME_COMMAND,IDS_NAME_COMMAND_TIP,L"control nusrmgr.cpl"},
 	{L"SearchFilesCommand",CSetting::TYPE_STRING,IDS_SEARCH_COMMAND,IDS_SEARCH_COMMAND_TIP,L"search-ms:",CSetting::FLAG_MENU_CLASSIC_BOTH},
 	{L"ExpandFolderLinks",CSetting::TYPE_BOOL,IDS_EXPAND_LINKS,IDS_EXPAND_LINKS_TIP,1},
+	{L"SingleClickFolders",CSetting::TYPE_BOOL,IDS_NO_DBLCLICK,IDS_NO_DBLCLICK_TIP,0},
+	{L"OpenTruePath",CSetting::TYPE_BOOL,IDS_OPEN_TRUE_PATH,IDS_OPEN_TRUE_PATH_TIP,1},
 	{L"EnableTouch",CSetting::TYPE_BOOL,IDS_ENABLE_TOUCH,IDS_ENABLE_TOUCH_TIP,1},
 	{L"EnableAccessibility",CSetting::TYPE_BOOL,IDS_ACCESSIBILITY,IDS_ACCESSIBILITY_TIP,1},
-	{L"ShowNextToTaskbar",CSetting::TYPE_BOOL,IDS_NEXTTASKBAR,IDS_NEXTTASKBAR_TIP,0},
+	{L"ShowNextToTaskbar",CSetting::TYPE_BOOL,IDS_NEXTTASKBAR,IDS_NEXTTASKBAR_TIP,1},
 	{L"PreCacheIcons",CSetting::TYPE_BOOL,IDS_CACHE_ICONS,IDS_CACHE_ICONS_TIP,1,CSetting::FLAG_COLD},
 	{L"DelayIcons",CSetting::TYPE_BOOL,IDS_DELAY_ICONS,IDS_DELAY_ICONS_TIP,1,CSetting::FLAG_COLD},
+	{L"BoldSettings",CSetting::TYPE_BOOL,IDS_BOLD_SETTINGS,IDS_BOLD_SETTINGS_TIP,1},
 	{L"ReportSkinErrors",CSetting::TYPE_BOOL,IDS_SKIN_ERRORS,IDS_SKIN_ERRORS_TIP,0},
+	{L"EnableAccelerators",CSetting::TYPE_BOOL,IDS_ENABLE_ACCELERATORS,IDS_ENABLE_ACCELERATORS_TIP,1},
+	{L"AltAccelerators",CSetting::TYPE_BOOL,IDS_ALT_ACCELERATORS,IDS_ALT_ACCELERATORS_TIP,0,0,L"EnableAccelerators",L"EnableAccelerators"},
 
 {L"SearchBoxSettings",CSetting::TYPE_GROUP,IDS_SEARCH_BOX},
 	{L"SearchBox",CSetting::TYPE_INT,IDS_SHOW_SEARCH_BOX,IDS_SHOW_SEARCH_BOX_TIP,SEARCHBOX_TAB,CSetting::FLAG_BASIC},
@@ -4327,6 +4369,8 @@ CSetting g_Settings[]={
 		{L"Normal",CSetting::TYPE_RADIO,IDS_SEARCH_BOX_SHOW,IDS_SEARCH_BOX_SHOW_TIP},
 		{L"Tab",CSetting::TYPE_RADIO,IDS_SEARCH_BOX_TAB,IDS_SEARCH_BOX_TAB_TIP},
 	{L"SearchSelect",CSetting::TYPE_BOOL,IDS_SEARCH_BOX_SEL,IDS_SEARCH_BOX_SEL_TIP,1,0,L"SearchBox=1",L"Normal"},
+	{L"SearchHint",CSetting::TYPE_BOOL,IDS_SEARCH_HINT,IDS_SEARCH_HINT_TIP,0,0,L"SearchBox"},
+		{L"SearchHintText",CSetting::TYPE_STRING,IDS_NEW_SEARCH_HINT,IDS_NEW_SEARCH_HINT_TIP,L"",0,L"#SearchHint",L"SearchHint"},
 	{L"SearchTrack",CSetting::TYPE_BOOL,IDS_SEARCH_TRACK,IDS_SEARCH_TRACK_TIP,1,0,L"SearchBox"},
 	{L"SearchResults",CSetting::TYPE_INT,IDS_SEARCH_MAX2,IDS_SEARCH_MAX_TIP2,5,CSetting::FLAG_MENU_CLASSIC_BOTH,L"SearchBox"},
 	{L"SearchResultsMax",CSetting::TYPE_INT,IDS_SEARCH_MAX3,IDS_SEARCH_MAX_TIP3,20,CSetting::FLAG_MENU_CLASSIC_BOTH,L"SearchBox"},
@@ -4341,6 +4385,7 @@ CSetting g_Settings[]={
 		{L"SearchContents",CSetting::TYPE_BOOL,IDS_SEARCH_CONTENTS,IDS_SEARCH_CONTENTS_TIP,1,0,L"#SearchFiles",L"SearchFiles"},
 		{L"SearchCategories",CSetting::TYPE_BOOL,IDS_SEARCH_CATEGORIES,IDS_SEARCH_CATEGORIES_TIP,1,0,L"#SearchFiles",L"SearchFiles"},
 	{L"SearchInternet",CSetting::TYPE_BOOL,IDS_SEARCH_INTERNET,IDS_SEARCH_INTERNET_TIP,1,0,L"SearchBox"},
+	{L"MoreResults",CSetting::TYPE_BOOL,IDS_MORE_RESULTS,IDS_MORE_RESULTS_TIP,1,0,L"SearchBox"},
 
 {L"Look",CSetting::TYPE_GROUP,IDS_LOOK_SETTINGS},
 	{L"SmallIconSize",CSetting::TYPE_INT,IDS_SMALL_SIZE_SM,IDS_SMALL_SIZE_SM_TIP,-1,CSetting::FLAG_COLD}, // 16 for DPI<=96, 20 for DPI<=120, 24 otherwise
@@ -4348,6 +4393,9 @@ CSetting g_Settings[]={
 	{L"InvertMetroIcons",CSetting::TYPE_BOOL,IDS_INVERT_ICONS,IDS_INVERT_ICONS_TIP,0},
 	{L"MaxMainMenuWidth",CSetting::TYPE_INT,IDS_MENU_WIDTH,IDS_MENU_WIDTH_TIP,60,CSetting::FLAG_MENU_CLASSIC_BOTH},
 	{L"MaxMenuWidth",CSetting::TYPE_INT,IDS_SUBMENU_WIDTH,IDS_SUBMENU_WIDTH_TIP,60},
+	{L"AlignToWorkArea",CSetting::TYPE_BOOL,IDS_ALIGN_WORK_AREA,IDS_ALIGN_WORK_AREA_TIP,0},
+	{L"HorizontalMenuOffset",CSetting::TYPE_INT,IDS_HOR_OFFSET,IDS_HOR_OFFSET_TIP,0},
+	{L"VerticalMenuOffset",CSetting::TYPE_INT,IDS_VERT_OFFSET,IDS_VERT_OFFSET_TIP,0 },
 	{L"OverrideDPI",CSetting::TYPE_INT,IDS_DPI_OVERRIDE,IDS_DPI_OVERRIDE_TIP,0,CSetting::FLAG_COLD},
 	{L"MainMenuAnimate",CSetting::TYPE_BOOL,IDS_ANIMATION7,IDS_ANIMATION7_TIP,1,CSetting::FLAG_MENU_WIN7},
 	{L"MainMenuAnimation",CSetting::TYPE_INT,IDS_ANIMATION,IDS_ANIMATION_TIP,-1}, // system animation type
@@ -4413,7 +4461,7 @@ CSetting g_Settings[]={
 	{L"StartButtonIconSize",CSetting::TYPE_INT,IDS_BUTTON_ICON_SIZE,IDS_BUTTON_ICON_SIZE_TIP,0,0,L"#StartButtonType=1",L"ClasicButton"},
 	{L"StartButtonText",CSetting::TYPE_STRING,IDS_BUTTON_TEXT,IDS_BUTTON_TEXT_TIP,L"$Menu.Start",0,L"#StartButtonType=1",L"ClasicButton"},
 
-{L"Taskbar",CSetting::TYPE_GROUP,IDS_TASKBAR_SETTINGS},
+{L"Taskbar",CSetting::TYPE_GROUP,IDS_TASKBAR_SETTINGS,0,0,CSetting::FLAG_BASIC},
 	{L"CustomTaskbar",CSetting::TYPE_BOOL,IDS_TASK_CUSTOM,IDS_TASK_CUSTOM_TIP,0,CSetting::FLAG_CALLBACK},
 	{L"TaskbarLook",CSetting::TYPE_INT,IDS_TASK_LOOK,IDS_TASK_LOOK_TIP,1,CSetting::FLAG_CALLBACK,L"CustomTaskbar",L"CustomTaskbar"},
 		{L"Opaque",CSetting::TYPE_RADIO,IDS_TASK_OPAQUE,IDS_TASK_OPAQUE_TIP},
@@ -4422,8 +4470,8 @@ CSetting g_Settings[]={
 		{L"AeroGlass",CSetting::TYPE_RADIO,IDS_TASK_AEROGLASS,IDS_TASK_AEROGLASS_TIP,0,CSetting::FLAG_HIDDEN},
 	{L"TaskbarOpacity",CSetting::TYPE_INT,IDS_TASK_OPACITY,IDS_TASK_OPACITY_TIP,DEFAULT_TASK_OPACITY10,CSetting::FLAG_CALLBACK,L"TaskbarLook",L"CustomTaskbar"},
 	{L"TaskbarColor",CSetting::TYPE_COLOR,IDS_TASK_COLOR,IDS_TASK_COLOR_TIP,0,CSetting::FLAG_CALLBACK,L"CustomTaskbar",L"CustomTaskbar"},
-	{L"TaskbarTextColor",CSetting::TYPE_COLOR,IDS_TASK_TEXTCOLOR,IDS_TASK_TEXTCOLOR_TIP,0xFFFFFF,CSetting::FLAG_CALLBACK|(1<<24),L"CustomTaskbar",L"CustomTaskbar"},
-	{L"TaskbarTexture",CSetting::TYPE_BITMAP_JPG,IDS_TASK_TEXTURE,IDS_TASK_TEXTURE_TIP,L"",CSetting::FLAG_CALLBACK,L"CustomTaskbar",L"CustomTaskbar"},
+	{L"TaskbarTextColor",CSetting::TYPE_COLOR,IDS_TASK_TEXTCOLOR,IDS_TASK_TEXTCOLOR_TIP,0xFFFFFF,CSetting::FLAG_COLD|(1<<24),L"CustomTaskbar",L"CustomTaskbar"},
+	{L"TaskbarTexture",CSetting::TYPE_BITMAP_JPG,IDS_TASK_TEXTURE,IDS_TASK_TEXTURE_TIP,L"",CSetting::FLAG_COLD,L"CustomTaskbar",L"CustomTaskbar"},
 	{L"TaskbarTileH",CSetting::TYPE_INT,IDS_TASK_STRETCHH,IDS_TASK_STRETCHH_TIP,1,CSetting::FLAG_CALLBACK,L"#TaskbarTexture",L"TaskbarTexture"},
 		{L"Tile",CSetting::TYPE_RADIO,IDS_TASK_TILE,IDS_TASK_TILE_TIP},
 		{L"Stretch",CSetting::TYPE_RADIO,IDS_TASK_STRETCH,IDS_TASK_STRETCH_TIP},
@@ -4619,6 +4667,48 @@ void UpgradeSettings( bool bShared )
 	}
 }
 
+static CString GetWindowsBrandingString()
+{
+	CString retval;
+
+	if (GetWinVersion() >= WIN_VER_WIN10)
+	{
+		auto winbrand = LoadLibraryEx(L"winbrand.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+		if (winbrand)
+		{
+			PWSTR (WINAPI * BrandingFormatString)(PCWSTR pstrFormat);
+			BrandingFormatString = (decltype(BrandingFormatString))GetProcAddress(winbrand, "BrandingFormatString");
+			if (BrandingFormatString)
+			{
+				auto osName = BrandingFormatString(L"%WINDOWS_LONG%");
+				if (osName)
+				{
+					retval = osName;
+					GlobalFree(osName);
+				}
+			}
+
+			FreeLibrary(winbrand);
+		}
+	}
+
+	if (retval.IsEmpty())
+	{
+		// fallback for older Windows
+		wchar_t title[256] = L"Windows";
+
+		if (CRegKey reg; reg.Open(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion", KEY_READ) == ERROR_SUCCESS)
+		{
+			ULONG size = _countof(title);
+			reg.QueryStringValue(L"ProductName", title, &size);
+		}
+
+		retval = title;
+	}
+
+	return retval;
+}
+
 void UpdateSettings( void )
 {
 	{
@@ -4656,11 +4746,19 @@ void UpdateSettings( void )
 	else if (dpi<96) dpi=96;
 	else if (dpi>480) dpi=480;
 
-	int iconSize=24;
-	if (dpi<=96)
-		iconSize=16;
-	else if (dpi<=120)
-		iconSize=20;
+	int iconSize=16;
+	if (dpi>=240)
+		iconSize=40;	// for 250% scaling
+	else if (dpi>=216)
+		iconSize=36;	// for 225% scaling
+	else if (dpi>=192)
+		iconSize=32;	// for 200% scaling
+	else if (dpi>=168)
+		iconSize=28;	// for 175% scaling
+	else if (dpi>=144)
+		iconSize=24;	// for 150% scaling
+	else if (dpi>=120)
+		iconSize=20;	// for 125% scaling
 	UpdateSetting(L"SmallIconSize",CComVariant(iconSize),false);
 	UpdateSetting(L"LargeIconSize",CComVariant(iconSize*2),false);
 
@@ -4733,16 +4831,10 @@ void UpdateSettings( void )
 
 	UpdateSetting(L"NumericSort",CComVariant(SHRestricted(REST_NOSTRCMPLOGICAL)?0:1),false);
 
-	wchar_t title[256]=L"Windows";
-	ULONG size=_countof(title);
-	{
-		CRegKey regTitle;
-		if (regTitle.Open(HKEY_LOCAL_MACHINE,L"Software\\Microsoft\\Windows NT\\CurrentVersion",KEY_READ)==ERROR_SUCCESS)
-			regTitle.QueryStringValue(L"ProductName",title,&size);
-	}
-	UpdateSetting(L"MenuCaption",CComVariant(title),false);
+	UpdateSetting(L"MenuCaption",CComVariant(GetWindowsBrandingString()),false);
 
-	size=_countof(title);
+	wchar_t title[256]{};
+	ULONG size=_countof(title);
 	if (!GetUserNameEx(NameDisplay,title,&size))
 	{
 		// GetUserNameEx may fail (for example on Home editions). use the login name
@@ -4873,7 +4965,7 @@ void UpdateSettings( void )
 		if (GetWinVersion()>WIN_VER_WIN7)
 		{
 			int color=GetSystemGlassColor8();
-			UpdateSetting(L"TaskbarColor",CComVariant(((color&0xFF)<<16)|(color&0xFF00)|((color>>16)&0xFF)),false);
+			UpdateSetting(L"TaskbarColor",CComVariant(RgbToBgr(color)),false);
 		}
 
 		if (GetWinVersion()<=WIN_VER_WIN7)
@@ -4973,15 +5065,15 @@ void UpdateSettings( void )
 			HIGHCONTRAST contrast={sizeof(contrast)};
 			if (SystemParametersInfo(SPI_GETHIGHCONTRAST,sizeof(contrast),&contrast,0) && (contrast.dwFlags&HCF_HIGHCONTRASTON))
 			{
-				options1=L"CAPTION=1\nUSER_IMAGE=0\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nTHICK_BORDER=0\nSOLID_SELECTION=1";
-				options2=L"NO_ICONS=1\nUSER_IMAGE=1\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nTHICK_BORDER=0\nSOLID_SELECTION=1";
-				options3=L"USER_IMAGE=1\nSMALL_ICONS=0\nTHICK_BORDER=0\nSOLID_SELECTION=1";
+				options1=L"CAPTION=1\nUSER_IMAGE=0\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nTHICK_BORDER=0\nSOLID_SELECTION=1\n";
+				options2=L"NO_ICONS=1\nUSER_IMAGE=1\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nTHICK_BORDER=0\nSOLID_SELECTION=1\n";
+				options3=L"USER_IMAGE=1\nSMALL_ICONS=0\nTHICK_BORDER=0\nSOLID_SELECTION=1\n";
 			}
 			else
 			{
-				options1=L"CAPTION=1\nUSER_IMAGE=0\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nTHICK_BORDER=0\nSOLID_SELECTION=0";
-				options2=L"NO_ICONS=1\nUSER_IMAGE=1\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nTHICK_BORDER=0\nSOLID_SELECTION=0";
-				options3=L"USER_IMAGE=1\nSMALL_ICONS=0\nTHICK_BORDER=0\nSOLID_SELECTION=0";
+				options1=L"CAPTION=1\nUSER_IMAGE=0\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nTHICK_BORDER=0\nSOLID_SELECTION=0\n";
+				options2=L"NO_ICONS=1\nUSER_IMAGE=1\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nTHICK_BORDER=0\nSOLID_SELECTION=0\n";
+				options3=L"USER_IMAGE=1\nSMALL_ICONS=0\nTHICK_BORDER=0\nSOLID_SELECTION=0\n";
 			}
 		}
 		else if (GetWinVersion()<WIN_VER_WIN8)
@@ -4989,25 +5081,25 @@ void UpdateSettings( void )
 			BOOL comp=FALSE;
 			skin12=(SUCCEEDED(DwmIsCompositionEnabled(&comp)) && comp)?L"Windows Aero":L"Windows Basic";
 			skin3=L"Windows Aero";
-			options1=L"CAPTION=1\nUSER_IMAGE=0\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nLARGE_FONT=0\nDISABLE_MASK=0\nWHITE_SUBMENUS=1";
-			options2=L"NO_ICONS=1\nUSER_IMAGE=1\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nLARGE_FONT=0\nDISABLE_MASK=0\nWHITE_SUBMENUS=1";
-			options3=L"USER_IMAGE=1\nSMALL_ICONS=0\nLARGE_FONT=0\nDISABLE_MASK=0\nWHITE_SUBMENUS=1";
+			options1=L"CAPTION=1\nUSER_IMAGE=0\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nLARGE_FONT=0\nDISABLE_MASK=0\nWHITE_SUBMENUS=1\n";
+			options2=L"NO_ICONS=1\nUSER_IMAGE=1\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nLARGE_FONT=0\nDISABLE_MASK=0\nWHITE_SUBMENUS=1\n";
+			options3=L"USER_IMAGE=1\nSMALL_ICONS=0\nLARGE_FONT=0\nDISABLE_MASK=0\nWHITE_SUBMENUS=1\n";
 		}
 		else if (GetWinVersion()<WIN_VER_WIN10)
 		{
 			skin12=L"Windows 8";
 			skin3=L"Windows 8";
-			options1=L"CAPTION=1\nUSER_IMAGE=0\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nLARGE_FONT=0\nDISABLE_MASK=0\nOPAQUE=0\nWHITE_SUBMENUS=1";
-			options2=L"NO_ICONS=1\nUSER_IMAGE=1\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nLARGE_FONT=0\nDISABLE_MASK=0\nOPAQUE=0\nGLASS_SHADOW=0\nBLACK_TEXT=0\nBLACK_FRAMES=0\nWHITE_SUBMENUS=1";
-			options3=L"USER_IMAGE=1\nSMALL_ICONS=0\nLARGE_FONT=0\nDISABLE_MASK=0\nOPAQUE=0\nGLASS_SHADOW=0\nBLACK_TEXT=0\nBLACK_FRAMES=0\nWHITE_SUBMENUS=1";
+			options1=L"CAPTION=1\nUSER_IMAGE=0\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nLARGE_FONT=0\nDISABLE_MASK=0\nOPAQUE=0\nWHITE_SUBMENUS=1\n";
+			options2=L"NO_ICONS=1\nUSER_IMAGE=1\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nLARGE_FONT=0\nDISABLE_MASK=0\nOPAQUE=0\nGLASS_SHADOW=0\nBLACK_TEXT=0\nBLACK_FRAMES=0\nWHITE_SUBMENUS=1\n";
+			options3=L"USER_IMAGE=1\nSMALL_ICONS=0\nLARGE_FONT=0\nDISABLE_MASK=0\nOPAQUE=0\nGLASS_SHADOW=0\nBLACK_TEXT=0\nBLACK_FRAMES=0\nWHITE_SUBMENUS=1\n";
 		}
 		else
 		{
-			skin12=L"Metro";
-			skin3=L"Metro";
-			options1=L"CAPTION=1\nUSER_IMAGE=0\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nLARGE_FONT=0\nICON_FRAMES=1\nOPAQUE=0";
-			options2=L"NO_ICONS=1\nUSER_IMAGE=1\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nLARGE_FONT=0\nICON_FRAMES=1\nOPAQUE=0";
-			options3=L"USER_IMAGE=1\nSMALL_ICONS=0\nLARGE_FONT=0\nICON_FRAMES=1\nOPAQUE=0";
+			skin12=L"Immersive";
+			skin3=L"Immersive";
+			options1=L"CAPTION=1\nUSER_IMAGE=0\nUSER_NAME=0\nCENTER_NAME=0\nSMALL_ICONS=0\nLARGE_FONT=0\nICON_FRAMES=1\nOPAQUE=0\n";
+			options2=L"NO_ICONS=1\nUSER_IMAGE=1\nCENTER_NAME=0\nSMALL_ICONS=0\nLARGE_FONT=0\nICON_FRAMES=1\nOPAQUE=0\n";
+			options3=L"USER_IMAGE=1\nSMALL_ICONS=0\nLARGE_FONT=0\nICON_FRAMES=1\nOPAQUE=0\n";
 		}
 		UpdateSetting(L"SkinC1",CComVariant(skin12),false);
 		UpdateSetting(L"SkinOptionsC1",CComVariant(options1),false);
@@ -5180,7 +5272,7 @@ void EditSettings( bool bModal, int tab )
 		Sprintf(title,_countof(title),LoadStringEx(IDS_SETTINGS_TITLE_VER),ver>>24,(ver>>16)&0xFF,ver&0xFFFF);
 	else
 		Sprintf(title,_countof(title),LoadStringEx(IDS_SETTINGS_TITLE));
-	EditSettings(title,bModal,tab);
+	EditSettings(title,bModal,tab,L"OpenShell.StartMenu.Settings");
 }
 
 bool DllImportSettingsXml( const wchar_t *fname )

@@ -1,0 +1,93 @@
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+1      ICON    "..\\..\\Setup\\OpenShell.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// SKIN
+//
+
+1      SKIN    "SkinDescription.txt"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Image
+//
+
+1      IMAGE   "fullglass1.png"
+2      IMAGE   "fullglasssearch1.png"
+3      IMAGE   "scrollbkg1.png"
+4      IMAGE   "fullglass_pager.png"
+5      IMAGE   "pager_arrows.png"
+6      IMAGE   "scrollbkg2.png"
+7      IMAGE   "programs.png"
+8      IMAGE   "arrow.png"
+9      IMAGE   "search.png"
+10     IMAGE   "twotone_pager.png"
+11     IMAGE   "separator.png"
+12     IMAGE   "user.png"
+13     IMAGE   "submenu_selector.png"
+14     IMAGE   "submenu_splitsel.png"
+15     IMAGE   "pin.png"
+16     IMAGE   "scrollbtn1.png"
+17     IMAGE   "scroll_arrows.png"
+18     IMAGE   "user144.png"
+19     IMAGE   "arrow144.png"
+20     IMAGE   "submenu_pager.png"
+21     IMAGE   "pager_arrows144.png"
+22     IMAGE   "programs144.png"
+23     IMAGE   "submenu.png"
+24     IMAGE   "submenu_vertsep.png"
+25     IMAGE   "fullglass2.png"
+26     IMAGE   "fullglasssearch2.png"
+27     IMAGE   "search_arrow.png"
+28     IMAGE   "fullglass_selector.png"
+29     IMAGE   "fullglass_splitsel.png"
+30     IMAGE   "searchbkg.png"
+31     IMAGE   "shutdown_selector.png"
+32     IMAGE   "scrollbtn2.png"
+33     IMAGE   "newsel.png"
+34     IMAGE   "search_arrow144.png"
+35     IMAGE   "scroll_arrows144.png"
+36     IMAGE   "pin144.png"
+37     IMAGE   "separator144.png"
+38     IMAGE   "submenu_vertsep144.png"
+39     IMAGE   "scrollthumb1.png"
+40     IMAGE   "scrollthumb2.png"
+41     IMAGE   "pager_arrows120.png"
+42     IMAGE   "programs120.png"
+43     IMAGE   "arrow120.png"
+44     IMAGE   "search120.png"
+45     IMAGE   "pin120.png"
+46     IMAGE   "scroll_arrows120.png"
+47     IMAGE   "search_arrow120.png"
+48     IMAGE   "user120.png"
+49     IMAGE   "fullglass3.png"
+50     IMAGE   "fullglass4.png"
+51     IMAGE   "arrow_mask.png"
+52     IMAGE   "arrow_mask120.png"
+53     IMAGE   "arrow_mask144.png"
+54     IMAGE   "twotone1.png"
+55     IMAGE   "twotone2.png"
+56     IMAGE   "twotonesearch.png"
+57     IMAGE   "twotonejump.png"
+58     IMAGE   "scrollbtn3.png"
+59     IMAGE   "scrollthumb3.png"
+60     IMAGE   "scrollbkg3.png"
+61     IMAGE   "twotone_selector.png"
+62     IMAGE   "twotone_splitsel.png"
+63     IMAGE   "twotone_listsel.png"
+64     IMAGE   "twotone_listsplitsel.png"
+65     IMAGE   "programs192.png"
+66     IMAGE   "pin192.png"
+67     IMAGE   "arrow192.png"
+68     IMAGE   "arrow_mask192.png"
+69     IMAGE   "pager_arrows192.png"
+70     IMAGE   "scroll_arrows192.png"
+71     IMAGE   "search_arrow192.png"
+72     IMAGE   "search192.png"

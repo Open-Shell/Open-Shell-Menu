@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 #include "resource.h"
-#include "ClassicExplorer_i.h"
+#include "ClassicExplorer_h.h"
 #include "dllmain.h"
 
 // Used to determine whether the DLL can be unloaded by OLE

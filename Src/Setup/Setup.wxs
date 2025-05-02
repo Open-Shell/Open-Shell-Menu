@@ -101,6 +101,8 @@
 				<ComponentRef Id="Midnight.skin7" />
 				<ComponentRef Id="Metro.skin7" />
 				<ComponentRef Id="Metallic.skin7" />
+				<ComponentRef Id="Immersive.skin" />
+				<ComponentRef Id="Immersive.skin7" />
 				<ComponentRef Id="AutoRun" />
 				<ComponentRef Id="MenuSettingsLink" />
 			</Feature>
@@ -115,7 +117,6 @@
 				<ComponentRef Id="ClassicIE_ARM64.exe" />
 				<?endif ?>
 				<ComponentRef Id="IESettingsLink" />
-				<Condition Level="1">IE_BUILD&gt;=90000</Condition>
 			</Feature>
 			<Feature Id="Update" Level="1" Title="!(loc.UpdateTitle)" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Description="!(loc.UpdateDesc)">
 				<ComponentRef Id="Update.exe" />
@@ -568,6 +569,14 @@
 			<Component Id="Metallic.skin7" Guid="2167BBCA-FD42-4285-AE00-9CDDDF436B30" Win64="$(var.CS_WIN64)">
 				<File Id="Metallic.skin7" KeyPath="yes" Checksum="yes" Source="Output\Metallic.skin7" Vital="yes" />
 			</Component>
+			<Component Id="Immersive.skin" Guid="045C48C3-FE11-4C66-AD7F-3F3EE35B4DEA" Win64="$(var.CS_WIN64)">
+				<File Id="Immersive.skin" KeyPath="yes" Checksum="yes" Source="Output\Immersive.skin" Vital="yes" />
+				<Condition>VersionNT&gt;601</Condition>
+			</Component>
+			<Component Id="Immersive.skin7" Guid="FFECA17A-C005-4D84-9F7C-DBC8EA2E1B5A" Win64="$(var.CS_WIN64)">
+				<File Id="Immersive.skin7" KeyPath="yes" Checksum="yes" Source="Output\Immersive.skin7" Vital="yes" />
+				<Condition>VersionNT&gt;601</Condition>
+			</Component>
 		</DirectoryRef>
 		<DirectoryRef Id="TARGETDIR">
 			<Component Id="OpenShell" Guid="19EC9EFC-B901-4EAB-B800-6E98D2261077" Win64="$(var.CS_WIN64)">
@@ -671,6 +680,9 @@
 		</Property>
 		<Property Id="APPLICATIONFOLDER">
 			<RegistrySearch Id="Path" Root="HKLM" Key="Software\OpenShell\OpenShell" Name="Path" Type="raw" Win64="$(var.CS_WIN64)" />
+		</Property>
+		<Property Id="WINDOWSBUILDNUM" Secure="yes">
+			<RegistrySearch Id="WindowsBuild" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuild" Type="raw" />
 		</Property>
 		<CustomAction Id="LaunchStartMenu" Impersonate="yes" ExeCommand="" FileKey="StartMenu.exe" Return="asyncNoWait" />
 		<CustomAction Id="CloseStartMenu" Impersonate="yes" BinaryKey="SetupHelper.exe" Return="ignore" ExeCommand="exitSM" />

@@ -503,6 +503,17 @@ SIZE MenuSkin::ScaleSkinElement( const SIZE &size ) const
 	return res;
 }
 
+_Success_(return != FALSE)
+BOOL WINAPI SystemParametersInfoForDpi(_In_ UINT uiAction, _In_ UINT uiParam, _Pre_maybenull_ _Post_valid_ PVOID pvParam, _In_ UINT fWinIni, _In_ UINT dpi)
+{
+	static auto p = static_cast<decltype(&SystemParametersInfoForDpi)>((void*)GetProcAddress(GetModuleHandle(L"user32.dll"), "SystemParametersInfoForDpi"));
+	if (p)
+		return p(uiAction, uiParam, pvParam, fWinIni, dpi);
+
+	// fall-back for older systems
+	return SystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
+}
+
 HFONT MenuSkin::LoadSkinFont( const wchar_t *str, const wchar_t *name, int weight, float size, bool bScale ) const
 {
 	DWORD quality=DEFAULT_QUALITY;
@@ -545,7 +556,7 @@ HFONT MenuSkin::LoadSkinFont( const wchar_t *str, const wchar_t *name, int weigh
 	{
 		// get the default menu font
 		NONCLIENTMETRICS metrics={sizeof(metrics)};
-		SystemParametersInfo(SPI_GETNONCLIENTMETRICS,NULL,&metrics,0);
+		SystemParametersInfoForDpi(SPI_GETNONCLIENTMETRICS,sizeof(metrics),&metrics,0,Dpi);
 		metrics.lfMenuFont.lfQuality=(BYTE)quality;
 		return CreateFontIndirect(&metrics.lfMenuFont);
 	}
@@ -1778,7 +1789,7 @@ bool MenuSkin::LoadSkin( HMODULE hMod, const wchar_t *variation, const wchar_t *
 				var.label=token;
 				if (var.labelEn.IsEmpty())
 					var.labelEn=var.label;
-				Variations.push_back(std::pair<int,Variation>(res,var));
+				Variations.emplace_back(res,var);
 				LOG_MENU(LOG_OPEN,L"Variation found: name=%s, id=%d",token,res);
 			}
 			else
@@ -3235,10 +3246,14 @@ void GetSkinsPath( wchar_t *path )
 {
 	GetModuleFileName(g_Instance,path,_MAX_PATH);
 	*PathFindFileName(path)=0;
-#ifdef BUILD_SETUP
 	Strcat(path,_MAX_PATH,L"Skins\\");
-#else
-	Strcat(path,_MAX_PATH,L"..\\Skins\\");
+
+#ifndef BUILD_SETUP
+	if (!PathIsDirectory(path))
+	{
+		*PathFindFileName(path) = 0;
+		Strcat(path,_MAX_PATH,L"..\\Skins\\");
+	}
 #endif
 }
 

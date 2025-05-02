@@ -9,6 +9,7 @@
 #include "stdafx.h"
 #include "ModernSettings.h"
 #include "ModernSettingsShellFolder.h"
+#include "ResourceHelper.h"
 #include <propkey.h>
 #include <strsafe.h>
 #include <Uxtheme.h>
@@ -181,7 +182,7 @@ HICON IconFromGlyph(UINT glyph, UINT size)
 	HDC dc = CreateCompatibleDC(nullptr);
 	SelectObject(dc, info.hbmColor);
 
-	HFONT font = CreateFontW(size, 0, 0, 0, 400, 0, 0, 0, 1, 0, 0, 0, 0, L"Segoe MDL2 Assets");
+	HFONT font = CreateFontW(size, 0, 0, 0, 400, 0, 0, 0, 1, 0, 0, 0, 0, IsWin11() ? L"Segoe Fluent Icons" : L"Segoe MDL2 Assets");
 	SelectObject(dc, font);
 
 	RECT rc{};

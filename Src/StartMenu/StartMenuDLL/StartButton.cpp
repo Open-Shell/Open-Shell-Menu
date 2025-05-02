@@ -144,7 +144,7 @@ LRESULT CStartButton::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 			m_Icon=(HICON)LoadImage(g_Instance,MAKEINTRESOURCE(IDI_APPICON),IMAGE_ICON,START_ICON_SIZE,START_ICON_SIZE,LR_DEFAULTCOLOR);
 	}
 	int dpi=CItemManager::GetDPI(false);
-	m_Font=CreateFont(10*dpi/72,0,0,0,FW_BOLD,0,0,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,L"Tahoma");
+	m_Font=CreateFont(MulDiv(10,dpi,72),0,0,0,FW_BOLD,0,0,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,L"Tahoma");
 	int val=1;
 	DwmSetWindowAttribute(m_hWnd,DWMWA_EXCLUDED_FROM_PEEK,&val,sizeof(val));
 	val=DWMFLIP3D_EXCLUDEABOVE;
@@ -154,6 +154,7 @@ LRESULT CStartButton::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 	OnThemeChanged(WM_THEMECHANGED,0,0,bHandled);
 	m_bPressed=true;
 	SetPressed(false);
+	ResizeClient(m_Size.cx,m_Size.cy);
 	bHandled=FALSE;
 	return 0;
 }
@@ -534,12 +535,12 @@ void CStartButton::LoadBitmap( void )
 		if (!m_Bitmap)
 		{
 			int id;
-			int dpi=CItemManager::GetDPI(false);
+			int dpi=GetDpi(GetParent());
 			if (dpi<120)
 				id=IDB_BUTTON96;
 			else if (dpi<144)
 				id=IDB_BUTTON120;
-			else if (dpi<180)
+			else if (dpi<168)
 				id=IDB_BUTTON144;
 			else
 				id=IDB_BUTTON180;
@@ -604,55 +605,12 @@ void CStartButton::LoadBitmap( void )
 
 static std::map<int,CStartButton> g_StartButtons;
 
-HWND CreateStartButton( int taskbarId, HWND taskBar, HWND rebar, const RECT &rcTask )
+HWND CreateStartButton( int taskbarId, HWND taskBar, HWND rebar )
 {
 	bool bRTL=(GetWindowLongPtr(rebar,GWL_EXSTYLE)&WS_EX_LAYOUTRTL)!=0;
 	DWORD styleTopmost=GetWindowLongPtr(taskBar,GWL_EXSTYLE)&WS_EX_TOPMOST;
 	CStartButton &button=g_StartButtons[taskbarId];
 	button.Create(taskBar,NULL,NULL,WS_POPUP,styleTopmost|WS_EX_TOOLWINDOW|WS_EX_LAYERED,0U,(void*)(intptr_t)(taskbarId*2+(bRTL?1:0)));
-	SIZE size=button.GetSize();
-	RECT rcButton;
-	MONITORINFO info;
-	UINT uEdge=GetTaskbarPosition(taskBar,&info,NULL,NULL);
-	if (uEdge==ABE_LEFT || uEdge==ABE_RIGHT)
-	{
-		if (GetSettingInt(L"StartButtonType")!=START_BUTTON_CUSTOM || !GetSettingBool(L"StartButtonAlign"))
-			rcButton.left=(rcTask.left+rcTask.right-size.cx)/2;
-		else if (uEdge==ABE_LEFT)
-			rcButton.left=rcTask.left;
-		else
-			rcButton.left=rcTask.right-size.cx;
-		rcButton.top=rcTask.top;
-	}
-	else
-	{
-		if (bRTL)
-			rcButton.left=rcTask.right-size.cx;
-		else
-			rcButton.left=rcTask.left;
-		if (GetSettingInt(L"StartButtonType")!=START_BUTTON_CUSTOM || !GetSettingBool(L"StartButtonAlign"))
-			rcButton.top=(rcTask.top+rcTask.bottom-size.cy)/2;
-		else if (uEdge==ABE_TOP)
-			rcButton.top=rcTask.top;
-		else
-			rcButton.top=rcTask.bottom-size.cy;
-	}
-	rcButton.right=rcButton.left+size.cx;
-	rcButton.bottom=rcButton.top+size.cy;
-	g_bAllowMoveButton=true;
-	button.SetWindowPos(HWND_TOP,&rcButton,SWP_SHOWWINDOW|SWP_NOOWNERZORDER|SWP_NOACTIVATE);
-	g_bAllowMoveButton=false;
-
-	RECT rc;
-	IntersectRect(&rc,&rcButton,&info.rcMonitor);
-	HRGN rgn=CreateRectRgn(rc.left-rcButton.left,rc.top-rcButton.top,rc.right-rcButton.left,rc.bottom-rcButton.top);
-	if (!SetWindowRgn(button,rgn,FALSE))
-	{
-		AddTrackedObject(rgn);
-		DeleteObject(rgn);
-	}
-
-	button.UpdateButton();
 	return button.m_hWnd;
 }
 

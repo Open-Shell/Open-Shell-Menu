@@ -91,7 +91,7 @@ STDMETHODIMP CStartMenuExt::Initialize( PCIDLIST_ABSOLUTE pidlFolder, IDataObjec
 		bUsePinned=(setting==1);
 	if (bUsePinned)
 	{
-		Strcpy(m_PinFolder1,_countof(m_PinFolder1),L"%APPDATA%\\OpenShell\\Pinned\\");
+		Sprintf(m_PinFolder1,_countof(m_PinFolder1),L"%s\\",GetSettingString(L"PinnedItemsPath"));
 		DoEnvironmentSubst(m_PinFolder1,_countof(m_PinFolder1));
 		m_PinFolder2[0]=0;
 	}

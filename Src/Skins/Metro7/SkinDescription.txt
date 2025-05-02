@@ -143,6 +143,7 @@ Scrollbar_arrows_mask=17
 
 
 ; LIST SECTION
+List_icon_padding=3,3,3,3,100%
 List_text_padding=0,0,4,0,100%
 List_separator_font="Segoe UI",bold,-9
 List_separator_text_padding=3,0,0,0,100%
@@ -249,7 +250,7 @@ Main_icon_frame_tint1=$SystemAccentDark2|$StartSelectionBackground
 Main_icon_frame_mask=10
 Main_icon_frame_slices_X=4,4,4
 Main_icon_frame_slices_Y=4,4,4
-Main_icon_frame_offset=3,3
+Main_icon_frame_offset=3,3,100%
 List_icon_frame=0
 Main_icon_padding=6,6,6,6,100%
 Main_text_padding=5,2,8,2,100%

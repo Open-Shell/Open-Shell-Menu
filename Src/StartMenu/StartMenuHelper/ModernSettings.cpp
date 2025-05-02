@@ -7,8 +7,10 @@
 #include "stdafx.h"
 #include "ModernSettings.h"
 #include "ResourceHelper.h"
+#include <appmodel.h>
 #include <Shlobj.h>
 #include <Shlwapi.h>
+#include <algorithm>
 #include <functional>
 #include <iterator>
 #include <mutex>
@@ -126,12 +128,80 @@ static void ProcessAttributes(const void* buffer, size_t size, std::function<voi
 
 ///
 
+static std::wstring GetPackageFullName(const wchar_t* packageFamily)
+{
+	static auto pGetPackagesByPackageFamily = static_cast<decltype(&GetPackagesByPackageFamily)>((void*)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetPackagesByPackageFamily"));
+	if (pGetPackagesByPackageFamily)
+	{
+		UINT32 count = 0;
+		UINT32 bufferLength = 0;
+
+		if (pGetPackagesByPackageFamily(packageFamily, &count, nullptr, &bufferLength, nullptr) == ERROR_INSUFFICIENT_BUFFER && count > 0)
+		{
+			std::vector<PWSTR> names(count);
+			std::vector<WCHAR> buffer(bufferLength);
+
+			if (pGetPackagesByPackageFamily(packageFamily, &count, names.data(), &bufferLength, buffer.data()) == ERROR_SUCCESS && count > 0)
+				return names[0];
+		}
+	}
+
+	return {};
+}
+
+static std::pair<std::wstring_view, std::wstring_view> ParseResourceString(const wchar_t* resourceString)
+{
+	std::wstring_view str = resourceString;
+
+	if (str[0] == '@' && str[1] == '{')
+	{
+		str.remove_prefix(2);
+		if (str.back() == '}')
+			str.remove_suffix(1);
+
+		auto pos = str.find('?');
+		if (pos != str.npos)
+			return { str.substr(0, pos), str.substr(pos + 1) };
+	}
+
+	return {};
+}
+
+static std::wstring FormatResourceString(const std::wstring_view& package, const std::wstring_view& resource)
+{
+	std::wstring retval(L"@{");
+
+	retval += package;
+	retval += L"?";
+	retval += resource;
+	retval += L"}";
+
+	return retval;
+}
+
+
 static std::wstring TranslateIndirectString(const WCHAR* string)
 {
 	std::wstring retval;
 	retval.resize(1024);
 
-	if (SUCCEEDED(::SHLoadIndirectString(string, retval.data(), (UINT)retval.size(), nullptr)))
+	auto hr = ::SHLoadIndirectString(string, retval.data(), (UINT)retval.size(), nullptr);
+
+	if (hr == E_INVALIDARG)
+	{
+		auto [package, resource] = ParseResourceString(string);
+		if (!package.empty() && !resource.empty())
+		{
+			auto fullPackage = GetPackageFullName(std::wstring(package).c_str());
+			if (!fullPackage.empty())
+			{
+				auto fullStr = FormatResourceString(fullPackage, resource);
+				hr = ::SHLoadIndirectString(fullStr.c_str(), retval.data(), (UINT)retval.size(), nullptr);
+			}
+		}
+	}
+
+	if (SUCCEEDED(hr))
 	{
 		retval.resize(wcslen(retval.data()));
 		return retval;
@@ -204,15 +274,30 @@ static void ParseApplicationInformation(CComPtr<IXMLDOMNode>& parent, AttributeW
 	}
 }
 
+static void ParseSettingIDs(CComPtr<IXMLDOMNode>& node, AttributeWriter& writer)
+{
+	writer.addString(Id::PageId, GetTranslatedString(node, L"PageID"));
+	writer.addString(Id::HostId, GetTranslatedString(node, L"HostID"));
+	writer.addString(Id::GroupId, GetTranslatedString(node, L"GroupID"));
+	writer.addString(Id::SettingId, GetTranslatedString(node, L"SettingID"));
+}
+
+static void ParseSettingPaths(CComPtr<IXMLDOMNode>& parent, AttributeWriter& writer)
+{
+	CComPtr<IXMLDOMNode> node;
+	if (parent->selectSingleNode(CComBSTR(L"SettingPaths/Path"), &node) == S_OK)
+		ParseSettingIDs(node, writer);
+}
+
 static void ParseSettingIdentity(CComPtr<IXMLDOMNode>& parent, AttributeWriter& writer)
 {
 	CComPtr<IXMLDOMNode> node;
 	if (parent->selectSingleNode(CComBSTR(L"SettingIdentity"), &node) == S_OK)
 	{
-		writer.addString(Id::PageId, GetTranslatedString(node, L"PageID"));
-		writer.addString(Id::HostId, GetTranslatedString(node, L"HostID"));
-		writer.addString(Id::GroupId, GetTranslatedString(node, L"GroupID"));
-		writer.addString(Id::SettingId, GetTranslatedString(node, L"SettingID"));
+		// Win11 24H2+
+		ParseSettingPaths(node, writer);
+		// older
+		ParseSettingIDs(node, writer);
 	}
 }
 
@@ -247,9 +332,9 @@ static std::vector<uint8_t> ParseSetting(CComPtr<IXMLDOMNode>& parent)
 	return writer.buffer();
 }
 
-static std::vector<uint8_t> ParseModernSettings()
+static std::vector<std::vector<uint8_t>> ParseModernSettings()
 {
-	AttributeWriter writer;
+	std::vector<std::vector<uint8_t>> retval;
 
 	CComPtr<IXMLDOMDocument> doc;
 	if (SUCCEEDED(doc.CoCreateInstance(L"Msxml2.FreeThreadedDOMDocument")))
@@ -257,8 +342,14 @@ static std::vector<uint8_t> ParseModernSettings()
 		doc->put_async(VARIANT_FALSE);
 
 		wchar_t path[MAX_PATH]{};
-		wcscpy_s(path, LR"(%windir%\ImmersiveControlPanel\Settings\AllSystemSettings_{253E530E-387D-4BC2-959D-E6F86122E5F2}.xml)");
+		wcscpy_s(path, LR"(%windir%\ImmersiveControlPanel\Settings\AllSystemSettings_{FDB289F3-FCFC-4702-8015-18926E996EC1}.xml)");
 		DoEnvironmentSubst(path, _countof(path));
+
+		if (!PathFileExists(path))
+		{
+			wcscpy_s(path, LR"(%windir%\ImmersiveControlPanel\Settings\AllSystemSettings_{253E530E-387D-4BC2-959D-E6F86122E5F2}.xml)");
+			DoEnvironmentSubst(path, _countof(path));
+		}
 
 		VARIANT_BOOL loaded;
 		if (SUCCEEDED(doc->load(CComVariant(path), &loaded)) && loaded)
@@ -266,25 +357,35 @@ static std::vector<uint8_t> ParseModernSettings()
 			CComPtr<IXMLDOMNode> root;
 			if (doc->selectSingleNode(CComBSTR(L"PCSettings"), &root) == S_OK)
 			{
-				FileHdr hdr{};
-				writer.addBlob(Id::Header, &hdr, sizeof(hdr));
-
 				CComPtr<IXMLDOMNode> node;
 				root->get_firstChild(&node);
 				while (node)
 				{
 					auto buffer = ParseSetting(node);
 					if (!buffer.empty())
-						writer.addBlob(Id::Blob, buffer.data(), buffer.size());
+						retval.push_back(std::move(buffer));
 
 					CComPtr<IXMLDOMNode> next;
 					if (FAILED(node->get_nextSibling(&next)))
 						break;
-					node = next;
+					node = std::move(next);
 				}
 			}
 		}
 	}
+
+	return retval;
+}
+
+static std::vector<uint8_t> SerializeModernSettings(const std::vector<std::vector<uint8_t>>& settings)
+{
+	AttributeWriter writer;
+
+	FileHdr hdr{};
+	writer.addBlob(Id::Header, &hdr, sizeof(hdr));
+
+	for (const auto& setting : settings)
+		writer.addBlob(Id::Blob, setting.data(), setting.size());
 
 	return writer.buffer();
 }
@@ -411,11 +512,30 @@ std::shared_ptr<ModernSettings> GetModernSettings()
 			s_settings.reset();
 
 			// re-parse settings
-			auto buffer = ParseModernSettings();
-			if (!buffer.empty())
+			auto settings = ParseModernSettings();
+			if (!settings.empty())
 			{
+				// sort by setting name (in reverse order)
+				// this way we will have newer settings (like SomeSetting-2) before older ones
+				std::stable_sort(settings.begin(), settings.end(), [](const auto& a, const auto& b) {
+					return ModernSettings::Setting(a).fileName > ModernSettings::Setting(b).fileName;
+					});
+
+				// now sort by description (strings presented to the user)
+				// and keep relative order of items with the same description
+				std::stable_sort(settings.begin(), settings.end(), [](const auto& a, const auto& b) {
+					return ModernSettings::Setting(a).description < ModernSettings::Setting(b).description;
+				});
+
+				// remove duplicates
+				settings.erase(std::unique(settings.begin(), settings.end(), [](const auto& a, const auto& b) {
+					return ModernSettings::Setting(a).description == ModernSettings::Setting(b).description;
+				}), settings.end());
+
 				// store to file
 				{
+					auto buffer = SerializeModernSettings(settings);
+
 					File f(path.c_str(), GENERIC_WRITE, 0, CREATE_ALWAYS);
 					if (f)
 					{

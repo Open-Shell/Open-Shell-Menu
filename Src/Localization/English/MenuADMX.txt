@@ -190,3 +190,4 @@ StartHoverDelay.nameOverride = Hover delay (for Start button)
 AllProgramsDelay.nameOverride = Hover delay (for All Programs in Windows 7)
 CSMHotkey.tipAddition = .\n\nThe base value is the main key's virtual code. Add 256 for Shift, 512 for Control and 1024 for Alt.\nThe best way to get the value is to select the hotkey in the Open-Shell Menu settings dialog and then look up the value named CSMHotkey in HKCU\Software\OpenShell\StartMenu\Settings
 WSMHotkey.tipAddition = .\n\nThe base value is the main key's virtual code. Add 256 for Shift, 512 for Control and 1024 for Alt.\nThe best way to get the value is to select the hotkey in the Open-Shell Menu settings dialog and then look up the value named WSMHotkey in HKCU\Software\OpenShell\StartMenu\Settings
+SearchFiles.tipOverride = When this is checked, the search results will include files, emails and other items from indexed locations

@@ -117,7 +117,7 @@
     <ClInclude Include="Resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="ClassicExplorer_i.h">
+    <ClInclude Include="ClassicExplorer_h.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
   </ItemGroup>

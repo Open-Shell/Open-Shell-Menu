@@ -15,51 +15,51 @@
 		</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="Open-Shell Menu">
-		<param name="Local" value="Menu.html">
+		<param name="Local" value="StartMenu.html">
 		<param name="ImageNumber" value="1">
 		</OBJECT>
 	<UL>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Estilos">
-			<param name="Local" value="Menu.html">
+			<param name="Local" value="StartMenu.html">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Operaci&oacute;n">
-			<param name="Local" value="Menu.html">
+			<param name="Local" value="StartMenu.html">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Configuraci&oacute;n">
-			<param name="Local" value="Menu.html">
-			<param name="URL" value="Menu.html#settings">
+			<param name="Local" value="StartMenu.html">
+			<param name="URL" value="StartMenu.html#settings">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Configuraci&oacute;n administrativa">
-			<param name="Local" value="Menu.html">
-			<param name="URL" value="Menu.html#admin">
+			<param name="Local" value="StartMenu.html">
+			<param name="URL" value="StartMenu.html#admin">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="M&aacute;s acerca de las m&aacute;scaras">
-			<param name="Local" value="Menu.html">
+			<param name="Local" value="StartMenu.html">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="B&uacute;squeda">
-			<param name="Local" value="Menu.html">
+			<param name="Local" value="StartMenu.html">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Bot&oacute;n Inicio personalizado">
-			<param name="Local" value="Menu.html">
+			<param name="Local" value="StartMenu.html">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Localizaci&oacute;n">
-			<param name="Local" value="Menu.html">
+			<param name="Local" value="StartMenu.html">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="L&iacute;nea de comandos">
-			<param name="Local" value="Menu.html">
+			<param name="Local" value="StartMenu.html">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Accesibilidad">
-			<param name="Local" value="Menu.html">
+			<param name="Local" value="StartMenu.html">
 			</OBJECT>
 	</UL>
 	<LI> <OBJECT type="text/sitemap">

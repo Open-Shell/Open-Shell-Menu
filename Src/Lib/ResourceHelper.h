@@ -67,6 +67,9 @@ bool IsWin10RS1( void );
 // Returns true if the version is Windows10 RS4 (Spring Creator Update) or later
 bool IsWin10RS4( void );
 
+// Returns true if the version is Windows11 or later
+bool IsWin11();
+
 // Wrapper for IShellFolder::ParseDisplayName
 HRESULT ShParseDisplayName( const wchar_t *pszName, PIDLIST_ABSOLUTE *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut );
 
@@ -81,6 +84,12 @@ void StringUpper( CString &str );
 
 // Create a font from the user settings
 HFONT CreateFontSetting( const wchar_t *fontStr, int dpi );
+
+// Return DPI of given window (or system DPI on older systems)
+UINT GetDpi(HWND hwnd = nullptr);
+
+// Scale given value according to DPI of window
+int ScaleForDpi(HWND hwnd, int value);
 
 extern HINSTANCE g_Instance;
 

@@ -47,22 +47,23 @@ void EnableStartTooltip( bool bEnable );
 
 struct TaskbarInfo
 {
-	TaskbarInfo( void ) { taskbarId=pointerId=0; taskBar=startButton=oldButton=rebar=taskList=chevron=desktop=NULL; startButtonSize.cx=startButtonSize.cy=0; oldButtonSize.cx=oldButtonSize.cy=0; bTimer=bCustomLook=bReplaceButton=bHideButton=bRecreatingButton=bThemeChanging=false; }
+	TaskbarInfo( void ) { taskbarId=pointerId=0; taskBar=startButton=oldButton=rebar=taskList=chevron=news=desktop=NULL; startButtonSize.cx=startButtonSize.cy=0; oldButtonSize.cx=oldButtonSize.cy=0; bTimer=bCustomLook=bReplaceButton=bHideButton=bRecreatingButton=bThemeChanging=false; }
 	int taskbarId;
 	HWND taskBar;
 	HWND startButton; // either own start button or the win7 start button (depending on bReplaceButton)
-	HWND oldButton; // win81 start button (child of taskBar)
+	HWND oldButton; // win8.1+ start button (child of taskBar)
 	HWND rebar;
 	HWND taskList;
 	HWND chevron;
+	HWND news;
 	HWND desktop;
 	SIZE startButtonSize;
 	SIZE oldButtonSize;
 	int pointerId;
 	bool bTimer;
 	bool bCustomLook;
-	bool bReplaceButton;
-	bool bHideButton;
+	bool bReplaceButton; // replace start button with own one
+	bool bHideButton; // hide old start button (if we have own button)
 	bool bRecreatingButton;
 	bool bThemeChanging;
 	std::vector<HWND> trayButtons; // ordered by Z order (for win10)

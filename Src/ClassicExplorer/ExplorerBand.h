@@ -6,7 +6,7 @@
 
 #pragma once
 #include "resource.h"
-#include "ClassicExplorer_i.h"
+#include "ClassicExplorer_h.h"
 #include "SettingsParser.h"
 #include <vector>
 
@@ -178,7 +178,7 @@ class ATL_NO_VTABLE CExplorerBand :
 public:
 	CExplorerBand( void );
 
-	DECLARE_REGISTRY_RESOURCEID(IDR_EXPLORERBAND)
+	DECLARE_REGISTRY_RESOURCEID_V2_WITHOUT_MODULE(IDR_EXPLORERBAND, CExplorerBand)
 
 	BEGIN_SINK_MAP( CExplorerBand )
 		SINK_ENTRY_EX(1, DIID_DWebBrowserEvents2, DISPID_NAVIGATECOMPLETE2, OnNavigateComplete)

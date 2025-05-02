@@ -4,7 +4,7 @@
 #pragma once
 #include "resource.h"
 #include "ComHelper.h"
-#include "StartMenuHelper_i.h"
+#include "StartMenuHelper_h.h"
 #include <shlobj.h>
 #include <string>
 
@@ -21,7 +21,7 @@ public:
 	{
 	}
 
-DECLARE_REGISTRY_RESOURCEID(IDR_MODERNSETTINGSSHELLFOLDER)
+DECLARE_REGISTRY_RESOURCEID_V2_WITHOUT_MODULE(IDR_MODERNSETTINGSSHELLFOLDER, CModernSettingsShellFolder)
 
 DECLARE_NOT_AGGREGATABLE(CModernSettingsShellFolder)
 

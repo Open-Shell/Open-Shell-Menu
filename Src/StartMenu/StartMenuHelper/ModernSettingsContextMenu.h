@@ -2,7 +2,7 @@
 
 #pragma once
 #include "resource.h"
-#include "StartMenuHelper_i.h"
+#include "StartMenuHelper_h.h"
 #include <shlobj.h>
 
 // CModernSettingsContextMenu
@@ -19,7 +19,7 @@ public:
 	{
 	}
 
-DECLARE_REGISTRY_RESOURCEID(IDR_MODERNSETTINGSCONTEXTMENU)
+DECLARE_REGISTRY_RESOURCEID_V2_WITHOUT_MODULE(IDR_MODERNSETTINGSCONTEXTMENU, CModernSettingsContextMenu)
 
 DECLARE_NOT_AGGREGATABLE(CModernSettingsContextMenu)
 

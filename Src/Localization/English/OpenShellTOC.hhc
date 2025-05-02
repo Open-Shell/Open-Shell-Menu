@@ -15,51 +15,65 @@
 		</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="Open-Shell Menu">
-		<param name="Local" value="Menu.html">
+		<param name="Local" value="StartMenu.html">
 		<param name="ImageNumber" value="1">
 		</OBJECT>
 	<UL>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Styles">
-			<param name="Local" value="Menu.html#styles">
+			<param name="Local" value="StartMenu.html#styles">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Operation">
-			<param name="Local" value="Menu.html#operation">
+			<param name="Local" value="StartMenu.html#operation">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Settings">
-			<param name="Local" value="Menu.html#settings">
-			<param name="URL" value="Menu.html#settings">
+			<param name="Local" value="StartMenu.html#settings">
+			<param name="URL" value="StartMenu.html#settings">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Administrative Settings">
-			<param name="Local" value="Menu.html#admin">
-			<param name="URL" value="Menu.html#admin">
+			<param name="Local" value="StartMenu.html#admin">
+			<param name="URL" value="StartMenu.html#admin">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="More About Skins">
-			<param name="Local" value="Menu.html#skins">
+			<param name="Local" value="StartMenu.html#skins">
+			<param name="ImageNumber" value="1">
 			</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Start Menu Skinning Tutorial">
+				<param name="Local" value="SkinTutorial.html#skin_tutorial">
+				</OBJECT>
+			</UL>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Search">
-			<param name="Local" value="Menu.html#search">
+			<param name="Local" value="StartMenu.html#search">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Custom Start Button">
-			<param name="Local" value="Menu.html#button">
+			<param name="Local" value="StartMenu.html#button">
+			<param name="ImageNumber" value="1">
 			</OBJECT>
+			<UL>
+				<LI> <OBJECT type="text/sitemap">
+				<param name="Name" value="Custom Start Buttons Tutorial">
+				<param name="Local" value="ButtonTutorial.html#button_tutorial">
+				</OBJECT>
+			</UL>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Localization">
-			<param name="Local" value="Menu.html#localization">
+			<param name="Local" value="StartMenu.html#localization">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Command Line">
-			<param name="Local" value="Menu.html#command_line">
+			<param name="Local" value="StartMenu.html#command_line">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Accessibility">
-			<param name="Local" value="Menu.html#accessibility">
+			<param name="Local" value="StartMenu.html#accessibility">
 			</OBJECT>
 	</UL>
 	<LI> <OBJECT type="text/sitemap">

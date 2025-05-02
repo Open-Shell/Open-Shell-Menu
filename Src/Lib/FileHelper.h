@@ -7,3 +7,4 @@
 bool CreateFakeFolder( const wchar_t *source, const wchar_t *fname );
 void DeleteFakeFolder( const wchar_t *fname );
 bool IsFakeFolder( const wchar_t *fname );
+bool GetFakeFolder( wchar_t *dst, int len, const wchar_t *src );

@@ -1,8 +1,11 @@
 version: 4.4.{build}
+branches:
+  only:
+    - master
 pull_requests:
   do_not_increment_build_number: true
 skip_tags: true
-image: Visual Studio 2019
+image: Visual Studio 2022
 clone_depth: 1
 build_script:
 - cmd: Src\Setup\__MakeFinal.bat
@@ -11,3 +14,12 @@ only_commits:
   files:
     - Src/
     - Localization/
+deploy:
+- provider: GitHub
+  tag: v$(APPVEYOR_BUILD_VERSION)
+  release: $(APPVEYOR_BUILD_VERSION)
+  on:
+    APPVEYOR_ACCOUNT_NAME: passionate-coder
+  auth_token:
+    secure: SOu6Y71k0oIxXJR35x+7ZTrqDa3HqUM4kLNJc+DbohPz9zhVHh9O8QYwmI7LI0qslug5L11fo9pZVfVgZttw4eBgooHaX9TNBTTA6sJItkXqMX+M6mKAG7tbI/O3Eg0v
+  prerelease: true

@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include "resource.h"
-#include "StartMenuHelper_i.h"
+#include "StartMenuHelper_h.h"
 #include "dllmain.h"
 #include "ResourceHelper.h"
 #include "Settings.h"

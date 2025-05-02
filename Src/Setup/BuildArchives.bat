@@ -1,7 +1,7 @@
 REM ***** Collect PDBs
 
 echo -- Creating symbols package
-set CS_SYMBOLS_NAME=OpenShellPDB_%CS_VERSION_STR%
+set CS_SYMBOLS_NAME=OpenShellSymbols_%CS_VERSION_STR%
 if %ARCH%==ARM64 set CS_SYMBOLS_NAME=%CS_SYMBOLS_NAME%_ARM64
 set CS_SYMBOLS_NAME=%CS_SYMBOLS_NAME%.7z
 
@@ -22,5 +22,9 @@ cd Localization
 cd ..
 
 cd Setup
+
+if defined APPVEYOR (
+	appveyor PushArtifact ..\..\build\bin\Release\Utility.exe
+)
 
 exit /b 0

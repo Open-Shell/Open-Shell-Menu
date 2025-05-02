@@ -52,7 +52,7 @@ END
 // FILE
 //
 
-1                       FILE                    "Release64\\Utility.exe"
+1                       FILE                    "..\\..\\..\\build\\bin\\Release64\\Utility.exe"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -206,6 +206,44 @@ BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION _PRODUCT_VERSION
+ PRODUCTVERSION _PRODUCT_VERSION
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "CompanyName", "Open-Shell"
+            VALUE "FileDescription", "Utility"
+            VALUE "FileVersion", _PRODUCT_VERSION_STR
+            VALUE "InternalName", "Utility.exe"
+            VALUE "LegalCopyright", "Copyright (C) 2017-2018, The Open-Shell Team"
+            VALUE "OriginalFilename", "Utility.exe"
+            VALUE "ProductName", "Open-Shell"
+            VALUE "ProductVersion", _PRODUCT_VERSION_STR
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
 
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////

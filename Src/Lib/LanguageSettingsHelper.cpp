@@ -68,17 +68,13 @@ public:
 		MESSAGE_HANDLER( WM_INITDIALOG, OnInitDialog )
 		MESSAGE_HANDLER( WM_DESTROY, OnDestroy )
 		MESSAGE_HANDLER( WM_SIZE, OnSize )
-		COMMAND_ID_HANDLER( IDC_BUTTONCHECK, OnCheckUpdates )
 		NOTIFY_HANDLER( IDC_LISTLANGUAGE, LVN_ITEMCHANGED, OnSelChange )
 		NOTIFY_HANDLER( IDC_LISTLANGUAGE, LVN_ITEMCHANGING, OnSelChanging )
 		NOTIFY_HANDLER( IDC_LISTLANGUAGE, NM_CUSTOMDRAW, OnCustomDraw )
-		NOTIFY_HANDLER( IDC_LINKDOWNLOAD, NM_CLICK, OnDownload )
 	END_MSG_MAP()
 
 	BEGIN_RESIZE_MAP
 		RESIZE_CONTROL(IDC_LISTLANGUAGE,MOVE_SIZE_X|MOVE_SIZE_Y)
-		RESIZE_CONTROL(IDC_BUTTONCHECK,MOVE_MOVE_Y)
-		RESIZE_CONTROL(IDC_LINKDOWNLOAD,MOVE_SIZE_X|MOVE_MOVE_Y)
 	END_RESIZE_MAP
 
 	void SetGroup( CSetting *pGroup );
@@ -92,11 +88,9 @@ protected:
 	LRESULT OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled );
 	LRESULT OnDestroy( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled );
 	LRESULT OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled );
-	LRESULT OnCheckUpdates( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
 	LRESULT OnSelChange( int idCtrl, LPNMHDR pnmh, BOOL& bHandled );
 	LRESULT OnSelChanging( int idCtrl, LPNMHDR pnmh, BOOL& bHandled );
 	LRESULT OnCustomDraw( int idCtrl, LPNMHDR pnmh, BOOL& bHandled );
-	LRESULT OnDownload( int idCtrl, LPNMHDR pnmh, BOOL& bHandled );
 
 private:
 	CSetting *m_pSetting;
@@ -114,20 +108,14 @@ private:
 		bool operator<( const LangInfo &info ) { return _wcsicmp(name,info.name)<0; }
 	};
 	std::vector<LangInfo> m_LanguageIDs; // the order matches the items in the listbox
-	static VersionData s_VersionData;
-	static void NewVersionCallback( VersionData &data );
 
 	void UpdateFlags( void );
-	void UpdateLink( const wchar_t *language );
 
 	void AddFlag( const wchar_t *langName, int langId, HBITMAP bmp );
 };
 
-VersionData CLanguageSettingsDlg::s_VersionData;
-
 void CLanguageSettingsDlg::AddFlag( const wchar_t *langName, int langId, HBITMAP bmp )
 {
-	std::vector<LangInfo>::iterator it=m_LanguageIDs.begin()+1;
 	int idx=1;
 	for (;idx<(int)m_LanguageIDs.size();idx++)
 	{
@@ -157,39 +145,6 @@ void CLanguageSettingsDlg::AddFlag( const wchar_t *langName, int langId, HBITMAP
 
 void CLanguageSettingsDlg::UpdateFlags( void )
 {
-	// add flags from s_VersionData
-	for (std::vector<LanguageVersionData>::const_iterator it=s_VersionData.languages.begin();it!=s_VersionData.languages.end();++it)
-	{
-		if (it->bitmap)
-		{
-			BITMAPINFO bi={0};
-			bi.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
-			bi.bmiHeader.biWidth=m_bLargeFlags?32:24;
-			bi.bmiHeader.biHeight=m_bLargeFlags?16:11;
-			bi.bmiHeader.biPlanes=1;
-			bi.bmiHeader.biBitCount=32;
-
-			HDC hdc=CreateCompatibleDC(NULL);
-			HBITMAP bmp=CreateDIBSection(hdc,&bi,DIB_RGB_COLORS,NULL,NULL,0);
-			HGDIOBJ bmp0=SelectObject(hdc,bmp);
-			HDC hsrc=CreateCompatibleDC(hdc);
-			HGDIOBJ bmp02=SelectObject(hsrc,it->bitmap);
-			SetDCBrushColor(hdc,0xFF00FF);
-			RECT rc={0,0,bi.bmiHeader.biWidth,bi.bmiHeader.biHeight};
-			FillRect(hdc,&rc,(HBRUSH)GetStockObject(DC_BRUSH));
-			if (m_bLargeFlags)
-				BitBlt(hdc,3,0,22,16,hsrc,0,11,SRCCOPY);
-			else
-				BitBlt(hdc,2,0,16,11,hsrc,0,0,SRCCOPY);
-			SelectObject(hsrc,bmp02);
-			DeleteDC(hsrc);
-			SelectObject(hdc,bmp0);
-			DeleteDC(hdc);
-			AddFlag(it->language,it->languageId,bmp);
-			DeleteObject(bmp);
-		}
-	}
-
 	// add flags from dlls
 	for (int pass=0;pass<2;pass++)
 	{
@@ -204,8 +159,6 @@ void CLanguageSettingsDlg::UpdateFlags( void )
 			Strcpy(path,_countof(path),L"%ALLUSERSPROFILE%\\OpenShell\\Languages");
 			DoEnvironmentSubst(path,_countof(path));
 		}
-
-		CWindow list=GetDlgItem(IDC_LISTLANGUAGE);
 
 		wchar_t find[_MAX_PATH];
 		Sprintf(find,_countof(find),L"%s\\*.dll",path);
@@ -291,7 +244,6 @@ LRESULT CLanguageSettingsDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lPa
 	ListView_SetExtendedListViewStyleEx(list,LVS_EX_DOUBLEBUFFER,LVS_EX_DOUBLEBUFFER);
 	LVCOLUMN column={LVCF_WIDTH,0,rc.right-rc.left};
 	ListView_InsertColumn(list,0,&column);
-	SetDlgItemText(IDC_LINKDOWNLOAD,L"");
 
 	m_LanguageIDs.resize(_countof(g_LanguageIDs)+1);
 	{
@@ -334,11 +286,6 @@ LRESULT CLanguageSettingsDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lPa
 		ListView_InsertItem(list,&item);
 	}
 
-	// parse update.ver in data and add all flags
-	wchar_t path[_MAX_PATH]=L"%ALLUSERSPROFILE%\\OpenShell\\update.ver";
-	DoEnvironmentSubst(path,_countof(path));
-	s_VersionData.bValid=(s_VersionData.Load(path,true)==VersionData::LOAD_OK);
-
 	UpdateFlags();
 
 	m_Tooltip.Create(TOOLTIPS_CLASS,m_hWnd,NULL,NULL,WS_POPUP|TTS_NOPREFIX);
@@ -362,40 +309,6 @@ LRESULT CLanguageSettingsDlg::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, B
 	return 0;
 }
 
-void CLanguageSettingsDlg::NewVersionCallback( VersionData &data )
-{
-	s_VersionData.Swap(data);
-}
-
-LRESULT CLanguageSettingsDlg::OnCheckUpdates( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled )
-{
-	DWORD res=CheckForNewVersion(m_hWnd,m_Component,CHECK_UPDATE,NewVersionCallback);
-	if (res==2) return 0;
-	if (res)
-	{
-		UpdateFlags();
-		CString language=GetSettingString(L"Language");
-		CWindow list=GetDlgItem(IDC_LISTLANGUAGE);
-		for (int idx=0;idx<(int)m_LanguageIDs.size();idx++)
-		{
-			const wchar_t *name=idx>0?m_LanguageIDs[idx].name.GetString():L"";
-			if (_wcsicmp(language,name)==0)
-			{
-				ListView_SetItemState(list,idx,LVIS_SELECTED|LVIS_FOCUSED,LVIS_SELECTED|LVIS_FOCUSED);
-				ListView_EnsureVisible(list,idx,FALSE);
-				break;
-			}
-		}
-		UpdateLink(language);
-	}
-	else
-	{
-		s_VersionData.Clear();
-		SetDlgItemText(IDC_LINKDOWNLOAD,LoadStringEx(IDS_LANGUAGE_FAIL));
-	}
-	return 0;
-}
-
 LRESULT CLanguageSettingsDlg::OnSelChange( int idCtrl, LPNMHDR pnmh, BOOL& bHandled )
 {
 	// set setting
@@ -408,13 +321,12 @@ LRESULT CLanguageSettingsDlg::OnSelChange( int idCtrl, LPNMHDR pnmh, BOOL& bHand
 	CComVariant val(name);
 	if (m_pSetting->value!=val)
 		SetSettingsDirty();
-	m_pSetting->value=val;
+	m_pSetting->value=std::move(val);
 
 	if (_wcsicmp(m_pSetting->value.bstrVal,m_pSetting->defValue.bstrVal)==0)
 		m_pSetting->flags|=CSetting::FLAG_DEFAULT;
 	else
 		m_pSetting->flags&=~CSetting::FLAG_DEFAULT;
-	UpdateLink(name);
 	return 0;
 }
 
@@ -451,41 +363,6 @@ static HRESULT CALLBACK TaskDialogCallbackProc( HWND hwnd, UINT uNotification, W
 	return S_OK;
 }
 
-LRESULT CLanguageSettingsDlg::OnDownload( int idCtrl, LPNMHDR pnmh, BOOL& bHandled )
-{
-	CString language=GetSettingString(L"Language");
-	if (language.IsEmpty())
-		language=m_LanguageIDs[0].name;
-
-	for (std::vector<LanguageVersionData>::const_iterator it=s_VersionData.languages.begin();it!=s_VersionData.languages.end();++it)
-	{
-		if (_wcsicmp(it->language,language)==0)
-		{
-			CString error;
-			DWORD res=DownloadLanguageDll(m_hWnd,m_Component,*it,error);
-			if (res==2)
-				return 0;
-			if (res)
-				MessageBox(LoadStringEx(it->bBasic?IDS_LANGUAGE_SUCCESS2:IDS_LANGUAGE_SUCCESS),LoadStringEx(IDS_UPDATE_TITLE),MB_OK|(it->bBasic?MB_ICONWARNING:MB_ICONINFORMATION));
-			else
-			{
-				if (!s_VersionData.languageLink.IsEmpty())
-					error+=L" "+LoadStringEx(IDS_DOWNLOAD_TIP)+L"\r\n\r\n"+s_VersionData.languageLink;
-				TASKDIALOGCONFIG task={sizeof(task),m_hWnd,NULL,TDF_ENABLE_HYPERLINKS|TDF_ALLOW_DIALOG_CANCELLATION|TDF_USE_HICON_MAIN,TDCBF_OK_BUTTON};
-				CString title=LoadStringEx(IDS_UPDATE_TITLE);
-				task.pszWindowTitle=title;
-				task.pszContent=error;
-				task.hMainIcon=LoadIcon(NULL,IDI_ERROR);
-				task.pfCallback=TaskDialogCallbackProc;
-				TaskDialogIndirect(&task,NULL,NULL,NULL);
-			}
-			UpdateLink(language);
-			break;
-		}
-	}
-	return 0;
-}
-
 void CLanguageSettingsDlg::SetGroup( CSetting *pGroup )
 {
 	m_bLocked=false;
@@ -507,7 +384,6 @@ void CLanguageSettingsDlg::SetGroup( CSetting *pGroup )
 			break;
 		}
 	}
-	UpdateLink(m_pSetting->value.bstrVal);
 	m_bLocked=m_pSetting->IsLocked();
 
 	TOOLINFO tool={sizeof(tool),0,m_hWnd,'CLSH'};
@@ -518,52 +394,6 @@ void CLanguageSettingsDlg::SetGroup( CSetting *pGroup )
 	tool.lpszText=(LPWSTR)(LPCWSTR)str;
 	m_Tooltip.SendMessage(TTM_UPDATETIPTEXT,0,(LPARAM)&tool);
 	ListView_SetBkColor(list,GetSysColor(m_bLocked?COLOR_BTNFACE:COLOR_WINDOW));
-}
-
-void CLanguageSettingsDlg::UpdateLink( const wchar_t *language )
-{
-	TOOLINFO tool={sizeof(tool),TTF_SUBCLASS|TTF_IDISHWND,m_hWnd,'CLSH'};
-	tool.uId=(UINT_PTR)GetDlgItem(IDC_LINKDOWNLOAD).m_hWnd;
-	m_Tooltip.SendMessage(TTM_DELTOOL,0,(LPARAM)&tool);
-
-	if (!s_VersionData.bValid)
-	{
-		SetDlgItemText(IDC_LINKDOWNLOAD,L"");
-		return;
-	}
-	if (!*language)
-		language=m_LanguageIDs[0].name;
-
-	wchar_t text[1024];
-	for (std::vector<LanguageVersionData>::const_iterator it=s_VersionData.languages.begin();it!=s_VersionData.languages.end();++it)
-	{
-		if (_wcsicmp(it->language,language)==0)
-		{
-			DWORD dllVersion=0, dllBuild=0;
-			HINSTANCE resInstance=LoadTranslationDll(language);
-			if (resInstance)
-			{
-				dllVersion=GetVersionEx(resInstance,&dllBuild);
-				FreeLibrary(resInstance);
-			}
-			if (it->version>dllVersion || (it->version==dllVersion && it->build>dllBuild))
-			{
-				Sprintf(text,_countof(text),LoadStringEx(IDS_LANGUAGE_DOWNLOAD),language);
-				SetDlgItemText(IDC_LINKDOWNLOAD,text);
-
-				tool.lpszText=(LPWSTR)(LPCWSTR)it->url;
-				m_Tooltip.SendMessage(TTM_ADDTOOL,0,(LPARAM)&tool);
-			}
-			else
-			{
-				Sprintf(text,_countof(text),LoadStringEx(IDS_LANGUAGE_UPDATED),language);
-				SetDlgItemText(IDC_LINKDOWNLOAD,text);
-			}
-			return;
-		}
-	}
-	Sprintf(text,_countof(text),LoadStringEx(IDS_LANGUAGE_MISSING),language);
-	SetDlgItemText(IDC_LINKDOWNLOAD,text);
 }
 
 class CLanguageSettingsPanel: public ISettingsPanel

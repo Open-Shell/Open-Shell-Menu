@@ -565,6 +565,7 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrC
 	else if (wcsstr(lpstrCmdLine,L"-toggle")!=NULL) open=MSG_TOGGLE;
 	else if (wcsstr(lpstrCmdLine,L"-open")!=NULL) open=MSG_OPEN;
 	else if (wcsstr(lpstrCmdLine,L"-settings")!=NULL) open=MSG_SETTINGS;
+	else if (wcsstr(lpstrCmdLine,L"-reloadsettings")!=NULL) open=MSG_RELOADSETTINGS;
 	else if (wcsstr(lpstrCmdLine,L"-exit")!=NULL) open=MSG_EXIT;
 
 	{

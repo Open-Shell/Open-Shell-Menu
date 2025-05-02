@@ -261,7 +261,7 @@ int APIENTRY wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	bool bQuiet=false;
 	for (;count>0;count--,params++)
 	{
-		if (_wcsicmp(params[0],L"help")==0 || _wcsicmp(params[0],L"/?")==0)
+		if (_wcsicmp(params[0],L"help")==0 || _wcsicmp(params[0],L"/help")==0 || _wcsicmp(params[0],L"/h")==0 || _wcsicmp(params[0],L"/?")==0)
 		{
 			wchar_t strTitle[256];
 			if (!LoadString(hInstance,IDS_APP_TITLE,strTitle,_countof(strTitle))) strTitle[0]=0;

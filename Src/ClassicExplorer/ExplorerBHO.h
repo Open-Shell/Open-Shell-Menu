@@ -9,7 +9,7 @@
 #include <vector>
 #include <map>
 
-#include "ClassicExplorer_i.h"
+#include "ClassicExplorer_h.h"
 #include "ComHelper.h"
 #include <shdispid.h>
 
@@ -53,7 +53,7 @@ public:
 		m_ZoneWidth=0;
 	}
 
-	DECLARE_REGISTRY_RESOURCEID(IDR_EXPLORERBHO)
+	DECLARE_REGISTRY_RESOURCEID_V2_WITHOUT_MODULE(IDR_EXPLORERBHO, CExplorerBHO)
 
 	BEGIN_SINK_MAP( CExplorerBHO )
 		SINK_ENTRY_EX(1, DIID_DWebBrowserEvents2, DISPID_DOCUMENTCOMPLETE, OnDocumentComplete)

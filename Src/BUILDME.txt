@@ -5,12 +5,12 @@ for other languages.
 The final files (installers, archives) are saved to the Setup\Final folder.
 
 You need the following tools:
-Visual Studio 2019 (Community Edition is enough)
+Visual Studio 2022 (Community Edition is enough)
   - Desktop development with C++ workload
-  - Windows 10 SDK (10.0.19041.0) for Desktop C++
+  - Windows 11 SDK (10.0.22621.0) for Desktop C++
   - Visual C++ ATL support
 HTML Help Workshop
-WiX 3.7 (3.14 for ARM64)
+WiX 3.14
 7-Zip
 It is possible to convert the projects to newer versions of Visual Studio and newer SDKs.
 Newer versions of WiX will probably work fine.

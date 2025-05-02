@@ -136,6 +136,8 @@ static void CreateAppResolver( void )
 
 static bool DetectGrayscaleImage( const unsigned int *bits, int stride, int width, int height )
 {
+	if (width==0 || height==0)
+		return false;
 	int transparent=0;
 	for (int y=0;y<height;y++,bits+=stride)
 	{
@@ -489,7 +491,8 @@ void CItemManager::LoadIconData::Init( void )
 			HIMAGELIST_QueryInterface(m_TempLists[i],IID_IImageList2,(void**)&m_pTempLists[i]);
 		}
 	}
-	m_pFactory.CoCreateInstance(CLSID_WICImagingFactory);
+	if (FAILED(m_pFactory.CoCreateInstance(CLSID_WICImagingFactory)))
+		m_pFactory.CoCreateInstance(CLSID_WICImagingFactory1);
 }
 
 void CItemManager::LoadIconData::Close( void )
@@ -589,7 +592,7 @@ void CItemManager::Init( void )
 
 	m_RootGames=L"::{ED228FDF-9EA8-4870-83B1-96B02CFE0D52}\\";
 	wchar_t text[_MAX_PATH];
-	Strcpy(text,_countof(text),START_MENU_PINNED_ROOT L"\\");
+	Sprintf(text,_countof(text),L"%s\\",GetSettingString(L"PinnedItemsPath"));
 	DoEnvironmentSubst(text,_countof(text));
 	m_RootStartMenu3=text;
 	StringUpper(m_RootStartMenu3);
@@ -609,7 +612,7 @@ void CItemManager::Init( void )
 		{
 			int width, height;
 			pList->GetIconSize(&width,&height);
-			m_ListSizes.push_back(std::pair<int,int>(width,i));
+			m_ListSizes.emplace_back(width,i);
 		}
 	}
 	std::sort(m_ListSizes.begin(),m_ListSizes.end());
@@ -617,7 +620,7 @@ void CItemManager::Init( void )
 	CreateDefaultIcons();
 	LoadCacheFile();
 
-	ItemInfo &item=m_ItemInfos.insert(std::pair<unsigned int,ItemInfo>(0,ItemInfo()))->second;
+	ItemInfo &item=m_ItemInfos.emplace(0,ItemInfo())->second;
 	item.bIconOnly=true;
 	item.smallIcon=m_DefaultSmallIcon;
 	item.largeIcon=m_DefaultLargeIcon;
@@ -704,21 +707,21 @@ void CItemManager::CreateDefaultIcons( void )
 		icon.bitmap=BitmapFromIcon(LoadShellIcon(index,SMALL_ICON_SIZE),SMALL_ICON_SIZE);
 	else
 		icon.bitmap=NULL;
-	m_DefaultSmallIcon=&m_IconInfos.insert(std::pair<unsigned int,IconInfo>(0,icon))->second;
+	m_DefaultSmallIcon=&m_IconInfos.emplace(0,icon)->second;
 
 	icon.sizeType=ICON_SIZE_TYPE_LARGE;
 	if (index>=0)
 		icon.bitmap=BitmapFromIcon(LoadShellIcon(index,LARGE_ICON_SIZE),LARGE_ICON_SIZE);
 	else
 		icon.bitmap=NULL;
-	m_DefaultLargeIcon=&m_IconInfos.insert(std::pair<unsigned int,IconInfo>(0,icon))->second;
+	m_DefaultLargeIcon=&m_IconInfos.emplace(0,icon)->second;
 
 	icon.sizeType=ICON_SIZE_TYPE_EXTRA_LARGE;
 	if (index>=0)
 		icon.bitmap=BitmapFromIcon(LoadShellIcon(index,EXTRA_LARGE_ICON_SIZE),EXTRA_LARGE_ICON_SIZE);
 	else
 		icon.bitmap=NULL;
-	m_DefaultExtraLargeIcon=&m_IconInfos.insert(std::pair<unsigned int,IconInfo>(0,icon))->second;
+	m_DefaultExtraLargeIcon=&m_IconInfos.emplace(0,icon)->second;
 }
 
 CItemManager::LoadIconData &CItemManager::GetLoadIconData( void )
@@ -896,7 +899,7 @@ const CItemManager::ItemInfo *CItemManager::GetItemInfo( IShellItem *pItem, PIDL
 		}
 		if (!pInfo)
 		{
-			pInfo=&m_ItemInfos.insert(std::pair<unsigned int,ItemInfo>(hash,ItemInfo()))->second;
+			pInfo=&m_ItemInfos.emplace(hash,ItemInfo())->second;
 			pInfo->pidl.Clone(pidl);
 			pInfo->path=path;
 			pInfo->PATH=PATH;
@@ -978,7 +981,7 @@ const CItemManager::ItemInfo *CItemManager::GetItemInfo( CString path, int refre
 		}
 		if (!pInfo)
 		{
-			pInfo=&m_ItemInfos.insert(std::pair<unsigned int,ItemInfo>(hash,ItemInfo()))->second;
+			pInfo=&m_ItemInfos.emplace(hash,ItemInfo())->second;
 			if (!PATH.IsEmpty())
 				MenuParseDisplayName(path,&pInfo->pidl,NULL,NULL);
 			if (pInfo->pidl)
@@ -1076,7 +1079,7 @@ const CItemManager::ItemInfo *CItemManager::GetCustomIcon( const wchar_t *locati
 		}
 		if (!pInfo)
 		{
-			pInfo=&m_ItemInfos.insert(std::pair<unsigned int,ItemInfo>(hash,ItemInfo()))->second;
+			pInfo=&m_ItemInfos.emplace(hash,ItemInfo())->second;
 			pInfo->bIconOnly=true;
 			pInfo->bTemp=bTemp;
 			pInfo->iconPath=location;
@@ -1122,6 +1125,14 @@ const CItemManager::ItemInfo *CItemManager::GetCustomIcon( const wchar_t *path, 
 		*c=0;
 		index=-_wtol(c+1);
 	}
+	// special handling for Apps icon
+	if (!text[0] && index==-IDI_APPSICON)
+	{
+		if (IsWin11())
+			index=-IDI_APPSICON11;
+		else if (GetWinVersion()==WIN_VER_WIN10)
+			index=-IDI_APPSICON10;
+	}
 	return GetCustomIcon(text,index,iconSizeType,false);
 }
 
@@ -1155,6 +1166,10 @@ const CItemManager::ItemInfo* CItemManager::GetLinkIcon(IShellLink* link, TIconS
 						CComPtr<IResourceMap> resMap;
 						if (SUCCEEDED(resManager->GetMainResourceMap(IID_PPV_ARGS(&resMap))))
 						{
+							CComPtr<IResourceContext> resContext;
+							if (SUCCEEDED(resManager->GetDefaultContext(IID_PPV_ARGS(&resContext))))
+								resContext->SetTargetSize(GetIconSize(iconSizeType));
+
 							CComString location;
 							if (SUCCEEDED(resMap->GetFilePath(logoUri, &location)))
 								return GetCustomIcon(location, -65536, iconSizeType, true);
@@ -1907,7 +1922,7 @@ void CItemManager::RefreshItemInfo( ItemInfo *pInfo, int refreshFlags, IShellIte
 									if (SUCCEEDED(store->GetValue(PKEY_MetroAppLauncher, &val)) && (val.vt == VT_I4 || val.vt == VT_UI4) && val.intVal)
 									{
 										newInfo.bLink = false;
-										pItem = target;
+										pItem = std::move(target);
 										pStore = store;
 									}
 									PropVariantClear(&val);
@@ -2597,7 +2612,7 @@ void CItemManager::StoreInCache( unsigned int hash, const wchar_t *path, HBITMAP
 
 	if ((refreshFlags&INFO_SMALL_ICON) && hSmallBitmap)
 	{
-		IconInfo *pInfo=&m_IconInfos.insert(std::pair<unsigned int,IconInfo>(hash,IconInfo()))->second;
+		IconInfo *pInfo=&m_IconInfos.emplace(hash,IconInfo())->second;
 		pInfo->sizeType=ICON_SIZE_TYPE_SMALL;
 		pInfo->bTemp=bTemp;
 		pInfo->bMetro=bMetro;
@@ -2607,7 +2622,7 @@ void CItemManager::StoreInCache( unsigned int hash, const wchar_t *path, HBITMAP
 	}
 	if ((refreshFlags&INFO_LARGE_ICON) && hLargeBitmap)
 	{
-		IconInfo *pInfo=&m_IconInfos.insert(std::pair<unsigned int,IconInfo>(hash,IconInfo()))->second;
+		IconInfo *pInfo=&m_IconInfos.emplace(hash,IconInfo())->second;
 		pInfo->sizeType=ICON_SIZE_TYPE_LARGE;
 		pInfo->bTemp=bTemp;
 		pInfo->bMetro=bMetro;
@@ -2617,7 +2632,7 @@ void CItemManager::StoreInCache( unsigned int hash, const wchar_t *path, HBITMAP
 	}
 	if ((refreshFlags&INFO_EXTRA_LARGE_ICON) && hExtraLargeBitmap)
 	{
-		IconInfo *pInfo=&m_IconInfos.insert(std::pair<unsigned int,IconInfo>(hash,IconInfo()))->second;
+		IconInfo *pInfo=&m_IconInfos.emplace(hash,IconInfo())->second;
 		pInfo->sizeType=ICON_SIZE_TYPE_EXTRA_LARGE;
 		pInfo->bTemp=bTemp;
 		pInfo->bMetro=bMetro;
@@ -2867,7 +2882,8 @@ void CItemManager::PreloadItemsThread( void )
 			else if (g_CacheFolders[i].folder==FOLDERID_ClassicPinned)
 			{
 				if (GetSettingInt(L"PinnedPrograms")!=PINNED_PROGRAMS_PINNED) continue;
-				wchar_t path[_MAX_PATH]=START_MENU_PINNED_ROOT;
+				wchar_t path[_MAX_PATH];
+				Strcpy(path,_countof(path),GetSettingString(L"PinnedItemsPath"));
 				DoEnvironmentSubst(path,_countof(path));
 				if (FAILED(SHParseDisplayName(path,NULL,&pidl,0,NULL)) || !pidl) continue;
 				if (FAILED(SHCreateItemFromIDList(pidl,IID_IShellItem,(void**)&pFolder)) || !pFolder) continue;
@@ -3273,7 +3289,7 @@ void CItemManager::LoadCacheFile( void )
 						bError=true;
 						break;
 					}
-					remapIcons.push_back(&m_IconInfos.insert(std::pair<unsigned int,IconInfo>(data.key,info))->second);
+					remapIcons.push_back(&m_IconInfos.emplace(data.key,info)->second);
 				}
 				else
 				{
@@ -3304,7 +3320,7 @@ void CItemManager::LoadCacheFile( void )
 					bError=true;
 					break;
 				}
-				ItemInfo &info=m_ItemInfos.insert(std::pair<unsigned int,ItemInfo>(data.key,ItemInfo()))->second;
+				ItemInfo &info=m_ItemInfos.emplace(data.key,ItemInfo())->second;
 
 				info.writestamp=data.writestamp;
 				info.createstamp=data.createstamp;
@@ -3568,11 +3584,31 @@ void CItemManager::ClearCache( void )
 	m_IconInfos.clear();
 	m_MetroItemInfos10.clear();
 	CreateDefaultIcons();
-	ItemInfo &item=m_ItemInfos.insert(std::pair<unsigned int,ItemInfo>(0,ItemInfo()))->second;
+	ItemInfo &item=m_ItemInfos.emplace(0,ItemInfo())->second;
 	item.bIconOnly=true;
 	item.smallIcon=m_DefaultSmallIcon;
 	item.largeIcon=m_DefaultLargeIcon;
 	item.extraLargeIcon=m_DefaultExtraLargeIcon;
+}
+
+int CItemManager::GetIconSize(TIconSizeType iconSizeType) const
+{
+	switch (iconSizeType)
+	{
+	case ICON_SIZE_TYPE_SMALL:
+	case ICON_SIZE_TYPE_SMALL_METRO:
+		return SMALL_ICON_SIZE;
+
+	case ICON_SIZE_TYPE_LARGE:
+	case ICON_SIZE_TYPE_LARGE_METRO:
+		return LARGE_ICON_SIZE;
+
+	case ICON_SIZE_TYPE_EXTRA_LARGE:
+	case ICON_SIZE_TYPE_EXTRA_LARGE_METRO:
+		return EXTRA_LARGE_ICON_SIZE;
+	}
+
+	return 0;
 }
 
 // retrieves the pidl and the SFGAO_FOLDER, SFGAO_STREAM, SFGAO_LINK flags for the path

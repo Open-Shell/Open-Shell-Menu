@@ -4,6 +4,7 @@
 
 #include <functional>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -120,6 +121,7 @@ public:
 
 		Setting() = default;
 		Setting(const Blob& blob);
+		Setting(const std::vector<uint8_t>& blob) : Setting(Blob{ blob.data(), blob.size() }) {}
 
 		explicit operator bool() const
 		{

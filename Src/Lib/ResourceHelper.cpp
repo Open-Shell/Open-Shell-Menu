@@ -396,8 +396,11 @@ HBITMAP LoadImageFile( const wchar_t *path, const SIZE *pSize, bool bUseAlpha, b
 	CComPtr<IWICImagingFactory> pFactory;
 	if (FAILED(pFactory.CoCreateInstance(CLSID_WICImagingFactory)))
 	{
-		if (srcBmp) DeleteObject(srcBmp);
-		return NULL;
+		if (FAILED(pFactory.CoCreateInstance(CLSID_WICImagingFactory1)))
+		{
+			if (srcBmp) DeleteObject(srcBmp);
+			return NULL;
+		}
 	}
 
 	CComPtr<IWICBitmapSource> pBitmap;
@@ -534,7 +537,10 @@ HBITMAP LoadImageResource( HMODULE hModule, const wchar_t *name, bool bTopDown, 
 {
 	CComPtr<IWICImagingFactory> pFactory;
 	if (FAILED(pFactory.CoCreateInstance(CLSID_WICImagingFactory)))
-		return NULL;
+	{
+		if (FAILED(pFactory.CoCreateInstance(CLSID_WICImagingFactory1)))
+			return NULL;
+	}
 
 	CComPtr<IWICBitmapSource> pBitmap;
 	if (hModule)
@@ -727,6 +733,19 @@ bool IsWin10RS4( void )
 	return bIsRS4;
 }
 
+static bool IsWin11Helper()
+{
+	auto version = GetOSVersion();
+	return version.dwMajorVersion >= 10 && version.dwBuildNumber >= 22000;
+}
+
+// Returns true if the version is Windows11 or later
+bool IsWin11(void)
+{
+	static bool bIsWin11 = IsWin11Helper();
+	return bIsWin11;
+}
+
 // Wrapper for IShellFolder::ParseDisplayName
 HRESULT ShParseDisplayName( const wchar_t *pszName, PIDLIST_ABSOLUTE *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut )
 {
@@ -901,5 +920,33 @@ HFONT CreateFontSetting( const wchar_t *fontStr, int dpi )
 		weight=FW_BOLD, bItalic=true;
 	str=GetToken(str,token,_countof(token),L", \t");
 	int size=-_wtol(token);
-	return CreateFont(size*dpi/72,0,0,0,weight,bItalic?1:0,0,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,name);
+	return CreateFont(MulDiv(size,dpi,72),0,0,0,weight,bItalic?1:0,0,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,name);
+}
+
+static UINT WINAPI GetDpiForWindow(HWND hwnd)
+{
+	static auto p = static_cast<decltype(&GetDpiForWindow)>((void*)GetProcAddress(GetModuleHandle(L"user32.dll"), "GetDpiForWindow"));
+	if (p)
+		return p(hwnd);
+
+	return 0;
+}
+
+UINT GetDpi(HWND hwnd)
+{
+	UINT dpi = GetDpiForWindow(hwnd);
+	if (!dpi)
+	{
+		// fall-back for older systems
+		HDC hdc = GetDC(nullptr);
+		dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+		ReleaseDC(nullptr, hdc);
+	}
+
+	return dpi;
+}
+
+int ScaleForDpi(HWND hwnd, int value)
+{
+	return MulDiv(value, GetDpi(hwnd), USER_DEFAULT_SCREEN_DPI);
 }

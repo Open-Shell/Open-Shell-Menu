@@ -33,11 +33,6 @@ static int g_LoadDialogs[]=
 	0
 };
 
-const wchar_t *GetDocRelativePath( void )
-{
-	return DOC_PATH;
-}
-
 static void NewVersionCallback( VersionData &data )
 {
 	wchar_t path[_MAX_PATH];

@@ -385,5 +385,13 @@ const wchar_t *GetSettingsRegPath( void );
 extern const GUID FOLDERID_DesktopRoot;
 
 bool BrowseCommandHelper( HWND parent, wchar_t *text );
-bool BrowseLinkHelper( HWND parent, wchar_t *text );
+bool BrowseLinkHelper( HWND parent, wchar_t *text, bool bFoldersOnly );
 bool BrowseIconHelper( HWND parent, wchar_t *text );
+
+// convert color in RRGGBB format to BBGGRR
+DWORD RgbToBgr(DWORD val);
+// convert color in BBGGRR format to RRGGBB
+DWORD BgrToRgb(DWORD val);
+
+// parse color from hexadecimal string
+DWORD ParseColor(const wchar_t* str);

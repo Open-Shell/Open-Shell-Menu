@@ -84,7 +84,7 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ClassicIEDLL_i.h">
+    <ClInclude Include="ClassicIEDLL_h.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
   </ItemGroup>

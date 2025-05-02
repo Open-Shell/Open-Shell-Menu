@@ -526,7 +526,7 @@ bool CSearchManager::SearchScope::ParseSearchConnector( const wchar_t *fname )
 			CComPtr<IXMLDOMNode> pNext;
 			if (pScopeItem->get_nextSibling(&pNext)!=S_OK)
 				break;
-			pScopeItem=pNext;
+			pScopeItem=std::move(pNext);
 		}
 		return true;
 	}
@@ -639,7 +639,8 @@ void CSearchManager::SearchThread( void )
 				// pinned folder
 				if (searchRequest.bPinnedFolder)
 				{
-					wchar_t path[_MAX_PATH]=START_MENU_PINNED_ROOT;
+					wchar_t path[_MAX_PATH];
+					Strcpy(path,_countof(path),GetSettingString(L"PinnedItemsPath"));
 					DoEnvironmentSubst(path,_MAX_PATH);
 					CComPtr<IShellItem> pFolder;
 					if (SUCCEEDED(SHCreateItemFromParsingName(path,NULL,IID_IShellItem,(void**)&pFolder)))
@@ -798,7 +799,7 @@ void CSearchManager::SearchThread( void )
 		CSession session;
 		if (SUCCEEDED(dataSource.OpenFromInitializationString(L"provider=Search.CollatorDSO.1;EXTENDED PROPERTIES=\"Application=Windows\"")) && SUCCEEDED(session.Open(dataSource)))
 		{
-			std::list<SearchScope> scopeList;
+			std::vector<SearchScope> scopeList;
 
 			if (searchRequest.bSearchMetroSettings && !m_bMetroSettingsFound)
 			{
@@ -1104,7 +1105,7 @@ void CSearchManager::SearchThread( void )
 				command0.Close();
 				continue;
 			}
-			for (std::list<SearchScope>::iterator it=scopeList.begin();it!=scopeList.end();++it)
+			for (auto it=scopeList.begin();it!=scopeList.end();++it)
 			{
 				if (it->roots.empty())
 					continue;
@@ -1122,7 +1123,7 @@ void CSearchManager::SearchThread( void )
 					else
 					{
 						len+=Strcpy(query+len,_countof(query)-len,L" AND System.Search.Store='FILE' AND System.ItemType!='.settingcontent-ms'");
-						for (std::list<SearchScope>::iterator it2=scopeList.begin();it2!=it;++it2)
+						for (auto it2=scopeList.begin();it2!=it;++it2)
 						{
 							if (it2->categoryHash==CATEGORY_METROSETTING)
 								continue;

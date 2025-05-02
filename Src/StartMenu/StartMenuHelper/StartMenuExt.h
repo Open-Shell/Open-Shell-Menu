@@ -3,7 +3,7 @@
 #pragma once
 #include "resource.h"       // main symbols
 
-#include "StartMenuHelper_i.h"
+#include "StartMenuHelper_h.h"
 #include <shlobj.h>
 
 

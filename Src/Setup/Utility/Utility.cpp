@@ -13,7 +13,6 @@
 #include "FNVHash.h"
 #include "SettingsParser.h"
 #include "resource.h"
-#include "..\UpdateBin\resource.h"
 #include "ResourceHelper.h"
 #include <commctrl.h>
 #include "SaveLogFile.h"
@@ -422,256 +421,6 @@ qqq:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-struct LanguageData
-{
-	std::map<int,CString> strings;
-	CString bitmap;
-};
-
-int GenerateUpdateFile( wchar_t *const *params, int count )
-{
-	if (count<3) return 3;
-
-	std::vector<unsigned char> buf;
-	LoadFile(params[1],buf);
-	if (buf.empty()) return 1;
-	buf.push_back(0);
-	buf.push_back(0);
-
-	wchar_t token[256];
-
-	std::map<int,LanguageData> languages;
-	const int DEFAULT_LANGUAGE=0x409;
-
-	const wchar_t *str0=(wchar_t*)&buf[0];
-	if (*str0==0xFEFF) str0++;
-	const wchar_t *str;
-
-	// old (current) version
-	str=wcsstr(str0,L"{OLD_VER}");
-	if (!str) return 1;
-	GetToken(str+9,token,_countof(token),L"\r\n");
-	int v1, v2, v3;
-	swscanf_s(token,L"%d.%d.%d",&v1,&v2,&v3);
-
-	// new version
-	str=wcsstr(str0,L"{NEW_VER}");
-	if (!str) return 1;
-	GetToken(str+9,token,_countof(token),L"\r\n");
-	languages[DEFAULT_LANGUAGE].strings[IDS_VERSION]=token;
-
-	// signer
-	str=wcsstr(str0,L"{SIGNER}");
-	if (!str) return 1;
-	GetToken(str+8,token,_countof(token),L"\r\n");
-	languages[DEFAULT_LANGUAGE].strings[IDS_INSTALL_SIGNER]=token;
-
-	// update
-	str=wcsstr(str0,L"{UPDATE}");
-	if (!str) return 1;
-	GetToken(str+8,token,_countof(token),L"\r\n");
-	languages[DEFAULT_LANGUAGE].strings[IDS_UPDATE_LINK]=token;
-
-	// languages
-	str=wcsstr(str0,L"{LANGUAGES}");
-	if (!str) return 1;
-	GetToken(str+11,token,_countof(token),L"\r\n");
-	languages[DEFAULT_LANGUAGE].strings[IDS_LANGUAGE_LINK]=token;
-
-	// language folder
-	str=wcsstr(str0,L"{LANGFOLDER}");
-	if (!str) return 1;
-	wchar_t langFolder[_MAX_PATH];
-	GetToken(str+12,langFolder,_countof(langFolder),L"\r\n");
-
-	// alt url
-	str=wcsstr(str0,L"{ALT}");
-	if (str)
-	{
-		GetToken(str+5,token,_countof(token),L"\r\n");
-		languages[DEFAULT_LANGUAGE].strings[IDS_ALT_URL]=token;
-	}
-
-	// news
-	str=wcsstr(str0,L"{NEWS}");
-	if (!str) return 1;
-	languages[DEFAULT_LANGUAGE].strings[IDS_NEWS]=str+6;
-
-	// look for {INST:
-	str=str0;
-	bool res=true;
-	while (1)
-	{
-		str=wcsstr(str,L"{INST: ");
-		res=true;
-		if (!str) break;
-		res=false;
-		str+=7;
-		str=GetToken(str,token,_countof(token),L"}\r\n");
-		int language;
-		if (!GetLocaleInfoEx(token,LOCALE_ILANGUAGE|LOCALE_RETURN_NUMBER,(LPWSTR)&language,4))
-			break;
-		str=GetToken(str,token,_countof(token),L"\r\n");
-		languages[language].strings[IDS_INSTALL_URL]=token;
-		// languages[language].strings[IDS_VERSION]=...; // TODO: allow per-language version of the installer
-	}
-
-	if (!res) return 1;
-
-	str=str0;
-	while (1)
-	{
-		str=wcsstr(str,L"{LANG: ");
-		res=true;
-		if (!str) break;
-		res=false;
-		str+=7;
-		str=GetToken(str,token,_countof(token),L"}\r\n");
-		int len=Strlen(token);
-		bool bBasic=(len>0 && token[len-1]=='*');
-		if (bBasic) token[len-1]=0;
-		int language;
-		if (!GetLocaleInfoEx(token,LOCALE_ILANGUAGE|LOCALE_RETURN_NUMBER,(LPWSTR)&language,4))
-			break;
-
-		wchar_t fname[_MAX_PATH];
-		Sprintf(fname,_countof(fname),L"%s\\%s.dll",langFolder,token);
-/*		if (GetFileAttributes(fname)==INVALID_FILE_ATTRIBUTES)
-		{
-			fname[0]=0;
-			wchar_t find[_MAX_PATH];
-			Sprintf(find,_countof(find),L"%s\\*.*",langFolder);
-			WIN32_FIND_DATA data;
-			HANDLE h=FindFirstFile(find,&data);
-			while (h!=INVALID_HANDLE_VALUE)
-			{
-				if ((data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) && data.cFileName[0]!='.')
-				{
-					Sprintf(fname,_countof(fname),L"%s\\%s\\%s.dll",langFolder,data.cFileName,token);
-					if (GetFileAttributes(fname)!=INVALID_FILE_ATTRIBUTES)
-					{
-						FindClose(h);
-						break;
-					}
-				}
-				if (!FindNextFile(h,&data))
-				{
-					FindClose(h);
-					break;
-				}
-			}
-		}*/
-		if (!fname[0]) break;
-
-		unsigned long hash=0;
-		wchar_t version[100];
-
-		hash=CalcFileFNV(fname);
-		if (!hash) break;
-
-		DWORD dllBuild;
-		DWORD dllVer=GetFileVersion(fname,&dllBuild);
-		if (!dllVer) break;
-		if (dllVer>(DWORD)((v1<<24)|(v2<<16)|v3)) break;
-
-		Sprintf(version,_countof(version),L"%d.%d.%d.%d%s",dllVer>>24,(dllVer>>16)&255,dllVer&65535,dllBuild,bBasic?L"*":L"");
-
-		Sprintf(token,_countof(token),L"%08X",hash);
-		languages[language].strings[IDS_LNG_CRC]=token;
-
-		languages[language].strings[IDS_LNG_VERSION]=version;
-		str=GetToken(str,token,_countof(token),L"\r\n");
-		languages[language].strings[IDS_LNG_URL]=token;
-	}
-
-	if (!res) return 1;
-
-	// look for {FLAG:
-	str=str0;
-	while (1)
-	{
-		str=wcsstr(str,L"{FLAG: ");
-		res=true;
-		if (!str) break;
-		res=false;
-		str+=7;
-		str=GetToken(str,token,_countof(token),L"}\r\n");
-		int language;
-		if (!GetLocaleInfoEx(token,LOCALE_ILANGUAGE|LOCALE_RETURN_NUMBER,(LPWSTR)&language,4))
-			break;
-		str=GetToken(str,token,_countof(token),L"\r\n");
-		languages[language].bitmap=token;
-	}
-
-	if (!res) return 1;
-
-	FILE *f=NULL;
-	if (_wfopen_s(&f,params[2],L"wb") || !f)
-	{
-		return 1;
-	}
-	fwprintf(f,L"\xFEFF");
-	for (std::map<int,LanguageData>::const_iterator it=languages.begin();it!=languages.end();++it)
-	{
-		fwprintf(f,L"/////////////////////////////////////////////////////////////////////////////\r\n");
-		GetLocaleInfo(it->first,LOCALE_SLANGUAGE,token,_countof(token));
-		fwprintf(f,L"// %s\r\n\r\n",token);
-		fwprintf(f,L"LANGUAGE 0x%02X, 0x%X\r\n",it->first&0x3FF,it->first>>10);
-		fwprintf(f,L"\r\nSTRINGTABLE\r\nBEGIN\r\n");
-		for (std::map<int,CString>::const_iterator it2=it->second.strings.begin();it2!=it->second.strings.end();++it2)
-		{
-			CString str=it2->second;
-			str.Replace(L"\r\n",L"\\r\\n");
-			str.Replace(L"\"",L"\"\"");
-			fwprintf(f,L"%4d  \"%s\"\r\n",it2->first,(const wchar_t*)str);
-		}
-		fwprintf(f,L"END\r\n\r\n");
-
-		if (it->first==DEFAULT_LANGUAGE)
-		{
-			fwprintf(f,L"1 VERSIONINFO\r\n");
-			fwprintf(f,L" FILEVERSION %d,%d,%d,0\r\n",v1,v2,v3);
-			fwprintf(f,L" PRODUCTVERSION %d,%d,%d,0\r\n",v1,v2,v3);
-			fwprintf(f,L" FILEFLAGSMASK 0x17L\r\n");
-			fwprintf(f,L" FILEFLAGS 0x0L\r\n");
-			fwprintf(f,L" FILEOS 0x4L\r\n");
-			fwprintf(f,L" FILETYPE 0x1L\r\n");
-			fwprintf(f,L" FILESUBTYPE 0x0L\r\n");
-			fwprintf(f,L"BEGIN\r\n");
-			fwprintf(f,L"\tBLOCK \"StringFileInfo\"\r\n");
-			fwprintf(f,L"\tBEGIN\r\n");
-			fwprintf(f,L"\t\tBLOCK \"040904b0\"\r\n");
-			fwprintf(f,L"\t\tBEGIN\r\n");
-			fwprintf(f,L"\t\t\tVALUE \"CompanyName\", \"OpenShell\"\r\n");
-			fwprintf(f,L"\t\t\tVALUE \"FileDescription\", \"Update information\"\r\n");
-			fwprintf(f,L"\t\t\tVALUE \"FileVersion\", \"%d, %d, %d, 0\"\r\n",v1,v2,v3);
-			fwprintf(f,L"\t\t\tVALUE \"InternalName\", \"Update\"\r\n");
-			fwprintf(f,L"\t\t\tVALUE \"LegalCopyright\", \"Copyright (C) 2017-2018, The Open-Shell Team\"\r\n");
-			fwprintf(f,L"\t\t\tVALUE \"OriginalFilename\", \"update.ver\"\r\n");
-			fwprintf(f,L"\t\t\tVALUE \"ProductName\", \"Open-Shell\"\r\n");
-			fwprintf(f,L"\t\t\tVALUE \"ProductVersion\", \"%d, %d, %d, 0\"\r\n",v1,v2,v3);
-			fwprintf(f,L"\t\tEND\r\n");
-			fwprintf(f,L"\tEND\r\n");
-			fwprintf(f,L"\tBLOCK \"VarFileInfo\"\r\n");
-			fwprintf(f,L"\tBEGIN\r\n");
-			fwprintf(f,L"\t\tVALUE \"Translation\", 0x409, 1200\r\n");
-			fwprintf(f,L"\tEND\r\n");
-			fwprintf(f,L"END\r\n\r\n");
-
-			for (std::map<int,LanguageData>::const_iterator it3=languages.begin();it3!=languages.end();++it3)
-			{
-				if (!it3->second.bitmap.IsEmpty())
-					fwprintf(f,L"%d BITMAP \"%s\"\r\n",it3->first,(const wchar_t*)it3->second.bitmap);
-			}
-			fwprintf(f,L"\r\n");
-		}
-	}
-	fclose(f);
-	return 0;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
 static void UnsescapeString( wchar_t *string )
 {
 	wchar_t *dst=string;
@@ -953,7 +702,7 @@ static BOOL CALLBACK EnumResLangProc( HMODULE hModule, LPCTSTR lpszType, LPCTSTR
 	if (IS_INTRESOURCE(lpszName))
 	{
 		std::vector<std::pair<int,WORD>> &oldStrings=*(std::vector<std::pair<int,WORD>>*)lParam;
-		oldStrings.push_back(std::pair<int,WORD>(PtrToInt(lpszName),wIDLanguage));
+		oldStrings.emplace_back(PtrToInt(lpszName),wIDLanguage);
 	}
 	return TRUE;
 }
@@ -1108,7 +857,6 @@ static HRESULT CALLBACK TaskDialogCallback( HWND hwnd, UINT uNotification, WPARA
 //   extract <dll> <csv> // extracts the string table, the dialog text, and the L10N text from a DLL and stores it in a CSV
 //   extract en-us.dll <dll> <csv> // extracts the string table, the dialog text, and the L10N text from two DLL and stores it in a CSV
 //   import <dll> <csv> // replaces the string table in the DLL with the text from the CSV
-//   update <update txt> <update rc> // generates a resource file for UpdateBin.dll by calculating the DLL hashes
 
 int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCmdLine, int nCmdShow )
 {
@@ -1133,7 +881,7 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrC
 		tasks.pszMainInstruction=L"Select task to perform";
 		tasks.cButtons=HIWORD(winVer)>=0x0602?4:3;
 		tasks.pButtons=taskButtons;
-		tasks.pszFooter=L"<A HREF=\"http://www.classicshell.net\">www.classicshell.net</A>";
+		tasks.pszFooter=L"<A HREF=\"https://open-shell.github.io/Open-Shell-Menu\">Open-Shell Homepage</A>";
 		tasks.pfCallback=TaskDialogCallback;
 
 		int seleciton;
@@ -1190,11 +938,6 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrC
 	if (_wcsicmp(params[0],L"import")==0)
 	{
 		return ImportStrings(params,count);
-	}
-
-	if (_wcsicmp(params[0],L"update")==0)
-	{
-		return GenerateUpdateFile(params,count);
 	}
 
 	if (_wcsicmp(params[0],L"colors")==0)

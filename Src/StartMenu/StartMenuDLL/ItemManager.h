@@ -51,6 +51,8 @@ public:
 		ICON_SIZE_COUNT
 	};
 
+	int GetIconSize(TIconSizeType iconSizeType) const;
+
 	struct IconInfo
 	{
 		TIconSizeType sizeType;
@@ -470,7 +472,6 @@ STDAPI ShGetKnownFolderItem(REFKNOWNFOLDERID rfid, IShellItem **ppItem );
 HBITMAP ColorizeMonochromeImage(HBITMAP bitmap, DWORD color);
 
 #define TASKBAR_PINNED_ROOT L"%APPDATA%\\Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar"
-#define START_MENU_PINNED_ROOT L"%APPDATA%\\OpenShell\\Pinned"
 #define STARTSCREEN_COMMAND L"startscreen.lnk"
 #define USERASSIST_LINKS_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist\\{F4E57C4B-2036-45F0-A9AB-443BCFE33D9F}\\Count"
 #define USERASSIST_APPIDS_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}\\Count"

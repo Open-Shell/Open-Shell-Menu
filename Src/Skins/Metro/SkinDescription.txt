@@ -105,7 +105,6 @@ Submenu_padding=2,2,2,2
 
 ; These have the same meaning as the Main_... properties
 Submenu_opacity=region
-Submenu_opacity=region
 Submenu_bitmap=$SystemAccentDark1|$StartBackground
 Submenu_bitmap_tint1=$StartHighlight
 Submenu_bitmap_mask=2
@@ -179,9 +178,11 @@ Main_icon_frame_tint1=$SystemAccentDark2|$StartSelectionBackground
 Main_icon_frame_mask=10
 Main_icon_frame_slices_X=4,4,4
 Main_icon_frame_slices_Y=4,4,4
-Main_icon_frame_offset=3,3
+Main_icon_frame_offset=3,3,100%
 Main_icon_padding=6,6,6,6,100%
 Main_text_padding=5,2,8,2,100%
+
+[ICON_FRAMES AND NOT SMALL_ICONS AND NOT NO_ICONS]
 Main2_icon_padding=6,6,6,6,100%
 Main2_text_padding=5,2,8,2,100%
 

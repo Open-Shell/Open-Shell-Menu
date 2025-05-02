@@ -71,6 +71,7 @@ StyleCopReport.xml
 *_i.c
 *_p.c
 *_i.h
+*_h.h
 *.ilk
 *.meta
 *.obj
@@ -351,7 +352,6 @@ ASALocalRun/
 *.PVS-Studio.*
 
 # Classic-Shell specific ignores
-Src/StartMenu/Skins/
 Src/Setup/Output/
 Src/Setup/Final/
 Src/Setup/Temp/

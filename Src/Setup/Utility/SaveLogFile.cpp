@@ -53,11 +53,6 @@ void UpdateSettings( void )
 {
 }
 
-const wchar_t *GetDocRelativePath( void )
-{
-	return NULL;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 static const wchar_t *g_Tabs=L"\t\t\t\t\t\t\t\t\t\t";

@@ -56,6 +56,7 @@ static const wchar_t *g_InstalledFiles[]=
 	L"ClassicIEDLL_64.dll",
 	L"ClassicIE_32.exe",
 	L"ClassicIE_64.exe",
+	L"DesktopToasts.dll",
 	L"OpenShell.chm",
 	L"OpenShellReadme.rtf",
 	L"Update.exe",
@@ -85,6 +86,8 @@ static const wchar_t *g_InstalledSkins[]=
 	L"Classic Skin.skin",
 	L"Classic Skin.skin7",
 	L"Full Glass.skin",
+	L"Immersive.skin",
+	L"Immersive.skin7",
 	L"Metallic.skin7",
 	L"Metro.skin",
 	L"Metro.skin7",
@@ -117,6 +120,7 @@ static const wchar_t *g_LocalFiles[]=
 	L"ClassicIELog.txt",
 	L"StartMenuLog.txt",
 	L"DataCache.db",
+	L"ModernSettings.dat",
 };
 
 // files to delete from the ALLUSERSPROFILE folder
@@ -333,7 +337,7 @@ LRESULT CResultsDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	if (m_bErrors)
 	{
 		SetDlgItemText(IDC_STATICRESULT,L"The Open-Shell removal tool encountered some errors. Please, restart your computer and try again. If the problem is not resolved"
-			L" seek help in the Open-Shell forums: www.classicshell.net/forum. Copy the following report and post it in the forum. The report is also saved in a file OpenShellReport.txt on your desktop.");
+			L" seek help in the Open-Shell forums: https://github.com/Open-Shell/Open-Shell-Menu/discussions. Copy the following report and post it in the forum. The report is also saved in a file OpenShellReport.txt on your desktop.");
 	}
 	else if (m_bReboot)
 	{
@@ -646,7 +650,7 @@ static void DeleteRegValueSOFTWARE( const wchar_t *keyName, const wchar_t *value
 		int error=RegOpenKeyEx(HKEY_LOCAL_MACHINE,keyName2,0,KEY_WRITE|DELETE|KEY_WOW64_64KEY,&hkey);
 		if (error==ERROR_SUCCESS)
 		{
-			int error=RegDeleteValue2(hkey,keyName);
+			int error=RegDeleteValue2(hkey,valueName);
 			if (error!=ERROR_FILE_NOT_FOUND)
 			{
 				LogMessage(-1,L"Deleting registry value HKEY_LOCAL_MACHINE\\SOFTWARE\\%s:%s",keyName,valueName);
@@ -669,7 +673,7 @@ static void DeleteRegValueSOFTWARE( const wchar_t *keyName, const wchar_t *value
 		int error=RegOpenKeyEx(HKEY_LOCAL_MACHINE,keyName2,0,KEY_WRITE|DELETE|KEY_WOW64_32KEY,&hkey);
 		if (error==ERROR_SUCCESS)
 		{
-			int error=RegDeleteValue2(hkey,keyName);
+			int error=RegDeleteValue2(hkey,valueName);
 			if (error!=ERROR_FILE_NOT_FOUND)
 			{
 				LogMessage(-1,L"Deleting registry value HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\%s:%s",keyName,valueName);
@@ -991,6 +995,13 @@ static void ManualUninstallInternal( void )
 	DeleteRegKeyHKCR(L"ClassicIE.ClassicIEBHO.1");
 	DeleteRegKeyHKCR(L"StartMenuHelper.StartMenuExt");
 	DeleteRegKeyHKCR(L"StartMenuHelper.StartMenuExt.1");
+	DeleteRegKeyHKCR(L"TypeLib\\{BF8D124A-A4E0-402F-8152-4EF377E62586}");
+	DeleteRegKeyHKCR(L"TypeLib\\{FDA50A1E-B8CE-49DE-8D17-B034A84AA280}");
+	DeleteRegKeyHKCR(L"Interface\\{2576496C-B58A-4995-8878-8B68F9E8D1FC}");
+	DeleteRegKeyHKCR(L"Interface\\{6E00B97F-A4D4-4062-98E4-4F66FC96F32F}");
+	DeleteRegKeyHKCR(L"Interface\\{A1678625-A011-4B7C-A1FA-D691E4CDDB79}");
+	DeleteRegKeyHKCR(L"Interface\\{BC4C1B8F-0BDE-4E42-9583-E072B2A28E0D}");
+	DeleteRegKeyHKCR(L"Interface\\{C698A81E-5D02-42B1-9801-5381CA8BBC2F}");
 
 	DeleteRegKeyCLSID(L"{449D0D6E-2412-4E61-B68F-1CB625CD9E52}",bIsWow64);
 	DeleteRegKeyCLSID(L"{553891B7-A0D5-4526-BE18-D3CE461D6310}",bIsWow64);
@@ -998,6 +1009,10 @@ static void ManualUninstallInternal( void )
 	DeleteRegKeyCLSID(L"{8C83ACB1-75C3-45D2-882C-EFA32333491C}",bIsWow64);
 	DeleteRegKeyCLSID(L"{D3214FBB-3CA1-406A-B3E8-3EB7C393A15E}",bIsWow64);
 	DeleteRegKeyCLSID(L"{E595F05F-903F-4318-8B0A-7F633B520D2B}",bIsWow64);
+	DeleteRegKeyCLSID(L"{82E749ED-B971-4550-BAF7-06AA2BF7E836}",bIsWow64);
+	DeleteRegKeyCLSID(L"{5AB14324-C087-42C1-B905-A0BFDB4E9532}",bIsWow64);
+	DeleteRegKeyCLSID(L"{E407B70A-1FBD-4D5E-8822-231C69102472}",bIsWow64);
+	DeleteRegKeyCLSID(L"{EA801577-E6AD-4BD5-8F71-4BE0154331A4}",bIsWow64);
 
 	DeleteRegKeySOFTWARE(L"Microsoft\\Internet Explorer\\Extensions\\{56753E59-AF1D-4FBA-9E15-31557124ADA2}",bIsWow64);
 	DeleteRegKeySOFTWARE(L"Microsoft\\Internet Explorer\\Low Rights\\ElevationPolicy\\{02E6771D-8375-42B9-9F83-B4730F697900}",bIsWow64);
@@ -1013,6 +1028,7 @@ static void ManualUninstallInternal( void )
 	DeleteRegValueSOFTWARE(L"Microsoft\\Windows\\CurrentVersion\\Policies\\Ext\\CLSID",L"{553891B7-A0D5-4526-BE18-D3CE461D6310}",bIsWow64);
 	DeleteRegValueSOFTWARE(L"Microsoft\\Windows\\CurrentVersion\\Policies\\Ext\\CLSID",L"{EA801577-E6AD-4BD5-8F71-4BE0154331A4}",bIsWow64);
 	DeleteRegValueSOFTWARE(L"Microsoft\\Windows\\CurrentVersion\\Run",L"Open-Shell Menu",bIsWow64);
+	DeleteRegValueSOFTWARE(L"Microsoft\\Windows\\CurrentVersion\\Run",L"Open-Shell Start Menu",bIsWow64);
 
 	DeleteInstallerKey(HKEY_CLASSES_ROOT,L"HKEY_CLASSES_ROOT",L"Installer\\Features",L"OpenShell",L"");
 	DeleteInstallerKey(HKEY_CLASSES_ROOT,L"HKEY_CLASSES_ROOT",L"Installer\\Products",L"ProductName",L"Open-Shell");

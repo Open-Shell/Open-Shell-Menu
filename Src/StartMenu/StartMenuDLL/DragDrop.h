@@ -15,9 +15,7 @@ public:
 		m_RefCount=0;
 	}
 
-	~CDropTargetProxy( void )
-	{
-	}
+	~CDropTargetProxy( void ) = default;
 
 	void Reset( void )
 	{

@@ -16,9 +16,7 @@ CMenuAccessible::CMenuAccessible( CMenuContainer *pOwner )
 	CreateStdAccessibleObject(pOwner->m_hWnd,OBJID_CLIENT,IID_IAccessible,(void**)&m_pStdAccessible);
 }
 
-CMenuAccessible::~CMenuAccessible( void )
-{
-}
+CMenuAccessible::~CMenuAccessible( void ) = default;
 
 void CMenuAccessible::Reset( void )
 {

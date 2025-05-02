@@ -5,7 +5,7 @@
 // dllmain.h : Declaration of module class.
 #pragma once
 
-#include "ClassicExplorer_i.h"
+#include "ClassicExplorer_h.h"
 #include <vector>
 
 class CClassicExplorerModule : public CAtlDllModuleT< CClassicExplorerModule >

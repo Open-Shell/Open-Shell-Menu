@@ -8,7 +8,7 @@
 #include "resource.h"       // main symbols
 #include <lm.h>
 
-#include "ClassicExplorer_i.h"
+#include "ClassicExplorer_h.h"
 
 // CShareOverlay
 
@@ -20,7 +20,7 @@ class ATL_NO_VTABLE CShareOverlay :
 public:
 	CShareOverlay( void );
 
-	DECLARE_REGISTRY_RESOURCEID(IDR_SHAREOVERLAY)
+	DECLARE_REGISTRY_RESOURCEID_V2_WITHOUT_MODULE(IDR_SHAREOVERLAY, CShareOverlay)
 
 	DECLARE_PROTECT_FINAL_CONSTRUCT()
 

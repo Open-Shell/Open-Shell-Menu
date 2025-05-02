@@ -88,7 +88,7 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="StartMenuHelper_i.h">
+    <ClInclude Include="StartMenuHelper_h.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
     <ClInclude Include="ModernSettingsShellFolder.h">

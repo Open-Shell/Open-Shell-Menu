@@ -808,7 +808,7 @@ private:
 	void ActivateItem( int index, TActivateType type, const POINT *pPt, ActivateData *pData=NULL );
 	void ActivateTreeItem( const void *treeItem, RECT &itemRect, TActivateType type, const POINT *pPt, ActivateData *pData=NULL );
 	void DragTreeItem( const void *treeItem, bool bApps );
-	void ShowKeyboardCues( void );
+	void ShowKeyboardCues( bool alt );
 	void SetActiveWindow( void );
 	void CreateBackground( int width1, int width2, int height1, int height2, int &totalWidth, int &totalHeight, bool bCreateRegion ); // width1/2, height1/2 - the first and second content area
 	void BlendPatterns( unsigned int *bits, int width, int height );
@@ -876,6 +876,7 @@ private:
 	static bool s_bNoDragDrop; // disables drag/drop
 	static bool s_bNoContextMenu; // disables the context menu
 	static bool s_bExpandLinks; // expand links to folders
+	static bool s_bSingleClickFolders; // open links to folders with one click instead of two
 	static bool s_bLogicalSort; // use StrCmpLogical instead of CompareString
 	static bool s_bExtensionSort; // sort file names by extension
 	static bool s_bAllPrograms; // this is the All Programs menu of the Windows start menu

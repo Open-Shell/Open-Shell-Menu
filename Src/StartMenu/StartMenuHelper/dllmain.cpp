@@ -2,7 +2,7 @@
 
 #include "stdafx.h"
 #include "resource.h"
-#include "StartMenuHelper_i.h"
+#include "StartMenuHelper_h.h"
 #include "dllmain.h"
 #include "Settings.h"
 #include "Translations.h"
@@ -37,11 +37,6 @@ void SettingChangedCallback( const CSetting *pSetting )
 {
 }
 
-const wchar_t *GetDocRelativePath( void )
-{
-	return L"";
-}
-
 CSetting g_Settings[]={
 {L"MenuStyleGroup",CSetting::TYPE_GROUP},
 	{L"MenuStyle",CSetting::TYPE_INT,0,0,2},
@@ -57,6 +52,7 @@ CSetting g_Settings[]={
 	{L"DisablePinExt",CSetting::TYPE_BOOL,0,0,0},
 	{L"FolderStartMenu",CSetting::TYPE_STRING,0,0,L""},
 	{L"FolderCommonStartMenu",CSetting::TYPE_STRING,0,0,L""},
+	{L"PinnedItemsPath",CSetting::TYPE_DIRECTORY,0,0,L"%APPDATA%\\OpenShell\\Pinned"},
 
 {L"Language",CSetting::TYPE_GROUP},
 	{L"Language",CSetting::TYPE_STRING,0,0,L"",CSetting::FLAG_COLD|CSetting::FLAG_SHARED},
@@ -91,7 +87,7 @@ static DWORD CALLBACK DllInitThread( void* )
 	}
 
 	wchar_t fname[_MAX_PATH];
-	Sprintf(fname,_countof(fname),L"%s" INI_PATH L"StartMenuHelperL10N.ini",path);
+	Sprintf(fname,_countof(fname),L"%sStartMenuHelperL10N.ini",path);
 	CString language=GetSettingString(L"Language");
 	ParseTranslations(fname,language);
 
