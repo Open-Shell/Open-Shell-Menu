@@ -296,10 +296,8 @@ bool WasOsUpgrade()
 // UAC dialog is shown to ensure it will run with administrator privileges
 void RunOsUpgradeTaskAsAdmin()
 {
-#if defined(_M_AMD64)
+#ifdef _WIN64
 	wchar_t path[_MAX_PATH] = L"%windir%\\System32\\StartMenuHelper64.dll";
-#elif defined(_M_ARM64)
-	wchar_t path[_MAX_PATH] = L"%windir%\\System32\\StartMenuHelperA64.dll";
 #else
 	wchar_t path[_MAX_PATH] = L"%windir%\\System32\\StartMenuHelper32.dll";
 #endif
@@ -323,10 +321,8 @@ DWORD PerformOsUpgradeTask(bool silent)
 		regKey.SetDWORDValue(L"WinVersion", g_winVer);
 
 		// run regsvr32 StartMenuHelper
-#if defined(_M_AMD64)
+#ifdef _WIN64
 		wchar_t cmdLine[_MAX_PATH] = L"regsvr32 /s \"%windir%\\System32\\StartMenuHelper64.dll\"";
-#elif defined(_M_ARM64)
-		wchar_t cmdLine[_MAX_PATH] = L"regsvr32 /s \"%windir%\\System32\\StartMenuHelperA64.dll\"";
 #else
 		wchar_t cmdLine[_MAX_PATH] = L"regsvr32 /s \"%windir%\\System32\\StartMenuHelper32.dll\"";
 #endif

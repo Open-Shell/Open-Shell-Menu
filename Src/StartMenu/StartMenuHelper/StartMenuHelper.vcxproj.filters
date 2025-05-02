@@ -56,9 +56,6 @@
     <None Include="StartMenuHelper64.def">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="StartMenuHelperA64.def">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="StartMenuExt.rgs">
       <Filter>Resource Files</Filter>
     </None>

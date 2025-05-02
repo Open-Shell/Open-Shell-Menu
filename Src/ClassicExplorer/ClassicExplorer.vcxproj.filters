@@ -80,9 +80,6 @@
     <None Include="ShareOverlay.rgs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="ClassicExplorerA64.def">
-      <Filter>Source Files</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\Localization\English\ClassicExplorerADMX.txt">

@@ -20,6 +20,10 @@
     <OutDir>$(MSBuildThisFileDirectory)..\build\bin\$(Configuration)ARM64\</OutDir>
     <IntDir>$(MSBuildThisFileDirectory)..\build\obj\$(ProjectName)\$(Configuration)ARM64\</IntDir>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Platform)'=='ARM64EC'">
+    <OutDir>$(MSBuildThisFileDirectory)..\build\bin\$(Configuration)ARM64EC\</OutDir>
+    <IntDir>$(MSBuildThisFileDirectory)..\build\obj\$(ProjectName)\$(Configuration)ARM64EC\</IntDir>
+  </PropertyGroup>
 
   <!-- Common settings for all configurations -->
   <ItemDefinitionGroup>

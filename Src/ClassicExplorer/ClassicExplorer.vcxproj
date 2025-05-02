@@ -5,6 +5,10 @@
       <Configuration>Debug</Configuration>
       <Platform>ARM64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64EC">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64EC</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -17,6 +21,10 @@
       <Configuration>Release</Configuration>
       <Platform>ARM64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64EC">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64EC</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
@@ -28,6 +36,10 @@
     <ProjectConfiguration Include="Setup|ARM64">
       <Configuration>Setup</Configuration>
       <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Setup|ARM64EC">
+      <Configuration>Setup</Configuration>
+      <Platform>ARM64EC</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Setup|Win32">
       <Configuration>Setup</Configuration>
@@ -65,8 +77,12 @@
   <PropertyGroup Condition="'$(Platform)'=='x64'">
     <TargetName>$(ProjectName)64</TargetName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Platform)'=='ARM64EC'">
+    <TargetName>$(ProjectName)64</TargetName>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Platform)'=='ARM64'">
-    <TargetName>$(ProjectName)A64</TargetName>
+    <TargetName>$(ProjectName)64</TargetName>
+    <BuildAsX>true</BuildAsX>
   </PropertyGroup>
   <PropertyGroup>
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
@@ -113,7 +129,6 @@
     <None Include="ClassicExplorer.rgs" />
     <None Include="ClassicExplorer32.def" />
     <None Include="ClassicExplorer64.def" />
-    <None Include="ClassicExplorerA64.def" />
     <None Include="ExplorerBand.rgs" />
     <None Include="ExplorerBHO.rgs" />
     <None Include="ExplorerL10N.ini">

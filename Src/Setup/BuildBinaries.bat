@@ -51,12 +51,12 @@ copy /B ..\..\build\bin\Release\Update.exe Output > nul
 copy /B ..\..\build\bin\Release\DesktopToasts.dll Output > nul
 copy /B ..\..\build\bin\Release\SetupHelper.exe Output > nul
 
-copy /B ..\..\build\bin\SetupARM64\ClassicExplorerA64.dll Output\ARM64 > nul
-copy /B ..\..\build\bin\SetupARM64\ClassicIEDLL_A64.dll Output\ARM64 > nul
-copy /B ..\..\build\bin\SetupARM64\ClassicIE_A64.exe Output\ARM64 > nul
+copy /B ..\..\build\bin\SetupARM64\ClassicExplorer64.dll Output\ARM64 > nul
+copy /B ..\..\build\bin\SetupARM64\ClassicIEDLL_64.dll Output\ARM64 > nul
+copy /B ..\..\build\bin\SetupARM64\ClassicIE_64.exe Output\ARM64 > nul
 copy /B ..\..\build\bin\SetupARM64\StartMenu.exe Output\ARM64 > nul
 copy /B ..\..\build\bin\SetupARM64\StartMenuDLL.dll Output\ARM64 > nul
-copy /B ..\..\build\bin\SetupARM64\StartMenuHelperA64.dll Output\ARM64 > nul
+copy /B ..\..\build\bin\SetupARM64\StartMenuHelper64.dll Output\ARM64 > nul
 
 copy /B ..\..\build\bin\Setup64\ClassicExplorer64.dll Output\x64 > nul
 copy /B ..\..\build\bin\Setup64\ClassicIEDLL_64.dll Output\x64 > nul
@@ -99,8 +99,8 @@ copy /B ..\..\build\bin\Setup64\ClassicExplorer64.pdb Output\PDB64 > nul
 copy /B Output\x64\ClassicExplorer64.dll Output\PDB64 > nul
 
 REM Explorer ARM64
-copy /B ..\..\build\bin\SetupARM64\ClassicExplorerA64.pdb Output\PDBARM64 > nul
-copy /B Output\ARM64\ClassicExplorerA64.dll Output\PDBARM64 > nul
+copy /B ..\..\build\bin\SetupARM64\ClassicExplorer64.pdb Output\PDBARM64 > nul
+copy /B Output\ARM64\ClassicExplorer64.dll Output\PDBARM64 > nul
 
 REM IE 32
 copy /B ..\..\build\bin\Setup\ClassicIEDLL_32.pdb Output\PDB32 > nul
@@ -115,10 +115,10 @@ copy /B ..\..\build\bin\Setup64\ClassicIE_64.pdb Output\PDB64 > nul
 copy /B Output\x64\ClassicIE_64.exe Output\PDB64 > nul
 
 REM IE ARM64
-copy /B ..\..\build\bin\SetupARM64\ClassicIEDLL_A64.pdb Output\PDBARM64 > nul
-copy /B Output\ARM64\ClassicIEDLL_A64.dll Output\PDBARM64 > nul
-copy /B ..\..\build\bin\SetupARM64\ClassicIE_A64.pdb Output\PDBARM64 > nul
-copy /B Output\ARM64\ClassicIE_A64.exe Output\PDBARM64 > nul
+copy /B ..\..\build\bin\SetupARM64\ClassicIEDLL_64.pdb Output\PDBARM64 > nul
+copy /B Output\ARM64\ClassicIEDLL_64.dll Output\PDBARM64 > nul
+copy /B ..\..\build\bin\SetupARM64\ClassicIE_64.pdb Output\PDBARM64 > nul
+copy /B Output\ARM64\ClassicIE_64.exe Output\PDBARM64 > nul
 
 REM Menu 32
 copy /B ..\..\build\bin\Setup\StartMenu.pdb Output\PDB32 > nul
@@ -145,8 +145,8 @@ copy /B ..\..\build\bin\SetupARM64\StartMenu.pdb Output\PDBARM64 > nul
 copy /B Output\ARM64\StartMenu.exe Output\PDBARM64 > nul
 copy /B ..\..\build\bin\SetupARM64\StartMenuDLL.pdb Output\PDBARM64 > nul
 copy /B Output\ARM64\StartMenuDLL.dll Output\PDBARM64 > nul
-copy /B ..\..\build\bin\SetupARM64\StartMenuHelperA64.pdb Output\PDBARM64 > nul
-copy /B Output\ARM64\StartMenuHelperA64.dll Output\PDBARM64 > nul
+copy /B ..\..\build\bin\SetupARM64\StartMenuHelper64.pdb Output\PDBARM64 > nul
+copy /B Output\ARM64\StartMenuHelper64.dll Output\PDBARM64 > nul
 
 REM ********* Source Index PDBs
 

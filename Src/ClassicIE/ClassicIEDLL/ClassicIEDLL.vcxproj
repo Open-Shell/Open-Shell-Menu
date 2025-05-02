@@ -5,6 +5,10 @@
       <Configuration>Debug</Configuration>
       <Platform>ARM64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64EC">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64EC</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -17,6 +21,10 @@
       <Configuration>Release</Configuration>
       <Platform>ARM64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64EC">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64EC</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
@@ -28,6 +36,10 @@
     <ProjectConfiguration Include="Setup|ARM64">
       <Configuration>Setup</Configuration>
       <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Setup|ARM64EC">
+      <Configuration>Setup</Configuration>
+      <Platform>ARM64EC</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Setup|Win32">
       <Configuration>Setup</Configuration>
@@ -65,8 +77,12 @@
   <PropertyGroup Condition="'$(Platform)'=='x64'">
     <TargetName>$(ProjectName)_64</TargetName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Platform)'=='ARM64EC'">
+    <TargetName>$(ProjectName)_64</TargetName>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Platform)'=='ARM64'">
-    <TargetName>$(ProjectName)_A64</TargetName>
+    <TargetName>$(ProjectName)_64</TargetName>
+    <BuildAsX>true</BuildAsX>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -107,7 +123,6 @@
     <None Include="ClassicIEDLL.rgs" />
     <None Include="ClassicIEDLL_32.def" />
     <None Include="ClassicIEDLL_64.def" />
-    <None Include="ClassicIEDLL_A64.def" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClassicIEBHO.h" />
