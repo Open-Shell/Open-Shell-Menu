@@ -1,10 +1,6 @@
 @echo off
 rem This file is to create all the files required for a new release to publish
 
-rem Default to x86/x64 unless we are building for ARM64
-set ARCH=%1
-if "%ARCH%"=="" set ARCH=x86_x64
-
 set PATH=C:\Program Files\7-Zip\;C:\Program Files (x86)\HTML Help Workshop;C:\Program Files (x86)\WiX Toolset v3.14\bin\;%PATH%
 
 cd %~dp0

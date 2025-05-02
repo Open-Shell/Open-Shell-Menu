@@ -100,12 +100,9 @@ END
 // MSI_FILE
 //
 
-#if defined(_M_AMD64) || defined(_M_IX86)
 IDR_MSI_FILE32          MSI_FILE                "Temp\\Setup32.msi_"
 IDR_MSI_FILE64          MSI_FILE                "Temp\\Setup64.msi_"
-#elif defined(_M_ARM64)
 IDR_MSI_FILEARM64       MSI_FILE                "Temp\\SetupARM64.msi_"
-#endif
 IDR_MSI_CHECKSUM        MSI_FILE                "msichecksum.bin"
 
 
@@ -130,7 +127,7 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_HELP                "Open-Shell Setup will install Open-Shell on  your computer. Possible command lines:\n    <no command line> - runs the installer normally\n    extract32 - extracts the 32-bit MSI\n    extract64 - extracts the 64-bit MSI\n    help, /? - shows the command line help\n    <some msiexec options> - the options are passed to msiexec\n        * if the options contain %MSI% (all caps) the token is replaced by the name of the extracted MSI file\n        * if %MSI% is not found, the setup runs ""msiexec /i <MSI file> <some msiexec options>""\n        * run msiexec with no parameters to see the full list of msiexec options\n\nExamples:\n    /qn - runs the installer in quiet mode\n    /x %MSI% /qb - uninstalls the product in basic UI level\n    /f %MSI% - repairs the product\n    /l* log.txt - runs the installer and logs the process in the log.txt file\n    /qn ADDLOCAL=ClassicExplorer - installs only Classic Explorer in quiet mode\n    /qn ADDLOCAL=StartMenu APPLICATIONFOLDER=C:\\OpenShell - installs only Open-Shell Start Menu in quiet mode in the folder C:\\OpenShell\n    ADDLOCAL=StartMenu,ClassicIE - runs the installer in full UI mode with Open-Shell Start Menu and Classic IE checked by default"
+    IDS_HELP                "Open-Shell Setup will install Open-Shell on  your computer. Possible command lines:\n    <no command line> - runs the installer normally\n    extract32 - extracts the 32-bit MSI\n    extract64 - extracts the 64-bit MSI\n    extractARM64 - extracts the ARM64 MSI\n    help, /? - shows the command line help\n    <some msiexec options> - the options are passed to msiexec\n        * if the options contain %MSI% (all caps) the token is replaced by the name of the extracted MSI file\n        * if %MSI% is not found, the setup runs ""msiexec /i <MSI file> <some msiexec options>""\n        * run msiexec with no parameters to see the full list of msiexec options\n\nExamples:\n    /qn - runs the installer in quiet mode\n    /x %MSI% /qb - uninstalls the product in basic UI level\n    /f %MSI% - repairs the product\n    /l* log.txt - runs the installer and logs the process in the log.txt file\n    /qn ADDLOCAL=ClassicExplorer - installs only Classic Explorer in quiet mode\n    /qn ADDLOCAL=StartMenu APPLICATIONFOLDER=C:\\OpenShell - installs only Open-Shell Start Menu in quiet mode in the folder C:\\OpenShell\n    ADDLOCAL=StartMenu,ClassicIE - runs the installer in full UI mode with Open-Shell Start Menu and Classic IE checked by default"
 END
 
 #endif    // English (U.S.) resources

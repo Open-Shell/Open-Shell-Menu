@@ -12,7 +12,7 @@
 #include "StringUtils.h"
 #include "FNVHash.h"
 
-// Setup.exe is a bootstrap application that contains installers for x86 and x64 or ARM64.
+// Setup.exe is a bootstrap application that contains installers for x86, x64 and ARM64.
 // It unpacks the right installer into the temp directory and executes it.
 
 typedef BOOL (WINAPI *FIsWow64Process)( HANDLE hProcess, PBOOL Wow64Process );
@@ -81,13 +81,21 @@ static int ExtractMsi( HINSTANCE hInstance, const wchar_t *msiName, ExtractType 
 		}
 		return ERR_HASH_NOTFOUND;
 	}
-	unsigned int hash0=((unsigned int*)pRes)[extractType==x64?1:0];
+	unsigned int hash0=((unsigned int*)pRes)[extractType-1];
 	const Chunk *pChunks=NULL;
 	int chunkCount=0;
 	if (extractType==x64)
 	{
-		chunkCount=((unsigned int*)pRes)[2];
-		pChunks=(Chunk*)((unsigned int*)pRes+3);
+		chunkCount=((unsigned int*)pRes)[3];
+		pChunks=(Chunk*)((unsigned int*)pRes+4);
+	}
+	if (extractType==ARM64)
+	{
+		int x64chunkCount=((unsigned int*)pRes)[3];
+		const Chunk *px64Chunks=(Chunk*)((unsigned int*)pRes+4);
+
+		chunkCount=((unsigned int*)(px64Chunks+x64chunkCount))[0];
+		pChunks = (Chunk*)((unsigned int*)(px64Chunks+x64chunkCount)+1);
 	}
 
 	// extract the installer
@@ -98,7 +106,7 @@ static int ExtractMsi( HINSTANCE hInstance, const wchar_t *msiName, ExtractType 
 		HGLOBAL hRes=LoadResource(hInstance,hResInfo);
 		pRes32=(unsigned char*)LockResource(hRes);
 	}
-	if (!pRes32 && extractType!=ARM64)
+	if (!pRes32)
 	{
 		if (!bQuiet)
 		{
@@ -110,19 +118,19 @@ static int ExtractMsi( HINSTANCE hInstance, const wchar_t *msiName, ExtractType 
 		}
 		return ERR_MSIRES_NOTFOUND;
 	}
-	const unsigned char *pResx64=NULL, *pResArm64=NULL;
+	const unsigned char *pRes64=NULL, *pResArm64=NULL;
 	int size32=SizeofResource(hInstance,hResInfo);
 	unsigned int hash;
-	int sizex64=0, sizeArm64=0;
+	int size64=0, sizeArm64=0;
 	if (extractType==x64)
 	{
 		HRSRC hResInfo=FindResource(hInstance,MAKEINTRESOURCE(IDR_MSI_FILE64),L"MSI_FILE");
 		if (hResInfo)
 		{
 			HGLOBAL hRes=LoadResource(hInstance,hResInfo);
-			pResx64=(unsigned char*)LockResource(hRes);
+			pRes64=(unsigned char*)LockResource(hRes);
 		}
-		if (!pResx64)
+		if (!pRes64)
 		{
 			if (!bQuiet)
 			{
@@ -135,7 +143,7 @@ static int ExtractMsi( HINSTANCE hInstance, const wchar_t *msiName, ExtractType 
 			return ERR_MSIRES_NOTFOUND;
 		}
 
-		sizex64=SizeofResource(hInstance,hResInfo);
+		size64=SizeofResource(hInstance,hResInfo);
 		hash=FNV_HASH0;
 		int start=0;
 		int pos=0;
@@ -143,13 +151,13 @@ static int ExtractMsi( HINSTANCE hInstance, const wchar_t *msiName, ExtractType 
 		{
 			const Chunk &chunk=pChunks[i];
 			if (start<chunk.start2)
-				hash=CalcFNVHash(pResx64+pos,chunk.start2-start,hash);
+				hash=CalcFNVHash(pRes64+pos,chunk.start2-start,hash);
 			hash=CalcFNVHash(pRes32+chunk.start1,chunk.len,hash);
 			pos+=chunk.start2-start;
 			start=chunk.start2+chunk.len;
 		}
-		if (pos<sizex64)
-			hash=CalcFNVHash(pResx64+pos,sizex64-pos,hash);
+		if (pos<size64)
+			hash=CalcFNVHash(pRes64+pos,size64-pos,hash);
 	}
 	else if (extractType==ARM64)
 	{
@@ -173,7 +181,20 @@ static int ExtractMsi( HINSTANCE hInstance, const wchar_t *msiName, ExtractType 
 		}
 
 		sizeArm64=SizeofResource(hInstance,hResInfo);
-		hash=CalcFNVHash(pResArm64,sizeArm64);
+		hash=FNV_HASH0;
+		int start=0;
+		int pos=0;
+		for (int i=0;i<chunkCount;i++)
+		{
+			const Chunk& chunk = pChunks[i];
+			if (start<chunk.start2)
+				hash=CalcFNVHash(pResArm64+pos,chunk.start2-start,hash);
+			hash=CalcFNVHash(pRes32+chunk.start1,chunk.len,hash);
+			pos+=chunk.start2-start;
+			start=chunk.start2+chunk.len;
+		}
+		if (pos<sizeArm64)
+			hash=CalcFNVHash(pResArm64+pos,sizeArm64-pos,hash);
 	}
 	else
 		hash=CalcFNVHash(pRes32,size32);
@@ -216,17 +237,29 @@ static int ExtractMsi( HINSTANCE hInstance, const wchar_t *msiName, ExtractType 
 		{
 			const Chunk &chunk=pChunks[i];
 			if (start<chunk.start2)
-				WriteFileXOR(hFile,pResx64+pos,chunk.start2-start);
+				WriteFileXOR(hFile,pRes64+pos,chunk.start2-start);
 			WriteFileXOR(hFile,pRes32+chunk.start1,chunk.len);
 			pos+=chunk.start2-start;
 			start=chunk.start2+chunk.len;
 		}
-		if (pos<sizex64)
-			WriteFileXOR(hFile,pResx64+pos,sizex64-pos);
+		if (pos<size64)
+			WriteFileXOR(hFile,pRes64+pos,size64-pos);
 	}
 	else if (extractType==ARM64)
 	{
-		WriteFileXOR(hFile,pResArm64,sizeArm64);
+		int start=0;
+		int pos=0;
+		for (int i=0;i<chunkCount;i++)
+		{
+			const Chunk &chunk=pChunks[i];
+			if (start<chunk.start2)
+				WriteFileXOR(hFile,pResArm64+pos,chunk.start2-start);
+			WriteFileXOR(hFile,pRes32+chunk.start1,chunk.len);
+			pos+=chunk.start2-start;
+			start=chunk.start2+chunk.len;
+		}
+		if (pos<sizeArm64)
+			WriteFileXOR(hFile,pResArm64+pos,sizeArm64-pos);
 	}
 	else
 	{
@@ -340,10 +373,9 @@ int APIENTRY wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
 	// Use IsWow64Process2 if it's available (Windows 10 1511+), otherwise fall back to IsWow64Process
 	FIsWow64Process2 isWow64Process2=(FIsWow64Process2)GetProcAddress(hKernel32,"IsWow64Process2");
-	USHORT processMachine = 0;
 	if (isWow64Process2)
 	{
-		USHORT nativeMachine = 0;
+		USHORT processMachine = 0, nativeMachine = 0;
 		isWow64Process2(GetCurrentProcess(), &processMachine, &nativeMachine);
 		extractType=nativeMachine==IMAGE_FILE_MACHINE_AMD64?x64:nativeMachine==IMAGE_FILE_MACHINE_ARM64?ARM64:x86;
 	}
@@ -374,7 +406,7 @@ int APIENTRY wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
 	// On ARM64 we must launch msiexec.exe from system32 and not syswow64 as would otherwise happen
 	PVOID wow64FsRedirVal=NULL;
-	if (extractType == ARM64 && processMachine != IMAGE_FILE_MACHINE_ARM64)
+	if (extractType == ARM64)
 		Wow64DisableWow64FsRedirection(&wow64FsRedirVal);
 
 	// start the installer
@@ -382,7 +414,7 @@ int APIENTRY wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	PROCESS_INFORMATION processInfo;
 	memset(&processInfo,0,sizeof(processInfo));
 	BOOL ret=CreateProcess(NULL,cmdLine,NULL,NULL,TRUE,0,NULL,NULL,&startupInfo,&processInfo);
-	if (extractType == ARM64 && processMachine != IMAGE_FILE_MACHINE_ARM64)
+	if (extractType == ARM64)
 		Wow64RevertWow64FsRedirection(wow64FsRedirVal);
 	if (!ret)
 	{

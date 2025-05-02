@@ -1,11 +1,8 @@
 REM ***** Collect PDBs
 
 echo -- Creating symbols package
-set CS_SYMBOLS_NAME=OpenShellSymbols_%CS_VERSION_STR%
-if %ARCH%==ARM64 set CS_SYMBOLS_NAME=%CS_SYMBOLS_NAME%_ARM64
-set CS_SYMBOLS_NAME=%CS_SYMBOLS_NAME%.7z
+set CS_SYMBOLS_NAME=OpenShellSymbols_%CS_VERSION_STR%.7z
 
-if exist Final\%CS_SYMBOLS_NAME% del Final\%CS_SYMBOLS_NAME% > nul
 7z a -mx9 .\Final\%CS_SYMBOLS_NAME% .\Output\symbols\* > nul
 
 if defined APPVEYOR (
