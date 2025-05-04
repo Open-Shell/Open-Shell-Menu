@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <WixLocalization Culture="en-US" Codepage="1252" xmlns="http://schemas.microsoft.com/wix/2006/localization">
   <String Id="Error32bit" Overridable="yes">This installer is only for 32-bit version of Windows. For 64-bit Windows you need to run Setup64.</String>
+  <String Id="Error64bit" Overridable="yes">This installer is only for 64-bit version of Windows. For ARM64 Windows you need to run SetupARM64.</String>
   <String Id="ErrorWin7" Overridable="yes">Open-Shell requires Windows 7 or above.</String>
   <String Id="ErrorNewVersion" Overridable="yes">A newer version of [ProductName] is already installed. The setup will now exit.</String>
   <String Id="ExplorerTitle" Overridable="yes">Classic Explorer</String>

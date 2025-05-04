@@ -27,8 +27,12 @@
 		<Package Description="Open-Shell" Comments="Start Menu Replacement" InstallerVersion="500" Compressed="yes" Platform="$(var.CS_PLATFORM)" />
 		<Media Id="1" Cabinet="cshell.cab" EmbedCab="yes" CompressionLevel="high" />
 		<Media Id="2" Cabinet="simple.cab" EmbedCab="yes" CompressionLevel="high" />
+		<PropertyRef Id="WIX_NATIVE_MACHINE" />
 		<?if $(var.x64)=0 And $(var.ARM64)=0 ?>
 		<Condition Message="!(loc.Error32bit)">not Msix64</Condition>
+		<?endif ?>
+		<?if $(var.x64)=1 ?>
+		<Condition Message="!(loc.Error64bit)">NOT (WIX_NATIVE_MACHINE AND WIX_NATIVE_MACHINE="43620")</Condition>
 		<?endif ?>
 		<Condition Message="!(loc.ErrorWin7)">VersionNT&gt;=601</Condition>
 		<Condition Message="!(loc.ErrorNewVersion)">NOT NEWERPRODUCTFOUND OR Installed</Condition>
