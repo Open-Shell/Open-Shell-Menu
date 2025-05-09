@@ -1,5 +1,5 @@
 // Classic Shell (c) 2009-2017, Ivo Beltchev
-// Open-Shell (c) 2017-2018, The Open-Shell Team
+// Open-Shell (c) 2017-2024, The Open-Shell Team
 // Confidential information of Ivo Beltchev. Not for disclosure or distribution without prior written consent from the author
 
 #pragma once
@@ -95,29 +95,6 @@ typedef struct tagPOINTER_INFO {
     UINT64          PerformanceCount;
     POINTER_BUTTON_CHANGE_TYPE ButtonChangeType;
 } POINTER_INFO;
-
-typedef enum tagINPUT_MESSAGE_DEVICE_TYPE  {
-     IMDT_UNAVAILABLE = 0x00000000,      // not specified
-     IMDT_KEYBOARD    = 0x00000001,      // from keyboard
-     IMDT_MOUSE       = 0x00000002,      // from mouse
-     IMDT_TOUCH       = 0x00000004,      // from touch
-     IMDT_PEN         = 0x00000008,      // from pen
- } INPUT_MESSAGE_DEVICE_TYPE;
-
-typedef enum tagINPUT_MESSAGE_ORIGIN_ID {
-     IMO_UNAVAILABLE = 0x00000000,  // not specified
-     IMO_HARDWARE    = 0x00000001,  // from a hardware device or injected by a UIAccess app
-     IMO_INJECTED    = 0x00000002,  // injected via SendInput() by a non-UIAccess app
-     IMO_SYSTEM      = 0x00000004,  // injected by the system
-} INPUT_MESSAGE_ORIGIN_ID;
-
-/*
- * Input source structure.
- */
- typedef struct tagINPUT_MESSAGE_SOURCE {
-     INPUT_MESSAGE_DEVICE_TYPE deviceType;
-     INPUT_MESSAGE_ORIGIN_ID   originId;
- } INPUT_MESSAGE_SOURCE;
 
 #endif
 

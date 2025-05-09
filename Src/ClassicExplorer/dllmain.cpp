@@ -169,7 +169,7 @@ extern "C" BOOL WINAPI DllMain( HINSTANCE hInstance, DWORD dwReason, LPVOID lpRe
 		const wchar_t *exe=PathFindFileName(path);
 		g_bExplorerExe=(_wcsicmp(exe,L"explorer.exe")==0 || _wcsicmp(exe,L"verclsid.exe")==0);
 		bool bReplaceUI=false;
-		if (GetWinVersion()<=WIN_VER_WIN7)
+		if (GetWinVersion()<=_WIN32_WINNT_WIN7)
 		{
 			settings[SETTING_REPLACE_FILE].LoadValue(regSettings,regSettingsUser,regPolicy,regPolicyUser);
 			settings[SETTING_REPLACE_FOLDER].LoadValue(regSettings,regSettingsUser,regPolicy,regPolicyUser);

@@ -604,7 +604,7 @@ static bool GetSkinColorizationParameters( DWMCOLORIZATIONPARAMS *params )
 	tGetColorizationParameters GetColorizationParameters=(tGetColorizationParameters)GetProcAddress(hMod,MAKEINTRESOURCEA(127));
 	if (!GetColorizationParameters || FAILED(GetColorizationParameters(params)))
 		return false;
-	if (GetWinVersion()>=WIN_VER_WIN8)
+	if (GetWinVersion()>=_WIN32_WINNT_WIN8)
 		params->ColorizationOpaqueBlend=0; // Win8 has no transparency
 	return true;
 }
@@ -703,7 +703,7 @@ COLORREF GetMetroTaskbarColor( bool &bTransparent )
 
 COLORREF GetSystemAccentColor( void )
 {
-	if (GetImmersiveUserColorSetPreference!=NULL && GetWinVersion()>=WIN_VER_WIN10)
+	if (GetImmersiveUserColorSetPreference!=NULL && GetWinVersion()>=_WIN32_WINNT_WIN10)
 	{
 		int type=GetImmersiveColorTypeFromName(L"ImmersiveSystemAccent");
 		if (type>=0)
@@ -717,7 +717,7 @@ COLORREF GetSystemAccentColor( void )
 
 static void GetMenuGlassColor( int &dr, int &dg, int &db, int &da )
 {
-	if (GetWinVersion()>=WIN_VER_WIN10)
+	if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 	{
 		bool bDef=true;
 		if (GetSettingBool(L"GlassOverride"))
@@ -1524,7 +1524,7 @@ bool MenuSkin::ComputeOptionStates( const std::map<CString,CString> &options, st
 		values.push_back(L"144_DPI");	// 150% scaling
 	else if (Dpi>=120)
 		values.push_back(L"120_DPI");	// 125% scaling
-	if (ForceTouch || (GetWinVersion()>=WIN_VER_WIN8 && GetSettingBool(L"EnableTouch") && (GetSystemMetrics(SM_DIGITIZER)&NID_INTEGRATED_TOUCH)!=0))
+	if (ForceTouch || (GetWinVersion()>=_WIN32_WINNT_WIN8 && GetSettingBool(L"EnableTouch") && (GetSystemMetrics(SM_DIGITIZER)&NID_INTEGRATED_TOUCH)!=0))
 		values.push_back(L"TOUCH_ENABLED");
 	if (GetSettingInt(L"SearchBox")!=SEARCHBOX_HIDDEN)
 		values.push_back(L"SEARCHBOX");
@@ -2877,7 +2877,7 @@ bool MenuSkin::LoadSkin( HMODULE hMod, const wchar_t *variation, const wchar_t *
 	Main_FakeGlass=false;
 	Submenu_FakeGlass=false;
 	WORD winVer=GetWinVersion();
-	if ((winVer>=WIN_VER_WIN8 && winVer<WIN_VER_WIN10 && !GetSettingBool(L"AeroGlass")) || (winVer>=WIN_VER_WIN10 && !GetSettingBool(L"EnableGlass")))
+	if ((winVer>=_WIN32_WINNT_WIN8 && winVer<_WIN32_WINNT_WIN10 && !GetSettingBool(L"AeroGlass")) || (winVer>=_WIN32_WINNT_WIN10 && !GetSettingBool(L"EnableGlass")))
 	{
 		// replace GLASS with ALPHA and enable the fake glass (alpha with less opacity)
 		if (Main_opacity==OPACITY_GLASS)
@@ -3044,7 +3044,7 @@ bool MenuSkin::LoadSkin( HMODULE hMod, const wchar_t *variation, const wchar_t *
 	}
 
 #ifndef SIMULATE_METRO_COLORS
-	if (!*s_SkinError && BHasMetroColors && GetWinVersion()==WIN_VER_WIN7)
+	if (!*s_SkinError && BHasMetroColors && GetWinVersion()==_WIN32_WINNT_WIN7)
 	{
 		Strcpy(s_SkinError,_countof(s_SkinError),LoadStringEx(IDS_SKIN_ERR_METRO_COLOR));
 		return false;
@@ -3071,7 +3071,7 @@ bool MenuSkin::LoadMenuSkin( const wchar_t *fname, const wchar_t *variation, con
 	BOOL bComp;
 	if (!bTheme || FAILED(DwmIsCompositionEnabled(&bComp)))
 		bComp=FALSE;
-	BOOL bEnableTouch=(GetWinVersion()>=WIN_VER_WIN8 && GetSettingBool(L"EnableTouch") && (GetSystemMetrics(SM_DIGITIZER)&NID_INTEGRATED_TOUCH)!=0);
+	BOOL bEnableTouch=(GetWinVersion()>=_WIN32_WINNT_WIN8 && GetSettingBool(L"EnableTouch") && (GetSystemMetrics(SM_DIGITIZER)&NID_INTEGRATED_TOUCH)!=0);
 	bool bAeroGlass=GetSettingBool(L"AeroGlass");
 	bool bEnableGlass=GetSettingBool(L"EnableGlass");
 	bool bSearchBox=GetSettingInt(L"SearchBox")!=SEARCHBOX_HIDDEN;

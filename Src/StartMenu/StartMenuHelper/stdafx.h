@@ -14,6 +14,9 @@
 #define _ATL_NO_AUTOMATIC_NAMESPACE
 #define _ATL_MODULES // compatibility with /permissive-
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS	// some CString constructors will be explicit
+#define VC_EXTRALEAN
+#define NOMINMAX
+#define _ATL_ALL_WARNINGS
 
 #include "resource.h"
 #include <atlbase.h>

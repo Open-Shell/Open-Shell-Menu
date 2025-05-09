@@ -275,7 +275,7 @@ bool CMenuContainer::DragOut( int index, bool bApp )
 	// get IDataObject for the current item
 	CComPtr<IDataObject> pDataObj;
 	bool bProtectedLink=false;
-	if (bApp && GetWinVersion()<WIN_VER_WIN10)
+	if (bApp && GetWinVersion()<_WIN32_WINNT_WIN10)
 		pDataObj=CreateMetroDataObject(item.pItemInfo);
 	else
 	{
@@ -722,9 +722,9 @@ HRESULT STDMETHODCALLTYPE CMenuContainer::Drop( IDataObject *pDataObj, DWORD grf
 
 	int folderIndex=0;
 	if (before>=0)
-		folderIndex=m_Items[min(before,(int)m_Items.size()-1)].priority>1?1:0;
+		folderIndex=m_Items[std::min(before,(int)m_Items.size()-1)].priority>1?1:0;
 
-	if (s_pDragSource==this && !s_bDragFromTree && s_bDragMovable && (*pdwEffect&DROPEFFECT_MOVE) && m_DragIndex!=m_ProgramTreeIndex && m_Items[m_DragIndex].priority==(m_Items[min(before,(int)m_Items.size()-1)].priority&2))
+	if (s_pDragSource==this && !s_bDragFromTree && s_bDragMovable && (*pdwEffect&DROPEFFECT_MOVE) && m_DragIndex!=m_ProgramTreeIndex && m_Items[m_DragIndex].priority==(m_Items[std::min(before,(int)m_Items.size()-1)].priority&2))
 	{
 		if (before==m_DragIndex || before==m_DragIndex+1)
 			return S_OK;

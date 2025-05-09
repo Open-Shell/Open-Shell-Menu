@@ -680,13 +680,13 @@ void CSearchManager::SearchThread( void )
 					continue;
 
 				// Metro links
-				if (GetWinVersion()>=WIN_VER_WIN8 && searchRequest.bSearchMetroApps)
+				if (GetWinVersion()>=_WIN32_WINNT_WIN8 && searchRequest.bSearchMetroApps)
 				{
 					std::vector<MetroLink> links;
 					GetMetroLinks(links,true);
 					for (std::vector<MetroLink>::const_iterator it=links.begin();it!=links.end();++it)
 					{
-						if (GetWinVersion()<WIN_VER_WIN10)
+						if (GetWinVersion()<_WIN32_WINNT_WIN10)
 							AddSearchItem(it->pItem,L"",COLLECT_PROGRAMS|COLLECT_METRO|COLLECT_ONLY_METRO,CATEGORY_PROGRAM,searchRequest);
 						else
 						{
@@ -966,7 +966,7 @@ void CSearchManager::SearchThread( void )
 									LOG_MENU(LOG_SEARCH,L"Ignoring: failed to parse searchconnector-ms");
 									continue;
 								}
-								if (GetWinVersion()>=WIN_VER_WIN10)
+								if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 								{
 									// ignore search connector using the WINRT scope - looks like it just duplicates the last search
 									bool bWinRT=false;

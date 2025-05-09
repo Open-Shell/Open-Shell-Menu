@@ -687,7 +687,9 @@ static LRESULT CALLBACK WindowProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 						if (bDef)
 						{
 							delay=0;
-							if (GetWinVersion()>=WIN_VER_WIN7)
+#if _WIN32_WINNT < _WIN32_WINNT_WIN7
+							if (GetWinVersion()>=_WIN32_WINNT_WIN7)
+#endif
 							{
 								BOOL comp;
 								if (SUCCEEDED(DwmIsCompositionEnabled(&comp)) && comp)

@@ -2,6 +2,9 @@
 // Open-Shell (c) 2017-2018, The Open-Shell Team
 // Confidential information of Ivo Beltchev. Not for disclosure or distribution without prior written consent from the author
 
+#define WIN32_LEAN_AND_MEAN
+#define VC_EXTRALEAN
+#define NOMINMAX
 #include <windows.h>
 #include <commctrl.h>
 #include <shlwapi.h>

@@ -332,9 +332,9 @@ STDAPI DllRegisterServer(void)
 	BOOL bWow64=FALSE;
 	// GetVersion lies! it always returns Vista when running inside msiexec. must check version of some system dll
 	WORD winVer=HIWORD(GetVersionEx(GetModuleHandle(L"user32.dll")));
-	if (SUCCEEDED(hr) && winVer>=WIN_VER_WIN8 && IsWow64Process(GetCurrentProcess(),&bWow64) && !bWow64)
+	if (SUCCEEDED(hr) && winVer>=_WIN32_WINNT_WIN8 && IsWow64Process(GetCurrentProcess(),&bWow64) && !bWow64)
 	{
-		AddRegistryKeys(winVer>=WIN_VER_WIN10);
+		AddRegistryKeys(winVer>=_WIN32_WINNT_WIN10);
 		InstallUpgradeTask(true);
 	}
 	
@@ -352,9 +352,9 @@ STDAPI DllUnregisterServer(void)
 #ifdef BUILD_SETUP
 	BOOL bWow64=FALSE;
 	WORD winVer=HIWORD(GetVersionEx(GetModuleHandle(L"user32.dll")));
-	if (winVer>=WIN_VER_WIN8 && IsWow64Process(GetCurrentProcess(),&bWow64) && !bWow64)
+	if (winVer>=_WIN32_WINNT_WIN8 && IsWow64Process(GetCurrentProcess(),&bWow64) && !bWow64)
 	{
-		RemoveRegistryKeys(winVer>=WIN_VER_WIN10);
+		RemoveRegistryKeys(winVer>=_WIN32_WINNT_WIN10);
 		InstallUpgradeTask(false);
 	}
 #endif

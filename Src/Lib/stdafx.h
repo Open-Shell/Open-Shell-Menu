@@ -8,6 +8,9 @@
 #include "targetver.h"
 
 #define STRICT_TYPED_ITEMIDS
+#define VC_EXTRALEAN
+#define NOMINMAX
+#define _ATL_ALL_WARNINGS
 // Windows Header Files:
 #include <windows.h>
 #include <commctrl.h>

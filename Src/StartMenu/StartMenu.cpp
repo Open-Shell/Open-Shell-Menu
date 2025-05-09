@@ -43,7 +43,7 @@ static bool HookStartMenu( THookMode mode, HWND &menu )
 
 	DllLogToFile(STARTUP_LOG,L"StartMenu: hooking Explorer");
 	HWND progWin=NULL;
-	bool bFindAppManager=(mode==HOOK_STARTUP && GetWinVersion()>=WIN_VER_WIN8 && GetWinVersion()<=WIN_VER_WIN81);
+	bool bFindAppManager=(mode==HOOK_STARTUP && GetWinVersion()>=_WIN32_WINNT_WIN8 && GetWinVersion()<=_WIN32_WINNT_WINBLUE);
 	for (int i=0;i<120;i++) // retry for 1 minute
 	{
 		if (bFindAppManager)
@@ -432,7 +432,7 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrC
 
 	DllLogToFile(STARTUP_LOG,L"StartMenu: start '%s'",lpstrCmdLine);
 
-	if (wcsstr(lpstrCmdLine,L"-startup") || (wcsstr(lpstrCmdLine,L"-autorun") && HIWORD(g_winVer)<WIN_VER_WIN8))
+	if (wcsstr(lpstrCmdLine,L"-startup") || (wcsstr(lpstrCmdLine,L"-autorun") && HIWORD(g_winVer)<_WIN32_WINNT_WIN8))
 	{
 		WaitDllInitThread();
 		if (!DllGetSettingBool(L"AutoStart"))
