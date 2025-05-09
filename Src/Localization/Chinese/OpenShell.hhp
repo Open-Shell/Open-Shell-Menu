@@ -2,10 +2,11 @@
 Compatibility=1.1 or later
 Compiled file=OpenShell.chm
 Contents file=OpenShellTOC.hhc
+Default Font=微软雅黑,10,0
 Default topic=Main.html
 Display compile progress=Yes
-Language=0x409 English (United States)
-Title=Open-Shell Help
+Language=0x804 中文(中国)
+Title=Open-Shell 帮助
 
 [FILES]
 ClassicExplorer.html
