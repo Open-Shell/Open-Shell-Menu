@@ -24,7 +24,7 @@ You can find the latest stable version here:
 [![GitHub All Releases](https://img.shields.io/github/downloads/Open-Shell/Open-Shell-Menu/total?style=for-the-badge&color=4bc2ee&logo=github)](https://github.com/Open-Shell/Open-Shell-Menu/releases/latest)
 
 ### ⚠️ Windows for ARM compatibility ⚠️
-Open-Shell is not compatible with Windows for ARM. If you install it on a Windows for ARM installation (ex. using Parallels Desktop on an Apple Silicon Mac), you will no longer be able to log into your account the next time you reboot. Please refrain from installing Open-Shell on Windows for ARM.
+Open-Shell x64 is not compatible with Windows for ARM. If you install it on a Windows for ARM installation (ex. using Parallels Desktop on an Apple Silicon Mac), you will no longer be able to log into your account the next time you reboot. Please refrain from installing Open-Shell x64 on Windows for ARM.
 
 ### Temporary Translation/Language Solution
 1. Download [language DLL](https://coddec.github.io/Classic-Shell/www.classicshell.net/translations/index.html)  
