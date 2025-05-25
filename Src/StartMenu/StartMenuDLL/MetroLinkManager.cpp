@@ -70,7 +70,7 @@ void GetMetroLinks( std::vector<MetroLink> &links, bool bLog, std::vector<CStrin
 			}
 			PropVariantClear(&val);
 		}
-		if (GetWinVersion()>=WIN_VER_WIN10)
+		if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 		{
 			PIDLIST_ABSOLUTE pidl;
 			if (!bNonApp && SUCCEEDED(SHGetIDListFromObject(pChild,&pidl)))
@@ -177,7 +177,7 @@ void ExecutePCSettings( void )
 
 CComPtr<IContextMenu> GetMetroPinMenu( const wchar_t *appid )
 {
-	if (GetWinVersion()<WIN_VER_WIN10 && !IsWin81Update1()) return NULL;
+	if (GetWinVersion()<_WIN32_WINNT_WIN10 && !IsWin81Update1()) return NULL;
 	CComPtr<IShellFolder> pAppFolder;
 	{
 		CAbsolutePidl pidl;
@@ -228,7 +228,7 @@ bool IsProtectedApp( const wchar_t *appid )
 // Returns true if uninstalling is allowed by the policy
 bool GetUninstallPolicy( void )
 {
-	if (GetWinVersion()<WIN_VER_WIN8)
+	if (GetWinVersion()<_WIN32_WINNT_WIN8)
 		return false;
 	CRegKey regKey;
 	if (regKey.Open(HKEY_CURRENT_USER,L"Software\\Policies\\Microsoft\\Windows\\Explorer",KEY_READ)==ERROR_SUCCESS)
@@ -347,7 +347,7 @@ void UninstallMetroApp( HWND parent, const wchar_t *name, const wchar_t *appid )
 // Determines if Edge is the default browser
 bool IsEdgeDefaultBrowser( void )
 {
-	if (GetWinVersion()<WIN_VER_WIN10)
+	if (GetWinVersion()<_WIN32_WINNT_WIN10)
 		return false;
 	CRegKey userKey;
 	if (userKey.Open(HKEY_CURRENT_USER,L"Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice",KEY_READ)==ERROR_SUCCESS)

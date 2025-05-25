@@ -104,7 +104,7 @@ CAutomaticList::CAutomaticList( const wchar_t *appid )
 			if (FAILED(m_pAutoList->Initialize(appid,NULL,NULL)))
 				m_pAutoList=NULL;
 		}
-		else if (GetWinVersion()>=WIN_VER_WIN10)
+		else if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 		{
 			pAutoListUnk->QueryInterface(IID_IAutomaticDestinationList10b,(void**)&m_pAutoList10b);
 			if (m_pAutoList10b)
@@ -175,7 +175,7 @@ static CComPtr<IDestinationList> GetCustomList( const wchar_t *appid )
 	if (SUCCEEDED(pCustomListUnk.CoCreateInstance(CLSID_DestinationList)))
 	{
 		CComPtr<IDestinationList> pCustomList;
-		if (GetWinVersion()<WIN_VER_WIN10)
+		if (GetWinVersion()<_WIN32_WINNT_WIN10)
 			pCustomListUnk->QueryInterface(IID_IDestinationList,(void**)&pCustomList);
 		else
 		{
@@ -191,7 +191,7 @@ static CComPtr<IDestinationList> GetCustomList( const wchar_t *appid )
 // Returns true if the given app has a non-empty jumplist
 bool HasJumplist( const wchar_t *appid )
 {
-	Assert(GetWinVersion()>=WIN_VER_WIN7);
+	Assert(GetWinVersion()>=_WIN32_WINNT_WIN7);
 
 	CComPtr<IDestinationList> pCustomList=GetCustomList(appid);
 	if (pCustomList)
@@ -354,7 +354,7 @@ static void AddJumpCollection( CJumpGroup &group, IObjectCollection *pCollection
 // Returns the jumplist for the given shortcut
 bool GetJumplist( const wchar_t *appid, CJumpList &list, int maxCount, int maxHeight, int sepHeight, int itemHeight )
 {
-	Assert(GetWinVersion()>=WIN_VER_WIN7);
+	Assert(GetWinVersion()>=_WIN32_WINNT_WIN7);
 	list.Clear();
 
 	UINT categoryCount=0;
@@ -527,7 +527,7 @@ bool GetJumplist( const wchar_t *appid, CJumpList &list, int maxCount, int maxHe
 // Executes the given item using the correct application
 bool ExecuteJumpItem( const CItemManager::ItemInfo *pAppInfo, const CJumpItem &item, HWND hwnd )
 {
-	Assert(GetWinVersion()>=WIN_VER_WIN7);
+	Assert(GetWinVersion()>=_WIN32_WINNT_WIN7);
 	if (!item.pItem)
 		return false;
 

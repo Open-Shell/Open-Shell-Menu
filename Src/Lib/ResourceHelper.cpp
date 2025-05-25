@@ -1,5 +1,5 @@
 // Classic Shell (c) 2009-2017, Ivo Beltchev
-// Open-Shell (c) 2017-2018, The Open-Shell Team
+// Open-Shell (c) 2017-2024, The Open-Shell Team
 // Confidential information of Ivo Beltchev. Not for disclosure or distribution without prior written consent from the author
 
 #include "stdafx.h"
@@ -648,7 +648,7 @@ DWORD GetVersionEx( HINSTANCE hInstance, DWORD *pBuild )
 }
 
 // Returns the Windows version - 0x600, 0x601, ...
-WORD GetWinVersion( void )
+WORD GetWinVersion()
 {
 	static WORD version;
 	if (!version)
@@ -660,21 +660,21 @@ WORD GetWinVersion( void )
 	return version;
 }
 
-static bool IsWin81Update1Helper( void )
+static bool IsWin81Update1Helper()
 {
 	DWORD build;
 	DWORD ver=GetVersionEx(GetModuleHandle(L"user32.dll"),&build);
-	return HIWORD(ver)==WIN_VER_WIN81 && build>17000;
+	return HIWORD(ver)==_WIN32_WINNT_WINBLUE && build>17000;
 }
 
 // Returns true if the version is Win81 Update1 or later
-bool IsWin81Update1( void )
+bool IsWin81Update1()
 {
 	static bool bIsUpdate1=IsWin81Update1Helper();
 	return bIsUpdate1;
 }
 
-static bool IsWin10RS1Helper( void )
+static bool IsWin10RS1Helper()
 {
 	DWORD build;
 	DWORD ver=GetVersionEx(GetModuleHandle(L"user32.dll"),&build);
@@ -682,7 +682,7 @@ static bool IsWin10RS1Helper( void )
 }
 
 // Returns true if the version is Windows10 RS1 or later
-bool IsWin10RS1( void )
+bool IsWin10RS1()
 {
 	static bool bIsRS1=IsWin10RS1Helper();
 	return bIsRS1;
@@ -720,14 +720,14 @@ static RTL_OSVERSIONINFOW GetOSVersion()
 	return ver;
 }
 
-static bool IsWin10RS4Helper( void )
+static bool IsWin10RS4Helper()
 {
 	auto version = GetOSVersion();
 	return version.dwMajorVersion > 8 && version.dwBuildNumber > 17131;
 }
 
 // Returns true if the version is Windows10 RS4 (Spring Creator Update) or later
-bool IsWin10RS4( void )
+bool IsWin10RS4()
 {
 	static bool bIsRS4=IsWin10RS4Helper();
 	return bIsRS4;
@@ -740,7 +740,7 @@ static bool IsWin11Helper()
 }
 
 // Returns true if the version is Windows11 or later
-bool IsWin11(void)
+bool IsWin11()
 {
 	static bool bIsWin11 = IsWin11Helper();
 	return bIsWin11;

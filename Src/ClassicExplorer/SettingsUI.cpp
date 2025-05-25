@@ -252,7 +252,7 @@ private:
 
 LRESULT CEditToolbarDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	m_Style=GetWinVersion()>=WIN_VER_WIN8?SETTINGS_STYLE_WIN8:SETTINGS_STYLE_WIN7;
+	m_Style=GetWinVersion()>=_WIN32_WINNT_WIN8?SETTINGS_STYLE_WIN8:SETTINGS_STYLE_WIN7;
 	CWindow commands=GetDlgItem(IDC_COMBOCOMMAND);
 	CWindow links=GetDlgItem(IDC_COMBOLINK);
 	InitDialog(commands,g_StdCommands,m_Style,SETTINGS_STYLE_MASK,links,g_CommonLinks);
@@ -428,7 +428,7 @@ LRESULT CEditToolbarDlg::OnReset( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 class CCustomToolbarDlg: public CCustomTreeDlg
 {
 public:
-	CCustomToolbarDlg( void ): CCustomTreeDlg(false,g_StdCommands,GetWinVersion()>=WIN_VER_WIN8?SETTINGS_STYLE_WIN8:SETTINGS_STYLE_WIN7,SETTINGS_STYLE_MASK) {}
+	CCustomToolbarDlg( void ): CCustomTreeDlg(false,g_StdCommands,GetWinVersion()>=_WIN32_WINNT_WIN8?SETTINGS_STYLE_WIN8:SETTINGS_STYLE_WIN7,SETTINGS_STYLE_MASK) {}
 
 protected:
 	virtual void ParseTreeItemExtra( CTreeItem *pItem, CSettingsParser &parser );
@@ -604,7 +604,7 @@ void UpdateSettings( void )
 	UpdateSetting(L"UpIconSize",CComVariant((dpi>=120)?36:30),false);
 	FindSetting(L"UpHotkey2")->pLinkTo=FindSetting(L"UpHotkey");
 
-	if (GetWinVersion()>=WIN_VER_WIN8)
+	if (GetWinVersion()>=_WIN32_WINNT_WIN8)
 	{
 		// Windows 8
 		HideSettingGroup(L"StatusBar",true);
@@ -624,7 +624,7 @@ void UpdateSettings( void )
 		UpdateSetting(L"FixFolderScroll",CComVariant(0),false);
 		UpdateSetting(L"ToolbarItems",CComVariant(g_DefaultToolbar2),false);
 
-		if (GetWinVersion()>=WIN_VER_WIN10)
+		if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 		{
 			FindSetting(L"TreeStyle")[1].flags|=CSetting::FLAG_HIDDEN;
 		}
@@ -657,14 +657,14 @@ static bool g_bCopyHook0; // initial state of the copy hook before the settings 
 void InitSettings( void )
 {
 	InitSettings(g_Settings,COMPONENT_EXPLORER,NULL);
-	g_bCopyHook0=GetWinVersion()<WIN_VER_WIN8 && (GetSettingBool(L"ReplaceFileUI") || GetSettingBool(L"ReplaceFolderUI") || GetSettingBool(L"EnableMore"));
+	g_bCopyHook0=GetWinVersion()< _WIN32_WINNT_WIN8 && (GetSettingBool(L"ReplaceFileUI") || GetSettingBool(L"ReplaceFolderUI") || GetSettingBool(L"EnableMore"));
 }
 
 void ClosingSettings( HWND hWnd, int flags, int command )
 {
 	if (command==IDOK)
 	{
-		bool bCopyHook=GetWinVersion()<WIN_VER_WIN8 && (GetSettingBool(L"ReplaceFileUI") || GetSettingBool(L"ReplaceFolderUI") || GetSettingBool(L"EnableMore"));
+		bool bCopyHook=GetWinVersion()< _WIN32_WINNT_WIN8 && (GetSettingBool(L"ReplaceFileUI") || GetSettingBool(L"ReplaceFolderUI") || GetSettingBool(L"EnableMore"));
 
 		if ((flags&CSetting::FLAG_COLD) || (bCopyHook && !g_bCopyHook0))
 			MessageBox(hWnd,LoadStringEx(IDS_NEW_SETTINGS2),LoadStringEx(IDS_APP_TITLE),MB_OK|MB_ICONWARNING);

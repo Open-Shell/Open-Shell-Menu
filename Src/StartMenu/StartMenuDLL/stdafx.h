@@ -8,6 +8,8 @@
 #include "targetver.h"
 
 #define STRICT_TYPED_ITEMIDS
+#define VC_EXTRALEAN
+#define NOMINMAX
 // Windows Header Files:
 #include <windows.h>
 #include <commctrl.h>
@@ -16,6 +18,7 @@
 
 #define _ATL_MODULES // compatibility with /permissive-
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // some CString constructors will be explicit
+#define _ATL_ALL_WARNINGS
 
 #include <atlbase.h>
 #include <atltypes.h>

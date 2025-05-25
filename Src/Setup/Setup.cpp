@@ -2,7 +2,9 @@
 // Open-Shell (c) 2017-2018, The Open-Shell Team
 // Confidential information of Ivo Beltchev. Not for disclosure or distribution without prior written consent from the author
 
-#define _WIN32_WINNT 0x0600
+#define VC_EXTRALEAN
+#define NOMINMAX
+#define _ATL_ALL_WARNINGS
 #include <windows.h>
 #include <shlwapi.h>
 #include <stdio.h>

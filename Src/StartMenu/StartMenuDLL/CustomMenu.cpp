@@ -466,7 +466,7 @@ const StdMenuItem *ParseCustomMenu( unsigned int &rootSettings )
 					}
 				}
 			}
-			if (GetWinVersion()<WIN_VER_WIN8 || GetSettingInt(L"ProgramsStyle")==PROGRAMS_INLINE || !GetSettingBool(L"AllProgramsMetro"))
+			if (GetWinVersion()<_WIN32_WINNT_WIN8 || GetSettingInt(L"ProgramsStyle")==PROGRAMS_INLINE || !GetSettingBool(L"AllProgramsMetro"))
 				len+=Strcpy(buf+len,_countof(buf)-len,L"ProgramsMenu.Items=\n");
 
 			menuText=buf;

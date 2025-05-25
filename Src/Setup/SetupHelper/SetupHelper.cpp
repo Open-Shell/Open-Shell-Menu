@@ -1,9 +1,12 @@
 // Classic Shell (c) 2009-2017, Ivo Beltchev
-// Open-Shell (c) 2017-2018, The Open-Shell Team
+// Open-Shell (c) 2017-2024, The Open-Shell Team
 // Confidential information of Ivo Beltchev. Not for disclosure or distribution without prior written consent from the author
 
 #define STRICT_TYPED_ITEMIDS
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS	// some CString constructors will be explicit
+#define VC_EXTRALEAN
+#define NOMINMAX
+#define _ATL_ALL_WARNINGS
 #include <windows.h>
 #include <atlstr.h>
 #include "ResourceHelper.h"
