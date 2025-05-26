@@ -14,123 +14,123 @@
 		<param name="ImageNumber" value="11">
 		</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="Open-Shell Menu">
+		<param name="Name" value="Open-Shell 菜单">
 		<param name="Local" value="StartMenu.html">
 		<param name="ImageNumber" value="1">
 		</OBJECT>
 	<UL>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Styles">
+			<param name="Name" value="样式">
 			<param name="Local" value="StartMenu.html#styles">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Operation">
+			<param name="Name" value="操作">
 			<param name="Local" value="StartMenu.html#operation">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Settings">
+			<param name="Name" value="设置">
 			<param name="Local" value="StartMenu.html#settings">
 			<param name="URL" value="StartMenu.html#settings">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Administrative Settings">
+			<param name="Name" value="管理设置">
 			<param name="Local" value="StartMenu.html#admin">
 			<param name="URL" value="StartMenu.html#admin">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="More About Skins">
+			<param name="Name" value="更多关于皮肤">
 			<param name="Local" value="StartMenu.html#skins">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Search">
+			<param name="Name" value="搜索">
 			<param name="Local" value="StartMenu.html#search">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Custom Start Button">
+			<param name="Name" value="自定义 [开始] 按钮">
 			<param name="Local" value="StartMenu.html#button">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Localization">
+			<param name="Name" value="本地化">
 			<param name="Local" value="StartMenu.html#localization">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Command Line">
+			<param name="Name" value="命令行">
 			<param name="Local" value="StartMenu.html#command_line">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Accessibility">
+			<param name="Name" value="辅助功能">
 			<param name="Local" value="StartMenu.html#accessibility">
 			</OBJECT>
 	</UL>
 	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="Classic Explorer">
+		<param name="Name" value="经典 Explorer">
 		<param name="Local" value="ClassicExplorer.html">
 		<param name="ImageNumber" value="1">
 		</OBJECT>
 	<UL>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="New Copy UI">
+			<param name="Name" value="新复制界面">
 			<param name="Local" value="ClassicExplorer.html#copy">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Alt+Enter in the folder panel">
+			<param name="Name" value="在文件夹面板中按 Alt+Enter 键">
 			<param name="Local" value="ClassicExplorer.html#alt_enter">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Toolbar for Windows Explorer">
+			<param name="Name" value="Windows 资源管理器工具栏">
 			<param name="Local" value="ClassicExplorer.html#toolbar">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Status bar">
+			<param name="Name" value="状态栏">
 			<param name="Local" value="ClassicExplorer.html#statusbar">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Settings">
+			<param name="Name" value="设置">
 			<param name="Local" value="ClassicExplorer.html#settings">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Examples for Custom Commands">
+			<param name="Name" value="自定义命令示例">
 			<param name="Local" value="ClassicExplorer.html#examples">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Administrative Settings">
+			<param name="Name" value="管理设置">
 			<param name="Local" value="ClassicExplorer.html#admin">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Dependencies on Windows settings">
+			<param name="Name" value="Windows 设置的依赖性">
 			<param name="Local" value="ClassicExplorer.html#dependencies">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Localization">
+			<param name="Name" value="本地化">
 			<param name="Local" value="ClassicExplorer.html#localization">
 			</OBJECT>
 	</UL>
 	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="Classic IE">
+		<param name="Name" value="经典 IE">
 		<param name="Local" value="ClassicIE.html">
 		<param name="ImageNumber" value="1">
 		</OBJECT>
 	<UL>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Installation">
+			<param name="Name" value="安装">
 			<param name="Local" value="ClassicIE.html#install">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Settings">
+			<param name="Name" value="设置">
 			<param name="Local" value="ClassicIE.html#settings">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Administrative Settings">
+			<param name="Name" value="管理设置">
 			<param name="Local" value="ClassicIE.html#admin">
 			</OBJECT>
 	</UL>
 	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="License Agreement">
+		<param name="Name" value="许可条款">
 		<param name="Local" value="License.html">
 		<param name="ImageNumber" value="11">
 		</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="Useful Links">
+		<param name="Name" value="有用连接">
 		<param name="Local" value="Links.html">
 		<param name="ImageNumber" value="13">
 		</OBJECT>
