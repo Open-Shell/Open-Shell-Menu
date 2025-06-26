@@ -823,7 +823,7 @@ void CMenuContainer::AddFirstFolder( IShellItem *pFolder, std::vector<MenuItem> 
 			bool bLibrary=_wcsicmp(PathFindExtension(pName),L".library-ms")==0;
 			bool bStartScreen=(
 #ifndef STARTSCREEN_WIN7
-				GetWinVersion()>=WIN_VER_WIN8 &&
+				GetWinVersion()>=_WIN32_WINNT_WIN8 &&
 #endif
 				wcscmp(pName,STARTSCREEN_COMMAND)==0);
 			const wchar_t *pStr=pName;
@@ -831,7 +831,7 @@ void CMenuContainer::AddFirstFolder( IShellItem *pFolder, std::vector<MenuItem> 
 				item.drive=(char)toupper(pStr[0]);
 			if (bStartScreen)
 			{
-				if (GetWinVersion()>=WIN_VER_WIN10)
+				if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 					item.name=FindTranslation(L"Menu.StartMenu",L"Start Menu");
 				else
 					item.name=FindTranslation(L"Menu.StartScreen",L"Start Screen");
@@ -929,13 +929,13 @@ void CMenuContainer::AddSecondFolder( IShellItem *pFolder, std::vector<MenuItem>
 			bool bLibrary=_wcsicmp(PathFindExtension(pName),L".library-ms")==0;
 			bool bStartScreen=(
 #ifndef STARTSCREEN_WIN7
-				GetWinVersion()>=WIN_VER_WIN8 &&
+				GetWinVersion()>=_WIN32_WINNT_WIN8 &&
 #endif
 				wcscmp(pName,STARTSCREEN_COMMAND)==0);
 			MenuItem item(MENU_NO);
 			if (bStartScreen)
 			{
-				if (GetWinVersion()>=WIN_VER_WIN10)
+				if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 					item.name=FindTranslation(L"Menu.StartMenu",L"Start Menu");
 				else
 					item.name=FindTranslation(L"Menu.StartScreen",L"Start Screen");
@@ -1395,7 +1395,7 @@ void CMenuContainer::AddStandardItems( void )
 					if (shutdown==SHUTDOWN_TYPE_RESTART)
 					{
 						item.name=FindTranslation(L"Menu.Restart",L"&Restart");
-						if (s_bHasUpdates && GetWinVersion()>=WIN_VER_WIN8)
+						if (s_bHasUpdates && GetWinVersion()>=_WIN32_WINNT_WIN8)
 							const_cast<StdMenuItem*>(item.pStdItem)->tip=FindTranslation(L"Menu.RestartUpdate",L"Update and restart");
 						else
 							const_cast<StdMenuItem*>(item.pStdItem)->tip=FindTranslation(L"Menu.RestartTip",L"");
@@ -1440,7 +1440,7 @@ void CMenuContainer::AddStandardItems( void )
 				}
 				else if (s_bHasUpdates && m_bSubMenu && item.id==MENU_SHUTDOWN)
 					item.name=FindTranslation(L"Menu.ShutdownUpdate",L"Update and shut down");
-				else if (s_bHasUpdates && m_bSubMenu && item.id==MENU_RESTART && GetWinVersion()>=WIN_VER_WIN8)
+				else if (s_bHasUpdates && m_bSubMenu && item.id==MENU_RESTART && GetWinVersion()>=_WIN32_WINNT_WIN8)
 					item.name=FindTranslation(L"Menu.RestartUpdate",L"Update and restart");
 				else
 					item.name=pStdItem->label;
@@ -1907,7 +1907,7 @@ void CMenuContainer::GetRecentPrograms( std::vector<MenuItem> &items, int maxCou
 			uaItems.push_back(uaItem);
 		}
 
-		if (GetWinVersion()>=WIN_VER_WIN10 && bShowMetro)
+		if (GetWinVersion()>=_WIN32_WINNT_WIN10 && bShowMetro)
 		{
 			// collect apps with positive rank from regKeyApp
 			for (int idx=0;;idx++)
@@ -2392,7 +2392,7 @@ void CMenuContainer::InitItems( void )
 		}
 	}
 
-	if ((m_Options&CONTAINER_APPS) && GetWinVersion()>=WIN_VER_WIN8)
+	if ((m_Options&CONTAINER_APPS) && GetWinVersion()>=_WIN32_WINNT_WIN8)
 	{
 		std::vector<MetroLink> links;
 		GetMetroLinks(links,true);
@@ -3287,7 +3287,7 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 			{
 				if (item.id==MENU_PROGRAMS)
 				{
-					if (s_bWin7Style && GetWinVersion()>=WIN_VER_WIN8 && GetSettingBool(L"AllProgramsMetro"))
+					if (s_bWin7Style && GetWinVersion()>=_WIN32_WINNT_WIN8 && GetSettingBool(L"AllProgramsMetro"))
 						item.bNew=g_ItemManager.HasNewPrograms(false) || g_ItemManager.HasNewApps(false);
 					else
 						item.bNew=g_ItemManager.HasNewPrograms(false);
@@ -4428,7 +4428,7 @@ LRESULT CMenuContainer::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 		MARGINS margins={-1};
 		DwmExtendFrameIntoClientArea(m_hWnd,&margins);
 	}
-	else if ((opacity==MenuSkin::OPACITY_GLASS || opacity==MenuSkin::OPACITY_FULLGLASS) && GetWinVersion()>=WIN_VER_WIN10)
+	else if ((opacity==MenuSkin::OPACITY_GLASS || opacity==MenuSkin::OPACITY_FULLGLASS) && GetWinVersion()>=_WIN32_WINNT_WIN10)
 	{
 		tSetWindowCompositionAttribute SetWindowCompositionAttribute=(tSetWindowCompositionAttribute)GetProcAddress(GetModuleHandle(L"user32.dll"),"SetWindowCompositionAttribute");
 		if (SetWindowCompositionAttribute)
@@ -5989,7 +5989,7 @@ LRESULT CMenuContainer::OnKeyDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 						ytop-=m_ScrollOffset;
 						ybottom-=m_ScrollOffset;
 					}
-					int d=min(abs(ytop-y0),abs(ybottom-y0));
+					int d=std::min(abs(ytop-y0),abs(ybottom-y0));
 					if (dist>d)
 					{
 						index=i;
@@ -6056,7 +6056,7 @@ LRESULT CMenuContainer::OnKeyDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 								ytop-=m_ScrollOffset;
 								ybottom-=m_ScrollOffset;
 							}
-							int d=min(abs(ytop-y0),abs(ybottom-y0));
+							int d= std::min(abs(ytop-y0),abs(ybottom-y0));
 							if (dist>d)
 							{
 								index=i;
@@ -7374,7 +7374,7 @@ static void NewVersionCallback( VersionData &data )
 static bool CheckForUpdates( void )
 {
 	bool bHasUpdates=false;
-	if (GetWinVersion()<WIN_VER_WIN8)
+	if (GetWinVersion()<_WIN32_WINNT_WIN8)
 	{
 		CRegKey regKey;
 		if (regKey.Open(HKEY_LOCAL_MACHINE,L"Software\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate\\Auto Update\\UAS",KEY_READ)==ERROR_SUCCESS)
@@ -7401,7 +7401,7 @@ static bool CheckForUpdates( void )
 			}
 		}
 	}
-	if (!bHasUpdates && GetWinVersion()>=WIN_VER_WIN8)
+	if (!bHasUpdates && GetWinVersion()>=_WIN32_WINNT_WIN8)
 	{
 		typedef HRESULT (WINAPI *FGetAutoUpdateNotification)(DWORD,DWORD*,DWORD*,DWORD*);
 		HMODULE mod=LoadLibrary(L"wuaext.dll");
@@ -7517,16 +7517,16 @@ POINT CMenuContainer::CalculateCorner( void )
 
 	POINT corner;
 	if (m_Options&CONTAINER_LEFT)
-		corner.x=max(s_MainMenuLimits.left,s_StartRect.left)+margin.left;
+		corner.x= std::max(s_MainMenuLimits.left,s_StartRect.left)+margin.left;
 	else
-		corner.x=min(s_MainMenuLimits.right,s_StartRect.right)+margin.right;
+		corner.x= std::min(s_MainMenuLimits.right,s_StartRect.right)+margin.right;
 
 	if (m_Options&CONTAINER_TOP)
 	{
 		if (s_bBehindTaskbar)
-			corner.y=max(s_MainMenuLimits.top,s_StartRect.top)+margin.top;
+			corner.y= std::max(s_MainMenuLimits.top,s_StartRect.top)+margin.top;
 		else
-			corner.y=max(s_MainMenuLimits.top,s_StartRect.top);
+			corner.y= std::max(s_MainMenuLimits.top,s_StartRect.top);
 	}
 	else
 		corner.y=s_MainMenuLimits.bottom+margin.bottom;
@@ -7645,7 +7645,7 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 	GetTaskbarPosition(s_TaskBar,NULL,&initialMonitor,NULL);
 
 	int dpi=CItemManager::GetDPI(true);
-	if (!CItemManager::GetDPIOverride() && GetWinVersion()>=WIN_VER_WIN81)
+	if (!CItemManager::GetDPIOverride() && GetWinVersion()>=_WIN32_WINNT_WINBLUE)
 	{
 		HMODULE shModule=GetModuleHandle(L"Shcore.dll");
 		if (shModule)
@@ -7704,7 +7704,7 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 	s_bNoCommonFolders=(SHRestricted(REST_NOCOMMONGROUPS)!=0);
 	s_bNoRun=(SHRestricted(REST_NORUN)!=0);
 	s_bNoClose=(SHRestricted(REST_NOCLOSE)!=0);
-	s_bHasTouch=GetWinVersion()>=WIN_VER_WIN8 && GetSettingBool(L"EnableTouch") && (GetSystemMetrics(SM_DIGITIZER)&NID_INTEGRATED_TOUCH)!=0;
+	s_bHasTouch=GetWinVersion()>=_WIN32_WINNT_WIN8 && GetSettingBool(L"EnableTouch") && (GetSystemMetrics(SM_DIGITIZER)&NID_INTEGRATED_TOUCH)!=0;
 	s_HasMoreResults=-1;
 	s_bDisableHover=false;
 	s_bDragClosed=false;
@@ -7725,7 +7725,9 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 	}
 
 	// the taskbar on Windows 7 (and most likely later versions) is always on top even though it doesn't have the ABS_ALWAYSONTOP flag.
-	if (GetWinVersion()>=WIN_VER_WIN7)
+#if _WIN32_WINNT < _WIN32_WINNT_WIN7
+	if (GetWinVersion()>=_WIN32_WINNT_WIN7)
+#endif
 	{
 		// also check the WS_EX_TOPMOST style - maybe some tool like DisableTaskbarOnTop is messing with it
 		if (::GetWindowLong(s_TaskBar,GWL_EXSTYLE)&WS_EX_TOPMOST)
@@ -7755,7 +7757,7 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 			s_bActiveDirectory=0;
 	}
 
-	if (GetWinVersion()>=WIN_VER_WIN8 && !s_pFrameworkInputPane && !(GetSettingInt(L"CompatibilityFixes")&COMPATIBILITY_NO_TOUCH_KBD))
+	if (GetWinVersion()>=_WIN32_WINNT_WIN8 && !s_pFrameworkInputPane && !(GetSettingInt(L"CompatibilityFixes")&COMPATIBILITY_NO_TOUCH_KBD))
 	{
 		s_pFrameworkInputPane.CoCreateInstance(CLSID_FrameworkInputPane);
 	}
@@ -7875,7 +7877,7 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 				g_StdOptions[i].options=(s_bHasUpdates && !s_bNoClose && (!bRemote || GetSettingBool(L"RemoteShutdown")))?MENU_ENABLED|MENU_EXPANDED:0;
 				break;
 			case MENU_RESTART_NOUPDATE:
-				g_StdOptions[i].options=(s_bHasUpdates && GetWinVersion()>=WIN_VER_WIN8 && !s_bNoClose && (!bRemote || GetSettingBool(L"RemoteShutdown")))?MENU_ENABLED|MENU_EXPANDED:0;
+				g_StdOptions[i].options=(s_bHasUpdates && GetWinVersion()>=_WIN32_WINNT_WIN8 && !s_bNoClose && (!bRemote || GetSettingBool(L"RemoteShutdown")))?MENU_ENABLED|MENU_EXPANDED:0;
 				break;
 			case MENU_SHUTDOWN_BOX:
 				g_StdOptions[i].options=0;
@@ -8044,10 +8046,10 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 				}
 				break;
 			case MENU_APPS:
-				g_StdOptions[i].options=(s_bWin7Style || (GetWinVersion()>=WIN_VER_WIN8 && GetSettingBool(L"ShowAppsMenu")))?MENU_ENABLED|MENU_EXPANDED:0;
+				g_StdOptions[i].options=(s_bWin7Style || (GetWinVersion()>=_WIN32_WINNT_WIN8 && GetSettingBool(L"ShowAppsMenu")))?MENU_ENABLED|MENU_EXPANDED:0;
 				break;
 			case MENU_PCSETTINGS:
-				g_StdOptions[i].options=(GetWinVersion()>=WIN_VER_WIN8)?MENU_ENABLED|MENU_EXPANDED:0;
+				g_StdOptions[i].options=(GetWinVersion()>=_WIN32_WINNT_WIN8)?MENU_ENABLED|MENU_EXPANDED:0;
 				break;
 		}
 		LOG_MENU(LOG_OPEN,L"ItemOptions[%d]=%d",i,g_StdOptions[i].options);
@@ -8085,7 +8087,7 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 		SHParseDisplayName(path,NULL,&path1,0,NULL);
 	}
 #ifndef STARTSCREEN_WIN7
-	if (GetWinVersion()>=WIN_VER_WIN8)
+	if (GetWinVersion()>=_WIN32_WINNT_WIN8)
 #endif
 	{
 		bool bPinned=GetSettingInt(L"PinnedPrograms")==PINNED_PROGRAMS_PINNED;

@@ -152,7 +152,9 @@ static LRESULT CALLBACK SubclassCaptionProc( HWND hWnd, UINT uMsg, WPARAM wParam
 			{
 				// exclude the caption buttons
 				rc.right-=g_SysButtonSize.cx+5;
-				if (GetWinVersion()==WIN_VER_VISTA) rc.bottom++;
+#if _WIN32_WINNT > _WIN32_WINNT_VISTA
+				if (GetWinVersion()==_WIN32_WINNT_VISTA) rc.bottom++;
+#endif
 				if (!bMaximized)
 				{
 					rc.left+=g_CustomCaption[0].leftPadding;
@@ -176,10 +178,10 @@ static LRESULT CALLBACK SubclassCaptionProc( HWND hWnd, UINT uMsg, WPARAM wParam
 						rc.left+=iconSize;
 					}
 					rc.left+=g_CustomCaption[1].iconPadding;
-					if (GetWinVersion()>=WIN_VER_WIN10)
+					if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 						rc.bottom++;
 				}
-				if (GetWinVersion()<WIN_VER_WIN10)
+				if (GetWinVersion()<_WIN32_WINNT_WIN10)
 					rc.top=rc.bottom-g_SysButtonSize.cy;
 				HFONT font0=(HFONT)SelectObject(hdcPaint,font);
 				RECT rcText={0,0,0,0};

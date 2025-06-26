@@ -38,7 +38,7 @@ STDMETHODIMP CClassicCopyExt::InvokeCommand( LPCMINVOKECOMMANDINFO pCmdInfo )
 
 HRESULT WINAPI CClassicCopyExt::UpdateRegistry( BOOL bRegister )
 {
-	if (GetWinVersion()>=WIN_VER_WIN8)
+	if (GetWinVersion()>=_WIN32_WINNT_WIN8)
 		return S_OK;
 	return _AtlModule.UpdateRegistryFromResource(IDR_CLASSICCOPYEXT,bRegister);
 }

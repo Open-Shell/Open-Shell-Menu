@@ -156,7 +156,7 @@ LRESULT CALLBACK CExplorerBHO::SubclassTreeProc( HWND hWnd, UINT uMsg, WPARAM wP
 			indent=0;
 
 		int treeStyle=GetSettingInt(L"TreeStyle");
-		if (treeStyle==STYLE_CLASSIC && GetWinVersion()>=WIN_VER_WIN10)
+		if (treeStyle==STYLE_CLASSIC && GetWinVersion()>= _WIN32_WINNT_WIN10)
 			treeStyle=STYLE_VISTA;
 		DWORD style=GetWindowLong(hWnd,GWL_STYLE);
 		if (treeStyle!=STYLE_VISTA)
@@ -209,7 +209,7 @@ LRESULT CALLBACK CExplorerBHO::SubclassTreeProc( HWND hWnd, UINT uMsg, WPARAM wP
 		if (GetSettingBool(L"FullIndent"))
 			indent=0;
 
-		if (GetSettingInt(L"TreeStyle")==STYLE_CLASSIC && GetWinVersion()<WIN_VER_WIN10)
+		if (GetSettingInt(L"TreeStyle")==STYLE_CLASSIC && GetWinVersion()< _WIN32_WINNT_WIN10)
 		{
 			HIMAGELIST images=TreeView_GetImageList(hWnd,TVSIL_NORMAL);
 			int cx, cy;
@@ -1109,7 +1109,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBHO::SetSite( IUnknown *pUnkSite )
 					SetProp(m_TopWindow,g_LoadedSettingsAtom,(HANDLE)1);
 					LoadSettings();
 				}
-				bool bWin8=(GetWinVersion()>=WIN_VER_WIN8);
+				bool bWin8=(GetWinVersion()>= _WIN32_WINNT_WIN8);
 
 				m_UpButtonIndex=bWin8?0:GetSettingInt(L"ShowUpButton");
 				bool bShowCaption=!bWin8 && GetSettingBool(L"ShowCaption");

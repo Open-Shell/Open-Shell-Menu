@@ -4,6 +4,10 @@
 
 #define STRICT_TYPED_ITEMIDS
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS	// some CString constructors will be explicit
+#define WIN32_LEAN_AND_MEAN
+#define VC_EXTRALEAN
+#define NOMINMAX
+#define _ATL_ALL_WARNINGS
 #include <windows.h>
 #include <commctrl.h>
 #include <shlwapi.h>

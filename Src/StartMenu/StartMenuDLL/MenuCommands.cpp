@@ -1102,7 +1102,7 @@ static bool ExecuteSysCommand( TMenuID menuCommand )
 			return true;
 
 		case MENU_RUN: // show the Run box
-			if (GetWinVersion()>=WIN_VER_WIN10)
+			if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 			{
 				ShellExecute(NULL,NULL,L"shell:::{2559a1f3-21d7-11d4-bdaf-00c04f60b9f0}",NULL,NULL,SW_SHOWNORMAL);
 			}
@@ -1136,7 +1136,7 @@ static bool ExecuteSysCommand( TMenuID menuCommand )
 			return true;
 
 		case MENU_SWITCHUSER: // switch_user
-			if (GetWinVersion()>=WIN_VER_WIN10)
+			if (GetWinVersion()>=_WIN32_WINNT_WIN10)
 			{
 				// on Windows 10 this value must be set to 1. For some reason non-admin code has permissions to do so
 				CRegKey regSwitch;
@@ -1202,7 +1202,7 @@ static bool ExecuteSysCommand( TMenuID menuCommand )
 			return true;
 
 		case MENU_PCSETTINGS:
-			if (GetWinVersion()>=WIN_VER_WIN8)
+			if (GetWinVersion()>=_WIN32_WINNT_WIN8)
 			{
 				ShellExecute(NULL,NULL,L"shell:appsfolder\\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel",NULL,NULL,SW_SHOWNORMAL);
 			}
@@ -1494,7 +1494,7 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 		return;
 	}
 
-	bool bKeepOpen=(type==ACTIVATE_EXECUTE) && bShift && !bCtrl && (!item.bMetroLink || GetWinVersion()>=WIN_VER_WIN10);
+	bool bKeepOpen=(type==ACTIVATE_EXECUTE) && bShift && !bCtrl && (!item.bMetroLink || GetWinVersion()>=_WIN32_WINNT_WIN10);
 	bool bTrackRecent=false;
 	if (s_RecentPrograms!=RECENT_PROGRAMS_NONE)
 	{
@@ -1717,9 +1717,9 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 					menuCommand=MENU_LOGOFF_CONFIRM;
 				break;
 			case MENU_RESTART:
-				if (GetWinVersion()>=WIN_VER_WIN8 && bShift)
+				if (GetWinVersion()>=_WIN32_WINNT_WIN8 && bShift)
 					menuCommand=MENU_RESTART_ADVANCED;
-				else if (s_bHasUpdates && GetWinVersion()>=WIN_VER_WIN8)
+				else if (s_bHasUpdates && GetWinVersion()>=_WIN32_WINNT_WIN8)
 					menuCommand=MENU_RESTART_UPDATE;
 				else
 					menuCommand=MENU_RESTART_NOUPDATE;
@@ -1727,7 +1727,7 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 			case MENU_SHUTDOWN:
 				if (s_bHasUpdates)
 					menuCommand=MENU_SHUTDOWN_UPDATE;
-				else if (GetWinVersion()>=WIN_VER_WIN8 && !bShift && GetSettingBool(L"HybridShutdown"))
+				else if (GetWinVersion()>=_WIN32_WINNT_WIN8 && !bShift && GetSettingBool(L"HybridShutdown"))
 					menuCommand=MENU_SHUTDOWN_HYBRID;
 				else
 					menuCommand=MENU_SHUTDOWN_NOUPDATE;
@@ -1955,7 +1955,7 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 				InsertMenu(menu,0,MF_BYPOSITION|MF_STRING,CMD_OPEN,FindTranslation(L"Menu.Open",L"&Open"));
 				SetMenuDefaultItem(menu,0,TRUE);
 				insertBefore++;
-				if (GetWinVersion()<WIN_VER_WIN10 && bUninstallPolicy && !bHasUninstall && !IsProtectedApp(_appId))
+				if (GetWinVersion()<_WIN32_WINNT_WIN10 && bUninstallPolicy && !bHasUninstall && !IsProtectedApp(_appId))
 				{
 					InsertMenu(menu,insertBefore,MF_BYPOSITION|MF_STRING,CMD_UNINSTALL,FindTranslation(L"Menu.Uninstall",L"&Uninstall"));
 					insertBefore++;
@@ -2000,7 +2000,7 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 			InsertMenu(menu,0,MF_BYPOSITION|MF_STRING,CMD_OPEN,FindTranslation(L"Menu.Open",L"&Open"));
 			SetMenuDefaultItem(menu,0,TRUE);
 			insertBefore++;
-			if (GetWinVersion()<WIN_VER_WIN10 && bUninstallPolicy && !IsProtectedApp(_appId))
+			if (GetWinVersion()<_WIN32_WINNT_WIN10 && bUninstallPolicy && !IsProtectedApp(_appId))
 			{
 				InsertMenu(menu,insertBefore,MF_BYPOSITION|MF_STRING,CMD_UNINSTALL,FindTranslation(L"Menu.Uninstall",L"&Uninstall"));
 				insertBefore++;
@@ -2143,7 +2143,7 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 				InsertMenu(menu,0,MF_BYPOSITION|MF_STRING,CMD_OPEN,FindTranslation(L"Menu.Open",L"&Open"));
 				SetMenuDefaultItem(menu,0,TRUE);
 				insertBefore++;
-				if (GetWinVersion()<WIN_VER_WIN10 && !bHasUninstall && bUninstallPolicy && !IsProtectedApp(_appId))
+				if (GetWinVersion()<_WIN32_WINNT_WIN10 && !bHasUninstall && bUninstallPolicy && !IsProtectedApp(_appId))
 				{
 					InsertMenu(menu,insertBefore,MF_BYPOSITION|MF_STRING,CMD_UNINSTALL,FindTranslation(L"Menu.Uninstall",L"&Uninstall"));
 					insertBefore++;
@@ -2382,7 +2382,7 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 		if (item.id==MENU_PROGRAMS)
 		{
 			bool bNew;
-			if (s_bWin7Style && GetWinVersion()>=WIN_VER_WIN8 && GetSettingBool(L"AllProgramsMetro"))
+			if (s_bWin7Style && GetWinVersion()>=_WIN32_WINNT_WIN8 && GetSettingBool(L"AllProgramsMetro"))
 				bNew=g_ItemManager.HasNewPrograms(true) || g_ItemManager.HasNewApps(true);
 			else
 				bNew=g_ItemManager.HasNewPrograms(true);
@@ -2554,7 +2554,7 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 			g_ItemManager.RemoveNewItems(false,true);
 		else if (item.id==MENU_PROGRAMS)
 		{
-			g_ItemManager.RemoveNewItems(true,s_bWin7Style && GetWinVersion()>=WIN_VER_WIN8 && GetSettingBool(L"AllProgramsMetro"));
+			g_ItemManager.RemoveNewItems(true,s_bWin7Style && GetWinVersion()>=_WIN32_WINNT_WIN8 && GetSettingBool(L"AllProgramsMetro"));
 			if (m_pProgramsTree)
 				m_pProgramsTree->ClearAllNew();
 		}
@@ -2932,7 +2932,7 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 
 			if (bRenamed)
 			{
-				if (GetWinVersion()>=WIN_VER_WIN8)
+				if (GetWinVersion()>=_WIN32_WINNT_WIN8)
 				{
 					SetForegroundWindow(m_hWnd);
 					SetActiveWindow();
@@ -2969,7 +2969,7 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 						}
 
 						// win7: if this is a pinned link with implicit app id, make it explicit - otherwise the app resolver will generate a new one
-						if (!m_bSubMenu && item.id==MENU_NO && GetWinVersion()<=WIN_VER_WIN7 && !_appId.IsEmpty() && _bIsLink && !_bExplicitAppId && SUCCEEDED(pFolder->GetDisplayNameOf(newPidl,SHGDN_FORPARSING,&str)))
+						if (!m_bSubMenu && item.id==MENU_NO && GetWinVersion()<=_WIN32_WINNT_WIN7 && !_appId.IsEmpty() && _bIsLink && !_bExplicitAppId && SUCCEEDED(pFolder->GetDisplayNameOf(newPidl,SHGDN_FORPARSING,&str)))
 						{
 							CComString pPath;
 							StrRetToStr(&str,newPidl,&pPath);

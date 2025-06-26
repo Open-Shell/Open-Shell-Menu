@@ -381,7 +381,7 @@ LRESULT CStartButton::OnThemeChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, B
 	if (m_Theme) CloseThemeData(m_Theme);
 	m_Theme=NULL;
 	HIGHCONTRAST contrast={sizeof(contrast)};
-	if (GetWinVersion()>=WIN_VER_WIN8 && SystemParametersInfo(SPI_GETHIGHCONTRAST,sizeof(contrast),&contrast,0) && (contrast.dwFlags&HCF_HIGHCONTRASTON))
+	if (GetWinVersion()>=_WIN32_WINNT_WIN8 && SystemParametersInfo(SPI_GETHIGHCONTRAST,sizeof(contrast),&contrast,0) && (contrast.dwFlags&HCF_HIGHCONTRASTON))
 	{
 		// only use themes on Win8 with high contrast
 		m_Theme=OpenThemeData(m_hWnd,L"button");
@@ -429,7 +429,7 @@ TStartButtonType GetStartButtonType( void )
 	if (bDef)
 	{
 		bool bClassic;
-		if (GetWinVersion()<WIN_VER_WIN8)
+		if (GetWinVersion()<_WIN32_WINNT_WIN8)
 			bClassic=!IsAppThemed();
 		else
 		{
