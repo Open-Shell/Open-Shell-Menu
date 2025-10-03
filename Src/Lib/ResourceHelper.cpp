@@ -384,14 +384,14 @@ HICON CreateDisabledIcon( HICON hIcon, int iconSize )
 }
 
 // Loads an image file into a bitmap and optionally resizes it
-HBITMAP LoadImageFile( const wchar_t *path, const SIZE *pSize, bool bUseAlpha, bool bPremultiply, std::vector<unsigned int> *pButtonAnim )
+HBITMAP LoadImageFile( const wchar_t *path, const SIZE *pSize, bool bUseAlpha, bool bPremultiply, std::vector<unsigned int> *pButtonAnim, UINT dpi )
 {
 	HBITMAP srcBmp=NULL;
 	if (_wcsicmp(PathFindExtension(path),L".bmp")==0)
 	{
 		srcBmp=(HBITMAP)LoadImage(NULL,path,IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION|LR_LOADFROMFILE);
 	}
-	if (srcBmp && !pSize)
+	if (srcBmp && !pSize && !dpi)
 		return srcBmp;
 	CComPtr<IWICImagingFactory> pFactory;
 	if (FAILED(pFactory.CoCreateInstance(CLSID_WICImagingFactory)))
@@ -481,6 +481,12 @@ HBITMAP LoadImageFile( const wchar_t *path, const SIZE *pSize, bool bUseAlpha, b
 				frameHeightD=pSize->cy;
 			else
 				frameHeightD=frameWidthD*frameHeightS/frameWidthS;
+		}
+
+		if (dpi)
+		{
+			frameWidthD=ScaleForDpi(dpi,frameWidthD);
+			frameHeightD=ScaleForDpi(dpi,frameHeightD);
 		}
 	}
 
@@ -946,7 +952,12 @@ UINT GetDpi(HWND hwnd)
 	return dpi;
 }
 
+int ScaleForDpi(UINT dpi, int value)
+{
+	return MulDiv(value, dpi, USER_DEFAULT_SCREEN_DPI);
+}
+
 int ScaleForDpi(HWND hwnd, int value)
 {
-	return MulDiv(value, GetDpi(hwnd), USER_DEFAULT_SCREEN_DPI);
+	return ScaleForDpi(GetDpi(hwnd), value);
 }
