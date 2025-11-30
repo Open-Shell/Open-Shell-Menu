@@ -21,5 +21,5 @@ deploy:
   on:
     APPVEYOR_ACCOUNT_NAME: passionate-coder
   auth_token:
-    secure: SOu6Y71k0oIxXJR35x+7ZTrqDa3HqUM4kLNJc+DbohPz9zhVHh9O8QYwmI7LI0qslug5L11fo9pZVfVgZttw4eBgooHaX9TNBTTA6sJItkXqMX+M6mKAG7tbI/O3Eg0v
+    secure: SOu6Y71k0oIxXJR35x+7ZeU/+WRW8kaGnCWcbR3OVOd8HeCJwB1Tw3hUJa5EveLGKaGoMKGqAh01Pwc8tWX4xmphZsYYUr09IVjA0+rqgN5VT87CXD6OQxUxBJ7g+9IN
   prerelease: true
