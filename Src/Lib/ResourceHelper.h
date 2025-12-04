@@ -35,7 +35,7 @@ HICON ShExtractIcon( const char *path, int index, int iconSize );
 HBITMAP BitmapFromIcon( HICON hIcon, int iconSize, unsigned int **pBits, bool bDestroyIcon );
 
 // Loads an image file into a bitmap and optionally resizes it
-HBITMAP LoadImageFile( const wchar_t *path, const SIZE *pSize, bool bUseAlpha, bool bPremultiply, std::vector<unsigned int> *pButtonAnim );
+HBITMAP LoadImageFile( const wchar_t *path, const SIZE *pSize, bool bUseAlpha, bool bPremultiply, std::vector<unsigned int> *pButtonAnim, UINT dpi=0 );
 
 // Loads a bitmap from a IMAGE resource
 HBITMAP LoadImageResource( HMODULE hModule, const wchar_t *name, bool bTopDown, bool bPremultiply );
@@ -88,6 +88,8 @@ HFONT CreateFontSetting( const wchar_t *fontStr, int dpi );
 // Return DPI of given window (or system DPI on older systems)
 UINT GetDpi(HWND hwnd = nullptr);
 
+// Scale given value according to given DPI
+int ScaleForDpi(UINT dpi, int value);
 // Scale given value according to DPI of window
 int ScaleForDpi(HWND hwnd, int value);
 

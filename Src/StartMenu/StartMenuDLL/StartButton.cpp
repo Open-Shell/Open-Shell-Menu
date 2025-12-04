@@ -526,16 +526,16 @@ void CStartButton::LoadBitmap( void )
 	}
 	else
 	{
+		int dpi=GetDpi(GetParent());
 		bool bResource=false;
 		std::vector<unsigned int> buttonAnim;
 		if (*path)
 		{
-			m_Bitmap=LoadImageFile(path,&size,true,true,&buttonAnim);
+			m_Bitmap=LoadImageFile(path,&size,true,true,&buttonAnim,dpi);
 		}
 		if (!m_Bitmap)
 		{
 			int id;
-			int dpi=GetDpi(GetParent());
 			if (dpi<120)
 				id=IDB_BUTTON96;
 			else if (dpi<144)
