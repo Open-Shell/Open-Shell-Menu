@@ -1872,7 +1872,7 @@ static LRESULT CALLBACK SubclassTaskBarProc( HWND hWnd, UINT uMsg, WPARAM wParam
 		ComputeTaskbarColors(data);
 		WINCOMPATTRDATA attrData={0x13,&data,sizeof(data)};
 		SetWindowCompositionAttribute(hWnd,&attrData);
-		if(!IsAppThemed()) {UpdateTaskBars(TASKBAR_UPDATE_TEXTURE);}
+		UpdateTaskBars(TASKBAR_UPDATE_TEXTURE);
 		return res;
 	}
 	if ((uMsg==WM_DWMCOLORIZATIONCOLORCHANGED || uMsg==WM_SETTINGCHANGE) && taskBar && taskBar->bCustomLook && SetWindowCompositionAttribute && GetWinVersion()<WIN_VER_WIN10)
@@ -2386,7 +2386,16 @@ void UpdateTaskBars( TUpdateTaskbar update )
 			}
 			else
 			{
-				color=GetSysColor(COLOR_BTNFACE);
+				if (bDefColor && GetWinVersion()>WIN_VER_WIN7)
+				{
+					if (IsAppThemed()) 
+					{
+						color=GetSystemGlassColor8();
+						color=((color&0xFF)<<16)|(color&0xFF00)|((color>>16)&0xFF);
+					} else {
+						color=GetSysColor(COLOR_BTNFACE);
+					}
+				}
 				BITMAPINFO bi={0};
 				bi.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
 				bi.bmiHeader.biWidth=bi.bmiHeader.biHeight=32;
