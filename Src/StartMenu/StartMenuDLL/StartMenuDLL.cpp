@@ -1624,7 +1624,7 @@ static void ComputeTaskbarColors( int *data )
 {
 	bool bDefLook;
 	int look=GetSettingInt(L"TaskbarLook",bDefLook);
-	if (GetWinVersion()<WIN_VER_WIN10 || look==TASKBAR_AEROGLASS || (look==TASKBAR_TRANSPARENT && g_TaskbarTexture))
+	if (GetWinVersion()<WIN_VER_WIN10 || !IsAppThemed() || look==TASKBAR_AEROGLASS || (look==TASKBAR_TRANSPARENT && g_TaskbarTexture))
 	{
 		memset(data,0,16);
 	}
