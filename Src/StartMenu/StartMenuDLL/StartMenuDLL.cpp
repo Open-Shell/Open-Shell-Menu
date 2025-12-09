@@ -2384,7 +2384,7 @@ void UpdateTaskBars( TUpdateTaskbar update )
 					}
 				}
 			}
-			else
+			else if ((GetWinVersion()<WIN_VER_WIN10 && (!bDefColor || !bDefOpacity)) || !IsAppThemed())
 			{
 				if (bDefColor && GetWinVersion()>WIN_VER_WIN7)
 				{
@@ -2392,7 +2392,9 @@ void UpdateTaskBars( TUpdateTaskbar update )
 					{
 						color=GetSystemGlassColor8();
 						color=((color&0xFF)<<16)|(color&0xFF00)|((color>>16)&0xFF);
-					} else {
+					}
+					else
+					{
 						color=GetSysColor(COLOR_BTNFACE);
 					}
 				}
