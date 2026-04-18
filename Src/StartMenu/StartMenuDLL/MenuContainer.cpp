@@ -6366,7 +6366,10 @@ LRESULT CMenuContainer::OnRefresh( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 					}
 				}
 				else if (m_Items[m_OriginalCount].id==MENU_SEARCH_CATEGORY)
-					hotItem=m_OriginalCount+1;
+				{
+					if (!bSearching || !s_SearchResults.programs.empty())
+						hotItem=m_OriginalCount+1;
+				}
 			}
 			else
 				hotItem=-1;
