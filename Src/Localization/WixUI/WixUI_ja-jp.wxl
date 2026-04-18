@@ -31,7 +31,7 @@
     <String Id="Advanced_Font_Bigger_Size" Overridable="yes">12</String>
     <String Id="Advanced_Font_Title_Size" Overridable="yes">9</String>
     <String Id="Advanced_Font_Emphasized_Size" Overridable="yes">8</String>
-    <String Id="Advanced_Font_FaceName" Overridable="yes">"MS UI Gothic", "MS PGothic", "ＭＳ Ｐゴシック", "MS Gothic", "ＭＳ ゴシック", Osaka, Tahoma</String>
+    <String Id="Advanced_Font_FaceName" Overridable="yes">"MS UI Gothic", "MS PGothic", "ＭＳ Ｐゴシック", "MS Gothic", "ＭＳ ゴシック", Yu Gothic UI, Tahoma</String>
 
     <String Id="BrowseDlg_Title" Overridable="yes">[ProductName] セットアップ</String>
     <String Id="BrowseDlgComboLabel" Overridable="yes">場所(&amp;L):</String>
