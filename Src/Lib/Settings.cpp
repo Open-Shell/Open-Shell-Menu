@@ -1670,7 +1670,7 @@ LRESULT CSettingsDlg::OnBackup( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 		ofn.lpstrTitle=title;
 		ofn.lpstrDefExt=L".xml";
 		ofn.Flags=OFN_DONTADDTORECENT|OFN_ENABLESIZING|OFN_EXPLORER|OFN_PATHMUSTEXIST|OFN_OVERWRITEPROMPT|OFN_HIDEREADONLY|OFN_NOCHANGEDIR;
-		if (GetSaveFileName(&ofn))
+		if (GetSaveFileNameSafe(&ofn))
 		{
 			CString err=g_SettingsManager.SaveSettingsXml(path);
 			if (!err.IsEmpty())
@@ -1699,7 +1699,7 @@ LRESULT CSettingsDlg::OnBackup( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 		CString title=LoadStringEx(IDS_XML_TITLE_LOAD);
 		ofn.lpstrTitle=title;
 		ofn.Flags=OFN_DONTADDTORECENT|OFN_ENABLESIZING|OFN_EXPLORER|OFN_FILEMUSTEXIST|OFN_HIDEREADONLY|OFN_NOCHANGEDIR;
-		if (GetOpenFileName(&ofn))
+		if (GetOpenFileNameSafe(&ofn))
 		{
 			SetCurTab(m_Index,true); // reload tab once to force-close any active edit boxes
 			CString error=g_SettingsManager.LoadSettingsXml(path);

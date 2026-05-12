@@ -395,3 +395,7 @@ DWORD BgrToRgb(DWORD val);
 
 // parse color from hexadecimal string
 DWORD ParseColor(const wchar_t* str);
+
+// safe versions of GetOpenFileName/GetSaveFileName (run API on a separate STA thread and pump messages on the caller)
+BOOL GetOpenFileNameSafe(OPENFILENAME* pOfn);
+BOOL GetSaveFileNameSafe(OPENFILENAME* pOfn);

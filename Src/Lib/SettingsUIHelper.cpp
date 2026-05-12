@@ -15,6 +15,7 @@
 #include <uxtheme.h>
 #include <map>
 #include <algorithm>
+#include <thread>
 
 const KNOWNFOLDERID FOLDERID_DesktopRoot={'DESK', 'TO', 'P', {'D', 'E', 'S', 'K', 'T', 'O', 'P', 0x00}};
 
@@ -1193,7 +1194,7 @@ bool BrowseCommandHelper( HWND parent, wchar_t *text )
 	ofn.lpstrFile=text;
 	ofn.nMaxFile=_MAX_PATH;
 	ofn.Flags=OFN_DONTADDTORECENT|OFN_ENABLESIZING|OFN_EXPLORER|OFN_FILEMUSTEXIST|OFN_HIDEREADONLY|OFN_NOCHANGEDIR|OFN_NODEREFERENCELINKS;
-	if (GetOpenFileName(&ofn))
+	if (GetOpenFileNameSafe(&ofn))
 	{
 		wchar_t buf[_MAX_PATH];
 		UnExpandEnvStrings(text,buf,_countof(buf));
@@ -1216,7 +1217,8 @@ bool BrowseCommandHelper( HWND parent, wchar_t *text )
 	return false;
 }
 
-bool BrowseLinkHelper( HWND parent, wchar_t *text, bool bFoldersOnly )
+// Internal implementation that must be run on an STA thread with COM initialized.
+static bool BrowseLinkHelperImpl( HWND parent, wchar_t *text, bool bFoldersOnly )
 {
 	DoEnvironmentSubst(text,_MAX_PATH);
 
@@ -1274,6 +1276,41 @@ bool BrowseLinkHelper( HWND parent, wchar_t *text, bool bFoldersOnly )
 	}
 
 	return pResult!=NULL;
+}
+
+// Run IFileOpenDialog on a separate STA thread and pump messages on the caller while waiting.
+bool BrowseLinkHelper( HWND parent, wchar_t *text, bool bFoldersOnly )
+{
+	bool result = false;
+
+	std::thread worker([&parent, &text, &bFoldersOnly, &result]() mutable {
+		CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+		result = BrowseLinkHelperImpl(parent, text, bFoldersOnly);
+		CoUninitialize();
+	});
+
+	// Pump messages while waiting for the worker (dialog) to finish
+	while (true)
+	{
+		HANDLE hWorker = worker.native_handle();
+		if (MsgWaitForMultipleObjects(1, &hWorker, FALSE, INFINITE, QS_ALLINPUT) == WAIT_OBJECT_0)
+			break;
+
+		MSG msg;
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			if (msg.message == WM_QUIT)
+			{
+				PostQuitMessage((int)msg.wParam);
+				break;
+			}
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+	}
+	worker.join();
+
+	return result;
 }
 
 bool BrowseIconHelper( HWND parent, wchar_t *text )
@@ -2011,7 +2048,7 @@ LRESULT CBrowseForIconDlg::OnBrowse( WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 	CString title=LoadStringEx(IDS_ICON_TITLE);
 	ofn.lpstrTitle=title;
 	ofn.Flags=OFN_DONTADDTORECENT|OFN_ENABLESIZING|OFN_EXPLORER|OFN_FILEMUSTEXIST|OFN_HIDEREADONLY|OFN_NOCHANGEDIR;
-	if (GetOpenFileName(&ofn))
+	if (GetOpenFileNameSafe(&ofn))
 	{
 		wchar_t buf[_MAX_PATH];
 		UnExpandEnvStrings(path,buf,_countof(buf));
@@ -2210,7 +2247,7 @@ bool BrowseForBitmap( HWND hWndParent, wchar_t *path, bool bAllowJpeg )
 	CString title=LoadStringEx(IDS_BMP_TITLE);
 	ofn.lpstrTitle=title;
 	ofn.Flags=OFN_DONTADDTORECENT|OFN_ENABLESIZING|OFN_EXPLORER|OFN_FILEMUSTEXIST|OFN_HIDEREADONLY|OFN_NOCHANGEDIR;
-	if (GetOpenFileName(&ofn))
+	if (GetOpenFileNameSafe(&ofn))
 	{
 		wchar_t buf[_MAX_PATH];
 		UnExpandEnvStrings(path,buf,_countof(buf));
@@ -2242,7 +2279,7 @@ bool BrowseForSound( HWND hWndParent, wchar_t *path )
 	CString title=LoadStringEx(IDS_WAV_TITLE);
 	ofn.lpstrTitle=title;
 	ofn.Flags=OFN_DONTADDTORECENT|OFN_ENABLESIZING|OFN_EXPLORER|OFN_FILEMUSTEXIST|OFN_HIDEREADONLY|OFN_NOCHANGEDIR;
-	if (GetOpenFileName(&ofn))
+	if (GetOpenFileNameSafe(&ofn))
 	{
 		wchar_t buf[_MAX_PATH];
 		UnExpandEnvStrings(path,buf,_countof(buf));
@@ -3629,4 +3666,50 @@ DWORD ParseColor(const wchar_t* str)
 {
 	wchar_t* end;
 	return wcstoul(str, &end, 16) & 0xFFFFFF;
+}
+
+// Run GetOpenFileName/GetSaveFileName on a separate STA thread and pump messages on the caller
+template <typename auto Fnc>
+static BOOL GetFileNameSafe(OPENFILENAME* pOfn)
+{
+	BOOL result = FALSE;
+
+	std::thread worker([&pOfn, &result]() mutable {
+		CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+		result = Fnc(pOfn);
+		CoUninitialize();
+		});
+
+	// Pump messages while waiting for the worker (dialog) to finish
+	while (true)
+	{
+		HANDLE hWorker = worker.native_handle();
+		if (MsgWaitForMultipleObjects(1, &hWorker, FALSE, INFINITE, QS_ALLINPUT) == WAIT_OBJECT_0)
+			break;
+
+		MSG msg;
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			if (msg.message == WM_QUIT)
+			{
+				PostQuitMessage((int)msg.wParam);
+				break;
+			}
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+	}
+	worker.join();
+
+	return result;
+}
+
+BOOL GetOpenFileNameSafe(OPENFILENAME* pOfn)
+{
+	return GetFileNameSafe<GetOpenFileNameW>(pOfn);
+}
+
+BOOL GetSaveFileNameSafe(OPENFILENAME* pOfn)
+{
+	return GetFileNameSafe<GetSaveFileNameW>(pOfn);
 }
