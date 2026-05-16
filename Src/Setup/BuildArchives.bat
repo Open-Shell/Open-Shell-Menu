@@ -20,6 +20,8 @@ cd ..
 
 cd Setup
 
+copy /B ..\..\build\bin\Release\Utility.exe .\Final > nul
+
 if defined APPVEYOR (
 	appveyor PushArtifact ..\..\build\bin\Release\Utility.exe
 )
