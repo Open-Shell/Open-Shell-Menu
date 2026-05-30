@@ -30,17 +30,17 @@
 #ifdef SAFE_MODE
 #define RegDeleteTree2(x,y) 5
 #define RegDeleteValue2(x,y) 5
-#define DeleteFile2(x) (SetLastError(3), FALSE)
+#define DeleteFile3(x) (SetLastError(3), FALSE)
 #define MoveFileEx2(x,y,z) (SetLastError(5), FALSE)
 #define SHFileOperation2(x) 0x78
-#define RemoveDirectory2(x) FALSE
+#define RemoveDirectory3(x) FALSE
 #else
 #define RegDeleteTree2(x,y) RegDeleteTree(x,y)
 #define RegDeleteValue2(x,y) RegDeleteValue(x,y)
-#define DeleteFile2(x) DeleteFile(x)
+#define DeleteFile3(x) DeleteFile(x)
 #define MoveFileEx2(x,y,z) MoveFileEx(x,y,z)
 #define SHFileOperation2(x) SHFileOperation(x)
-#define RemoveDirectory2(x) RemoveDirectory(x)
+#define RemoveDirectory3(x) RemoveDirectory(x)
 #endif
 
 // files to delete from the Open-Shell folder
@@ -777,7 +777,7 @@ static bool DeleteFileEx( const wchar_t *fname, bool bAllowDelay )
 		if (attribs&FILE_ATTRIBUTE_READONLY)
 			SetFileAttributes(fname,attribs&~FILE_ATTRIBUTE_READONLY);
 		LogMessage(-1,L"Deleting file %s",fname);
-		if (!DeleteFile2(fname))
+		if (!DeleteFile3(fname))
 		{
 			int error=GetLastError();
 			if (error==ERROR_ACCESS_DENIED && bAllowDelay)
@@ -826,7 +826,7 @@ static void DeleteDirectoryEx( const wchar_t *path, bool bDelay )
 	else
 	{
 		LogMessage(-1,L"Deleting directory %s",path);
-		if (!RemoveDirectory2(path))
+		if (!RemoveDirectory3(path))
 		{
 			int error=GetLastError();
 			bool bOldHasErrors=g_bHasErrors;
