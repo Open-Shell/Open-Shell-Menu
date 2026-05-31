@@ -1,3 +1,6 @@
+@echo off
+cd %~dp0
+
 SET CS_LANG_FOLDER=English
 SET CS_LANG_NAME=en-US
 SET CS_LANG_NAME_SHORT=en

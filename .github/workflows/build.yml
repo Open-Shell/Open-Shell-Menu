@@ -53,16 +53,45 @@ jobs:
           "NEW_VERSION=$finalVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           Write-Host "Building version: $finalVersion"
 
-      - name: Build
+      - name: Build binaries
         shell: cmd
         env:
-          APPVEYOR_BUILD_VERSION: ${{ steps.versioning.outputs.NEW_VERSION }}
-        run: Src\Setup\__MakeFinal.bat
+          CS_VERSION: ${{ steps.versioning.outputs.NEW_VERSION }}
+        run: Src\Setup\BuildBinaries.bat
 
-      - name: Upload artifacts
+      - name: Upload binaries
         uses: actions/upload-artifact@v7
         with:
-          name: OpenShell
+          name: Binaries
+          path: |
+            Src/Setup/Output/
+            !Src/Setup/Output/*.skin
+            !Src/Setup/Output/*.skin7
+            !Src/Setup/Output/*.zip
+
+      - name: Build installers
+        shell: cmd
+        env:
+          CS_VERSION: ${{ steps.versioning.outputs.NEW_VERSION }}
+        run: Src\Setup\_BuildEnglish.bat
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v7
+        with:
+          name: MSI
+          path: |
+            Src/Setup/Temp/*.msi
+
+      - name: Build final
+        shell: cmd
+        env:
+          CS_VERSION: ${{ steps.versioning.outputs.NEW_VERSION }}
+        run: Src\Setup\BuildArchives.bat
+
+      - name: Upload final
+        uses: actions/upload-artifact@v7
+        with:
+          name: Final
           path: |
             Src/Setup/Final/
             !Src/Setup/Final/OpenShellLoc.zip
