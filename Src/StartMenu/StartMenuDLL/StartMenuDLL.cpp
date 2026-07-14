@@ -22,6 +22,7 @@
 #include <dbghelp.h>
 #include <set>
 #include <Thumbcache.h>
+#include <tlhelp32.h>
 
 #define HOOK_DROPTARGET // define this to replace the IDropTarget of the start button
 #define START_TOUCH // touch support for the start button
@@ -2936,6 +2937,35 @@ static void OpenCortana( void )
 		ShellExecute(NULL,NULL,L"shell:::{2559a1f8-21d7-11d4-bdaf-00c04f60b9f0}",NULL,NULL,SW_SHOWNORMAL);
 }
 
+HMODULE GetModuleHandleByPrefix(const WCHAR* prefix)
+{
+	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+	if (snapshot == INVALID_HANDLE_VALUE)
+		return nullptr;
+
+	size_t prefixLength = wcslen(prefix);
+
+	MODULEENTRY32 me{};
+	me.dwSize = sizeof(me);
+
+	HMODULE result = nullptr;
+
+	if (Module32First(snapshot, &me))
+	{
+		do
+		{
+			if (_wcsnicmp(me.szModule, prefix, prefixLength) == 0)
+			{
+				result = reinterpret_cast<HMODULE>(me.modBaseAddr);
+				break;
+			}
+		} while (Module32Next(snapshot, &me));
+	}
+
+	CloseHandle(snapshot);
+	return result;
+}
+
 static void InitStartMenuDLL( void )
 {
 	static bool initCalled = false;
@@ -2979,10 +3009,7 @@ static void InitStartMenuDLL( void )
 		auto module=GetModuleHandle(L"taskbar.dll");
 		if (!module)
 		{
-			module = GetModuleHandle(L"ep_taskbar.5.dll");
-			if (!module)
-				module = GetModuleHandle(L"ep_taskbar.2.dll");
-
+			module = GetModuleHandleByPrefix(L"ep_taskbar");
 			if (module)
 				g_epTaskbar = true;
 		}
