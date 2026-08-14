@@ -207,6 +207,10 @@ LRESULT CSkinSettingsDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam,
 	EnableThemeDialogTexture(m_hWnd,ETDT_ENABLETAB);
 
 	m_Tree=GetDlgItem(IDC_SKINOPTIONS);
+	EnableSettingsTreeAccessibility(m_Tree);
+	CString optionsName;
+	GetDlgItemText(IDC_STATICOPT,optionsName);
+	SetSettingsTreeAccessibleName(m_Tree,optionsName);
 	SetWindowSubclass(m_Tree,SubclassTreeProc,'CLSH',0);
 	TreeView_SetImageList(m_Tree,GetSettingsImageList(m_Tree),TVSIL_NORMAL);
 	m_Tree.SendMessage(TVM_SETEXTENDEDSTYLE,TVS_EX_DOUBLEBUFFER,TVS_EX_DOUBLEBUFFER);
@@ -290,6 +294,7 @@ LRESULT CSkinSettingsDlg::OnDestroy( UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 void CSkinSettingsDlg::InitSkinUI( void )
 {
 	m_Tree.SetRedraw(FALSE);
+	ClearSettingsTreeItemAccessibility(m_Tree);
 	TreeView_DeleteAllItems(m_Tree);
 	m_VariationIndex=-1;
 	m_EditItemIndex=-1;
@@ -396,10 +401,12 @@ void CSkinSettingsDlg::UpdateSkinSettings( void )
 			{
 				item.iImage=item.iSelectedImage=image;
 				TreeView_SetItem(m_Tree,&item);
+				NotifyWinEvent(EVENT_OBJECT_STATECHANGE,m_Tree,OBJID_CLIENT,TreeView_MapHTREEITEMToAccID(m_Tree,hVar));
 				RECT rc;
 				TreeView_GetItemRect(m_Tree,hVar,&rc,FALSE);
 				m_Tree.InvalidateRect(&rc);
 			}
+			SetSettingsTreeItemAccessibleRole(m_Tree,hVar,ROLE_SYSTEM_RADIOBUTTON);
 		}
 		hItem=TreeView_GetNextSibling(m_Tree,hItem);
 	}
@@ -442,6 +449,8 @@ void CSkinSettingsDlg::UpdateSkinSettings( void )
 			item.iImage=item.iSelectedImage=image;
 			item.mask|=TVIF_TEXT;
 			TreeView_SetItem(m_Tree,&item);
+			NotifyWinEvent(EVENT_OBJECT_STATECHANGE,m_Tree,OBJID_CLIENT,TreeView_MapHTREEITEMToAccID(m_Tree,hItem));
+			SetSettingsTreeItemAccessibleRole(m_Tree,hItem,option.groupId>=0?ROLE_SYSTEM_RADIOBUTTON:ROLE_SYSTEM_CHECKBUTTON);
 			item.mask&=~TVIF_TEXT;
 			RECT rc;
 			TreeView_GetItemRect(m_Tree,hItem,&rc,FALSE);

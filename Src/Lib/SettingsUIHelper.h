@@ -14,6 +14,16 @@ class CSettingsTree;
 class ISettingsPanel;
 struct CSetting;
 
+// Adds the checked/unchecked and unavailable states used by the settings
+// trees to their MSAA/UIA representation. The visual state remains provided
+// by Open-Shell's existing image list.
+void EnableSettingsTreeAccessibility( HWND tree );
+void ClearSettingsTreeItemAccessibility( HWND tree );
+void SetControlAccessibleName( HWND control, const wchar_t *name );
+void SetSettingsTreeAccessibleName( HWND tree, const wchar_t *name );
+void SetSettingsTreeItemAccessibleName( HWND tree, HTREEITEM item, const wchar_t *name );
+void SetSettingsTreeItemAccessibleRole( HWND tree, HTREEITEM item, LONG role );
+
 ///////////////////////////////////////////////////////////////////////////////
 
 // CResizeableDlg - a dialog that rearranges its controls when it gets resized

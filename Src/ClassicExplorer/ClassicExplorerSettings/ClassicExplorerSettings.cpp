@@ -135,6 +135,8 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrC
 	FARPROC proc=GetProcAddress(dll,"ShowExplorerSettings");
 	if (!proc) return 2;
 
+	HRESULT comResult=CoInitialize(NULL);
 	proc();
+	if (SUCCEEDED(comResult)) CoUninitialize();
 	return 0;
 }

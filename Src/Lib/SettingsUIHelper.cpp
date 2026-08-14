@@ -16,6 +16,183 @@
 #include <map>
 #include <algorithm>
 #include <thread>
+#include <oleacc.h>
+
+// Local constants avoid forcing every executable that links the Lib static
+// library to define the oleacc GUID symbols.
+static const GUID CLSID_SettingsAccPropServices={0xb5f8350b,0x0548,0x48b1,{0xa6,0xee,0x88,0xbd,0x00,0xb4,0xa5,0xe7}};
+static const GUID PROPID_SettingsAccState={0xa8d4d5b0,0x0a21,0x42d0,{0xa5,0xc0,0x51,0x4e,0x98,0x4f,0x45,0x7b}};
+static const GUID PROPID_SettingsAccName={0x608d3df8,0x8128,0x4aa7,{0xa4,0x28,0xf5,0x5e,0x49,0x26,0x72,0x91}};
+static const GUID PROPID_SettingsAccRole={0xcb905ff2,0x7bd1,0x4c05,{0xb3,0xc8,0xe6,0xc2,0x41,0x36,0x4d,0x70}};
+
+class CSettingsTreeAccServer: public IAccPropServer
+{
+public:
+	CSettingsTreeAccServer( void ): m_RefCount(1)
+	{
+		CoCreateInstance(CLSID_SettingsAccPropServices,NULL,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&m_Props));
+	}
+
+	virtual HRESULT STDMETHODCALLTYPE QueryInterface( REFIID iid, void **object )
+	{
+		if (!object) return E_POINTER;
+		*object=NULL;
+		if (iid==IID_IUnknown || iid==IID_IAccPropServer)
+		{
+			*object=static_cast<IAccPropServer*>(this);
+			AddRef();
+			return S_OK;
+		}
+		return E_NOINTERFACE;
+	}
+	virtual ULONG STDMETHODCALLTYPE AddRef( void ) { return InterlockedIncrement(&m_RefCount); }
+	virtual ULONG STDMETHODCALLTYPE Release( void )
+	{
+		ULONG count=InterlockedDecrement(&m_RefCount);
+		if (!count) delete this;
+		return count;
+	}
+	virtual HRESULT STDMETHODCALLTYPE GetPropValue( const BYTE *identity, DWORD identitySize, MSAAPROPID prop, VARIANT *value, BOOL *hasProp )
+	{
+		if (!value || !hasProp) return E_POINTER;
+		VariantInit(value);
+		*hasProp=FALSE;
+		if (!m_Props) return S_OK;
+
+		HWND tree=NULL;
+		DWORD objectId=0, childId=0;
+		if (FAILED(m_Props->DecomposeHwndIdentityString(identity,identitySize,&tree,&objectId,&childId)) || objectId!=OBJID_CLIENT || childId==CHILDID_SELF)
+			return S_OK;
+		HTREEITEM hItem=TreeView_MapAccIDToHTREEITEM(tree,childId);
+		if (!hItem) return S_OK;
+
+		wchar_t text[256];
+		TVITEM item={TVIF_IMAGE|TVIF_STATE|TVIF_TEXT,hItem,0,TVIS_SELECTED|TVIS_EXPANDED|TVIS_CUT,text,_countof(text)};
+		if (!TreeView_GetItem(tree,&item)) return S_OK;
+		if (prop==PROPID_SettingsAccRole)
+		{
+			if (item.iImage&SETTING_STATE_CHECKBOX)
+				value->lVal=ROLE_SYSTEM_CHECKBUTTON;
+			else if (item.iImage&SETTING_STATE_RADIO)
+				value->lVal=ROLE_SYSTEM_RADIOBUTTON;
+			else
+				return S_OK;
+			value->vt=VT_I4;
+			*hasProp=TRUE;
+			return S_OK;
+		}
+		if (prop==PROPID_SettingsAccName)
+		{
+			// A sighted user can see which child choice is checked without
+			// opening the group. Give screen-reader users the same summary.
+			for (HTREEITEM child=TreeView_GetChild(tree,hItem);child;child=TreeView_GetNextSibling(tree,child))
+			{
+				wchar_t childText[256];
+				TVITEM childItem={TVIF_IMAGE|TVIF_TEXT,child,0,0,childText,_countof(childText)};
+				if (TreeView_GetItem(tree,&childItem) && (childItem.iImage&SETTING_STATE_CHECKED))
+				{
+					CString name;
+					name.Format(L"%s: %s",text,childText);
+					value->vt=VT_BSTR;
+					value->bstrVal=SysAllocString(name);
+					if (!value->bstrVal) return E_OUTOFMEMORY;
+					*hasProp=TRUE;
+					return S_OK;
+				}
+			}
+			return S_OK;
+		}
+		if (prop!=PROPID_SettingsAccState) return S_OK;
+		LONG state=STATE_SYSTEM_SELECTABLE|STATE_SYSTEM_FOCUSABLE;
+		if (item.state&TVIS_SELECTED)
+		{
+			state|=STATE_SYSTEM_SELECTED;
+			if (GetFocus()==tree) state|=STATE_SYSTEM_FOCUSED;
+		}
+		if (TreeView_GetChild(tree,hItem))
+			state|=(item.state&TVIS_EXPANDED)?STATE_SYSTEM_EXPANDED:STATE_SYSTEM_COLLAPSED;
+		if (item.state&TVIS_CUT || (item.iImage&SETTING_STATE_DISABLED))
+			state|=STATE_SYSTEM_UNAVAILABLE;
+		if ((item.iImage&(SETTING_STATE_CHECKBOX|SETTING_STATE_RADIO)) && (item.iImage&SETTING_STATE_CHECKED))
+			state|=STATE_SYSTEM_CHECKED;
+		RECT rect;
+		if (!TreeView_GetItemRect(tree,hItem,&rect,FALSE))
+			state|=STATE_SYSTEM_INVISIBLE;
+
+		value->vt=VT_I4;
+		value->lVal=state;
+		*hasProp=TRUE;
+		return S_OK;
+	}
+
+private:
+	LONG m_RefCount;
+	CComPtr<IAccPropServices> m_Props;
+};
+
+void EnableSettingsTreeAccessibility( HWND tree )
+{
+	CComPtr<IAccPropServices> props;
+	if (FAILED(CoCreateInstance(CLSID_SettingsAccPropServices,NULL,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&props)))) return;
+	CSettingsTreeAccServer *server=new CSettingsTreeAccServer;
+	MSAAPROPID property=PROPID_SettingsAccState;
+	props->SetHwndPropServer(tree,OBJID_CLIENT,CHILDID_SELF,&property,1,server,ANNO_CONTAINER);
+	server->Release();
+}
+
+void ClearSettingsTreeItemAccessibility( HWND tree )
+{
+	CComPtr<IAccPropServices> props;
+	if (FAILED(CoCreateInstance(CLSID_SettingsAccPropServices,NULL,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&props)))) return;
+	MSAAPROPID properties[]={PROPID_SettingsAccState,PROPID_SettingsAccName,PROPID_SettingsAccRole};
+	for (HTREEITEM item=TreeView_GetRoot(tree);item;)
+	{
+		props->ClearHwndProps(tree,OBJID_CLIENT,TreeView_MapHTREEITEMToAccID(tree,item),properties,_countof(properties));
+		HTREEITEM next=TreeView_GetChild(tree,item);
+		if (!next)
+		{
+			next=TreeView_GetNextSibling(tree,item);
+			while (!next && (item=TreeView_GetParent(tree,item))!=NULL)
+				next=TreeView_GetNextSibling(tree,item);
+		}
+		item=next;
+	}
+}
+
+void SetControlAccessibleName( HWND control, const wchar_t *name )
+{
+	CComPtr<IAccPropServices> props;
+	if (SUCCEEDED(CoCreateInstance(CLSID_SettingsAccPropServices,NULL,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&props))))
+		props->SetHwndPropStr(control,OBJID_CLIENT,CHILDID_SELF,PROPID_SettingsAccName,name);
+}
+
+void SetSettingsTreeAccessibleName( HWND tree, const wchar_t *name )
+{
+	SetControlAccessibleName(tree,name);
+}
+
+void SetSettingsTreeItemAccessibleName( HWND tree, HTREEITEM item, const wchar_t *name )
+{
+	CComPtr<IAccPropServices> props;
+	if (SUCCEEDED(CoCreateInstance(CLSID_SettingsAccPropServices,NULL,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&props))))
+		props->SetHwndPropStr(tree,OBJID_CLIENT,TreeView_MapHTREEITEMToAccID(tree,item),PROPID_SettingsAccName,name);
+}
+
+void SetSettingsTreeItemAccessibleRole( HWND tree, HTREEITEM item, LONG role )
+{
+	CComPtr<IAccPropServices> props;
+	if (SUCCEEDED(CoCreateInstance(CLSID_SettingsAccPropServices,NULL,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&props))))
+	{
+		// Some settings hosts do not ask a container annotation server for
+		// descendant state. Bind the dynamic state provider to the item too.
+		CSettingsTreeAccServer *server=new CSettingsTreeAccServer;
+		MSAAPROPID stateProperty=PROPID_SettingsAccState;
+		props->SetHwndPropServer(tree,OBJID_CLIENT,TreeView_MapHTREEITEMToAccID(tree,item),&stateProperty,1,server,ANNO_THIS);
+		server->Release();
+		CComVariant value(role);
+		props->SetHwndProp(tree,OBJID_CLIENT,TreeView_MapHTREEITEMToAccID(tree,item),PROPID_SettingsAccRole,value);
+	}
+}
 
 const KNOWNFOLDERID FOLDERID_DesktopRoot={'DESK', 'TO', 'P', {'D', 'E', 'S', 'K', 'T', 'O', 'P', 0x00}};
 
@@ -2334,7 +2511,6 @@ public:
 		NOTIFY_HANDLER( IDC_SETTINGS, TVN_KEYDOWN, OnKeyDown )
 		NOTIFY_HANDLER( IDC_SETTINGS, TVN_GETINFOTIP, OnGetInfoTip )
 		NOTIFY_HANDLER( IDC_SETTINGS, TVN_SELCHANGED, OnSelChanged )
-		NOTIFY_HANDLER( IDC_SETTINGS, TVN_ITEMEXPANDING, OnExpanding )
 	END_MSG_MAP()
 
 	BEGIN_RESIZE_MAP
@@ -2364,7 +2540,6 @@ protected:
 	LRESULT OnClick( int idCtrl, LPNMHDR pnmh, BOOL& bHandled );
 	LRESULT OnGetInfoTip( int idCtrl, LPNMHDR pnmh, BOOL& bHandled );
 	LRESULT OnSelChanged( int idCtrl, LPNMHDR pnmh, BOOL& bHandled );
-	LRESULT OnExpanding( int idCtrl, LPNMHDR pnmh, BOOL& bHandled ) { return TRUE; } // prevent collapsing
 
 private:
 	CWindow m_Tree;
@@ -2398,6 +2573,32 @@ static LRESULT CALLBACK SubclassTreeProc( HWND hWnd, UINT uMsg, WPARAM wParam, L
 {
 	if (uMsg==WM_COMMAND)
 		return SendMessage(GetParent(hWnd),uMsg,wParam,lParam);
+	if (uMsg==WM_KEYDOWN && (wParam==VK_LEFT || wParam==VK_RIGHT) && GetKeyState(VK_MENU)>=0)
+	{
+		HTREEITEM item=TreeView_GetSelection(hWnd);
+		if (!item) return 0;
+		HTREEITEM child=TreeView_GetChild(hWnd,item);
+		TVITEM state={TVIF_STATE,item,0,TVIS_EXPANDED};
+		TreeView_GetItem(hWnd,&state);
+		if (wParam==VK_LEFT)
+		{
+			if (child && (state.state&TVIS_EXPANDED))
+				TreeView_Expand(hWnd,item,TVE_COLLAPSE);
+			else
+			{
+				HTREEITEM parent=TreeView_GetParent(hWnd,item);
+				if (parent) TreeView_SelectItem(hWnd,parent);
+			}
+		}
+		else if (child)
+		{
+			if (state.state&TVIS_EXPANDED)
+				TreeView_SelectItem(hWnd,child);
+			else
+				TreeView_Expand(hWnd,item,TVE_EXPAND);
+		}
+		return 0;
+	}
 	return DefSubclassProc(hWnd,uMsg,wParam,lParam);
 }
 
@@ -2534,6 +2735,16 @@ LRESULT CTreeSettingsDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam,
 		SetWindowTheme(m_Tree,L"Explorer",NULL);
 	}
 	m_Tree.SendMessage(TVM_SETEXTENDEDSTYLE,TVS_EX_DOUBLEBUFFER,TVS_EX_DOUBLEBUFFER);
+	EnableSettingsTreeAccessibility(m_Tree);
+	CString tip;
+	GetDlgItemText(IDC_STATICTIP,tip);
+	int line=tip.Find(L'\n');
+	if (line>=0)
+	{
+		tip=tip.Mid(line+1);
+		tip.Trim();
+		SetControlAccessibleName(GetDlgItem(IDC_STATICTIP),tip);
+	}
 	SetWindowSubclass(m_Tree,SubclassTreeProc,'CLSH',0);
 	HINSTANCE hInstance=_AtlBaseModule.GetResourceInstance();
 
@@ -3201,6 +3412,7 @@ void CTreeSettingsDlg::ItemSelected( HTREEITEM hItem, CSetting *pSetting, bool b
 	if (mode!=EDIT_NONE)
 	{
 		CString str=LoadStringEx(pSetting->nameID);
+		SetControlAccessibleName(m_EditBox,str);
 		TVITEM item={TVIF_TEXT,hItem,0,0,(LPWSTR)(LPCWSTR)str};
 		TreeView_SetItem(m_Tree,&item);
 		m_Tree.GetClientRect(&rc);
@@ -3242,6 +3454,12 @@ void CTreeSettingsDlg::ItemSelected( HTREEITEM hItem, CSetting *pSetting, bool b
 		m_EditBox.SetWindowPos(NULL,&rc,SWP_NOZORDER|SWP_SHOWWINDOW);
 		SendMessage(WM_NEXTDLGCTL,(LPARAM)m_EditBox.m_hWnd,TRUE);
 		SetWindowSubclass(m_EditBox,SubclassEditProc,'CLSH',(mode==EDIT_HOTKEY)?1:((mode==EDIT_HOTKEY_ANY)?2:0));
+		// The same overlay edit is reused while Up/Down moves through the
+		// tree. Its HWND and keyboard focus do not change, so explicitly
+		// announce that its accessible name has changed.
+		NotifyWinEvent(EVENT_OBJECT_NAMECHANGE,m_EditBox,OBJID_CLIENT,CHILDID_SELF);
+		if (::GetFocus()==m_EditBox)
+			NotifyWinEvent(EVENT_OBJECT_FOCUS,m_EditBox,OBJID_CLIENT,CHILDID_SELF);
 	}
 	else
 		m_EditBox.ShowWindow(SW_HIDE);
@@ -3385,11 +3603,14 @@ HTREEITEM CTreeSettingsDlg::FindSettingsItem( const wchar_t *name )
 
 void CTreeSettingsDlg::SetGroup( CSetting *pGroup, const CString &filter, const CSetting *pSelect )
 {
+	CString groupName=LoadStringEx(pGroup->nameID);
+	SetSettingsTreeAccessibleName(m_Tree,groupName);
 	ItemSelected(NULL,NULL,false);
 	m_pGroup=pGroup;
 	// fill tree control
 	m_Tree.SendMessage(WM_SETREDRAW,FALSE);
 	TreeView_SelectItem(m_Tree,NULL);
+	ClearSettingsTreeItemAccessibility(m_Tree);
 	TreeView_DeleteAllItems(m_Tree);
 	int level=0;
 	HTREEITEM hRadioParent=NULL;
@@ -3566,9 +3787,14 @@ void CTreeSettingsDlg::UpdateGroup( const CSetting *pModified )
 			RECT rc;
 			TreeView_GetItemRect(m_Tree,hItem,&rc,FALSE);
 			m_Tree.InvalidateRect(&rc);
+			NotifyWinEvent(EVENT_OBJECT_STATECHANGE,m_Tree,OBJID_CLIENT,TreeView_MapHTREEITEMToAccID(m_Tree,hItem));
 		}
+		if (pSetting->type==CSetting::TYPE_BOOL)
+			SetSettingsTreeItemAccessibleRole(m_Tree,hItem,ROLE_SYSTEM_CHECKBUTTON);
 
 		// update radio buttons
+		wchar_t selectedText[256];
+		selectedText[0]=0;
 		if (pSetting->type==CSetting::TYPE_INT && pSetting[1].type==CSetting::TYPE_RADIO)
 		{
 			int val=0;
@@ -3598,9 +3824,37 @@ void CTreeSettingsDlg::UpdateGroup( const CSetting *pModified )
 					RECT rc;
 					TreeView_GetItemRect(m_Tree,hRadio,&rc,FALSE);
 					m_Tree.InvalidateRect(&rc);
+					NotifyWinEvent(EVENT_OBJECT_STATECHANGE,m_Tree,OBJID_CLIENT,TreeView_MapHTREEITEMToAccID(m_Tree,hRadio));
 				}
+				SetSettingsTreeItemAccessibleRole(m_Tree,hRadio,ROLE_SYSTEM_RADIOBUTTON);
+			}
+			for (HTREEITEM hRadio=TreeView_GetChild(m_Tree,hItem);hRadio;hRadio=TreeView_GetNextSibling(m_Tree,hRadio))
+			{
+				TVITEM radioName={TVIF_IMAGE|TVIF_TEXT,hRadio,0,0,selectedText,_countof(selectedText)};
+				if (TreeView_GetItem(m_Tree,&radioName) && (radioName.iImage&SETTING_STATE_CHECKED)) break;
+				selectedText[0]=0;
 			}
 		}
+
+		// Bold is the visual indication that a setting differs from its
+		// default. Expose the same information in the accessible name.
+		wchar_t parentText[256];
+		TVITEM parentName={TVIF_TEXT,hItem,0,0,parentText,_countof(parentText)};
+		TreeView_GetItem(m_Tree,&parentName);
+		CString accessibleName=parentText;
+		if (selectedText[0])
+		{
+			accessibleName+=L": ";
+			accessibleName+=selectedText;
+		}
+		if (!bDefault)
+		{
+			accessibleName+=L", ";
+			accessibleName+=LoadStringEx(IDS_SETTING_MODIFIED);
+		}
+		SetSettingsTreeItemAccessibleName(m_Tree,hItem,accessibleName);
+		if (pSetting==pModified)
+			NotifyWinEvent(EVENT_OBJECT_NAMECHANGE,m_Tree,OBJID_CLIENT,TreeView_MapHTREEITEMToAccID(m_Tree,hItem));
 	}
 }
 

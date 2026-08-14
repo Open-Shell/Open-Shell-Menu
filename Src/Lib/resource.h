@@ -139,6 +139,8 @@
 #define IDS_BMP_FILTERS2                4077
 #define IDS_UNSAVED_CHANGES             4078
 #define IDS_UNSAVED_TITLE               4079
+#define IDS_SETTINGS_PAGES              4080
+#define IDS_SETTING_MODIFIED            4081
 
 // Next default values for new objects
 // 

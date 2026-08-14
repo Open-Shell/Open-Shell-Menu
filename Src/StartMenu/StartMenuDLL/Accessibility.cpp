@@ -53,7 +53,14 @@ HRESULT STDMETHODCALLTYPE CMenuAccessible::get_accName( VARIANT varChild, BSTR *
 	if (!m_pOwner) return RPC_E_DISCONNECTED;
 	*pszName=NULL;
 	if (varChild.vt!=VT_I4) return S_FALSE;
-	if (varChild.lVal==CHILDID_SELF) return S_FALSE;
+	if (varChild.lVal==CHILDID_SELF)
+	{
+		if (m_pOwner->m_pParent && m_pOwner->m_ParentIndex>=0 && m_pOwner->m_ParentIndex<(int)m_pOwner->m_pParent->m_Items.size())
+			*pszName=SysAllocString(m_pOwner->m_pParent->m_Items[m_pOwner->m_ParentIndex].name);
+		else
+			*pszName=SysAllocString(L"Start");
+		return *pszName?S_OK:E_OUTOFMEMORY;
+	}
 	int index=varChild.lVal-1;
 	if (index<0 || index>=(int)m_pOwner->m_Items.size()) return S_FALSE;
 	if (m_pOwner->m_Items[index].id==MENU_SEPARATOR) return S_FALSE;
@@ -105,7 +112,10 @@ HRESULT STDMETHODCALLTYPE CMenuAccessible::get_accState( VARIANT varChild, VARIA
 		if (m_pOwner->m_HotItem==index)
 			flags|=STATE_SYSTEM_FOCUSED;
 		if (item.bFolder)
+		{
 			flags|=STATE_SYSTEM_HASPOPUP;
+			flags|=(m_pOwner->m_Submenu==index)?STATE_SYSTEM_EXPANDED:STATE_SYSTEM_COLLAPSED;
+		}
 		if (item.id==MENU_SEPARATOR)
 			flags=0;
 		RECT rc;
@@ -167,7 +177,12 @@ HRESULT STDMETHODCALLTYPE CMenuAccessible::get_accDefaultAction( VARIANT varChil
 		return S_FALSE;
 	const CMenuContainer::MenuItem &item=m_pOwner->m_Items[index];
 	if (item.id!=MENU_SEPARATOR && item.id!=MENU_EMPTY && item.id!=MENU_EMPTY_TOP)
-		*pszDefaultAction=SysAllocString(item.bFolder?FindTranslation(L"Menu.ActionOpen",L"Open"):FindTranslation(L"Menu.ActionExecute",L"Execute"));
+	{
+		if (item.bFolder)
+			*pszDefaultAction=SysAllocString(m_pOwner->m_Submenu==index?FindTranslation(L"Menu.ActionClose",L"Close"):FindTranslation(L"Menu.ActionOpen",L"Open"));
+		else
+			*pszDefaultAction=SysAllocString(FindTranslation(L"Menu.ActionExecute",L"Execute"));
+	}
 	return S_OK;
 }
 

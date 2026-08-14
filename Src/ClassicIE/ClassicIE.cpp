@@ -252,6 +252,8 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		return 0;
 	}
 
+	HRESULT comResult=CoInitialize(NULL);
 	ShowIESettings();
+	if (SUCCEEDED(comResult)) CoUninitialize();
 	return 0;
 }

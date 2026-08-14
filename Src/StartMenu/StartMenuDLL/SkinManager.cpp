@@ -2918,6 +2918,28 @@ bool MenuSkin::LoadSkin( HMODULE hMod, const wchar_t *variation, const wchar_t *
 	ItemSettings[COLUMN2_INLINE].bmpIconFrame.bIsOwned=false;
 	ItemSettings[COLUMN2_INLINE].bmpSeparator.bIsOwned=false;
 
+	// A skin's "new item" colors must not override the user's High Contrast
+	// palette. This only changes the highlighted-new variants while High
+	// Contrast is active; normal themed rendering remains untouched.
+	HIGHCONTRAST contrast={sizeof(contrast)};
+	if (SystemParametersInfo(SPI_GETHIGHCONTRAST,sizeof(contrast),&contrast,0) && (contrast.dwFlags&HCF_HIGHCONTRASTON))
+	{
+		const int newItems[]={COLUMN1_NEW,COLUMN2_NEW,SUBMENU_NEW,PROGRAMS_TREE_NEW,PROGRAMS_BUTTON_NEW,PROGRAMS_CASCADING_NEW};
+		for (int i=0;i<_countof(newItems);i++)
+		{
+			ItemDrawSettings &settings=ItemSettings[newItems[i]];
+			settings.bmpSelection.Reset(true);
+			settings.bmpSelection=GetSysColor(COLOR_HIGHLIGHT);
+			settings.glowSize=0;
+			for (int j=0;j<_countof(settings.textColors);j++)
+			{
+				settings.textColors[j]=GetSysColor(COLOR_HIGHLIGHTTEXT);
+				settings.textShadowColors[j]=GetSysColor(COLOR_HIGHLIGHT);
+			}
+			settings.arrColors[0]=settings.arrColors[1]=GetSysColor(COLOR_HIGHLIGHTTEXT);
+		}
+	}
+
 	HDC hdc=CreateCompatibleDC(NULL);
 	HGDIOBJ font0=GetCurrentObject(hdc,OBJ_FONT);
 	for (int i=0;i<_countof(ItemSettings);i++)
