@@ -4456,6 +4456,7 @@ CSetting g_Settings[]={
 		{L"CustomButton",CSetting::TYPE_RADIO,IDS_CUSTOM_BUTTON,IDS_CUSTOM_BUTTON_TIP},
 	{L"StartButtonPath",CSetting::TYPE_BITMAP,IDS_BUTTON_IMAGE,IDS_BUTTON_IMAGE_TIP,L"",0,L"#StartButtonType=2",L"CustomButton"},
 	{L"StartButtonSize",CSetting::TYPE_INT,IDS_BUTTON_SIZE,IDS_BUTTON_SIZE_TIP2,0,0,L"#StartButtonType=2",L"CustomButton"},
+	{L"StartButtonOffset",CSetting::TYPE_INT,IDS_BUTTON_OFFSET,IDS_BUTTON_OFFSET_TIP,0,0,L"#StartButtonType=2",L"CustomButton"},
 	{L"StartButtonAlign",CSetting::TYPE_BOOL,IDS_BUTTON_ALIGN,IDS_BUTTON_ALIGN_TIP,0,0,L"#StartButtonType=2",L"CustomButton"},
 	{L"StartButtonIcon",CSetting::TYPE_ICON,IDS_BUTTON_ICON,IDS_BUTTON_ICON_TIP,L",1",0,L"#StartButtonType=1",L"ClasicButton"},
 	{L"StartButtonIconSize",CSetting::TYPE_INT,IDS_BUTTON_ICON_SIZE,IDS_BUTTON_ICON_SIZE_TIP,0,0,L"#StartButtonType=1",L"ClasicButton"},
@@ -5157,7 +5158,7 @@ void InitSettings( void )
 	InitSettings(g_Settings,COMPONENT_MENU,&g_CustomSettings);
 }
 
-static int g_ButtonPath, g_ButtonSize, g_ButtonIcon, g_ButtonIconSize, g_ButtonText, g_ButtonTip;
+static int g_ButtonPath, g_ButtonSize, g_ButtonIcon, g_ButtonOffset, g_ButtonIconSize, g_ButtonText, g_ButtonTip;
 static bool g_bButtonEnable, g_bTaskbarsChanged, g_bTaskbarsUpdated;
 
 static void StoreButtonSettings( void )
@@ -5175,6 +5176,7 @@ static void StoreButtonSettings( void )
 	if (g_ButtonPath==START_BUTTON_CUSTOM)
 		g_ButtonPath=CalcFNVHash(GetSettingString(L"StartButtonPath"));
 	g_ButtonSize=GetSettingInt(L"StartButtonSize");
+	g_ButtonOffset = GetSettingInt(L"StartButtonOffset");
 	g_ButtonIconSize=GetSettingInt(L"StartButtonIconSize");
 }
 
@@ -5191,7 +5193,7 @@ static void UpdateButtons( bool bForce )
 	}
 	if (path==START_BUTTON_CUSTOM)
 		path=CalcFNVHash(GetSettingString(L"StartButtonPath"));
-	bool bRecreate=(g_bButtonEnable!=GetSettingBool(L"EnableStartButton") || path!=g_ButtonPath || g_ButtonSize!=GetSettingInt(L"StartButtonSize")
+	bool bRecreate = (g_bButtonEnable != GetSettingBool(L"EnableStartButton") || path != g_ButtonPath || g_ButtonSize != GetSettingInt(L"StartButtonSize") || g_ButtonOffset != GetSettingInt(L"StartButtonOffset")
 		|| g_ButtonIcon!=icon || g_ButtonIconSize!=GetSettingInt(L"StartButtonIconSize") || g_ButtonText!=text || g_ButtonTip!=tip);
 	if ((g_bTaskbarsChanged && !g_bTaskbarsUpdated) || bForce || bRecreate)
 	{

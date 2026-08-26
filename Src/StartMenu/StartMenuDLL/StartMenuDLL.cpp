@@ -498,8 +498,8 @@ public:
 		return E_NOINTERFACE;
 	}
 
-	virtual ULONG STDMETHODCALLTYPE AddRef( void ) 
-	{ 
+	virtual ULONG STDMETHODCALLTYPE AddRef( void )
+	{
 		return InterlockedIncrement(&m_RefCount);
 	}
 
@@ -1345,9 +1345,13 @@ static void UpdateStartButtonPosition(const TaskbarInfo* taskBar, const WINDOWPO
 
 		// Start button on Win11 is a bit shifted to the right
 		// We will shift our Aero button to cover original button
-		// We should also shift custom icons, as they're incorrectly aligned to the left edge on Windows 11
-		if (IsWin11() && (x == info.rcMonitor.left) && (GetStartButtonType() == START_BUTTON_AERO || GetStartButtonType() == START_BUTTON_CUSTOM) && !g_epTaskbar)
-			x += ScaleForDpi(taskBar->taskBar, 6);
+		if (IsWin11() && (x == info.rcMonitor.left) && !g_epTaskbar) {
+			if (GetStartButtonType() == START_BUTTON_AERO)
+				x += ScaleForDpi(taskBar->taskBar, 6);
+			// we should also be able to shift our custom icon, as it's also incorrectly aligned to the left edge on Windows 11
+			else if (GetStartButtonType() == START_BUTTON_CUSTOM)
+				x += ScaleForDpi(taskBar->taskBar, GetSettingInt(L"StartButtonOffset"));
+		}
 	}
 
 	RECT rcButton = { x, y, x + taskBar->startButtonSize.cx, y + taskBar->startButtonSize.cy };
@@ -2390,7 +2394,7 @@ void UpdateTaskBars( TUpdateTaskbar update )
 			{
 				if (bDefColor && GetWinVersion()>WIN_VER_WIN7)
 				{
-					if (IsAppThemed()) 
+					if (IsAppThemed())
 					{
 						color=GetSystemGlassColor8();
 						color=((color&0xFF)<<16)|(color&0xFF00)|((color>>16)&0xFF);
@@ -4307,7 +4311,7 @@ HBITMAP GetStartScreenIcon( int size )
 	}
 	SelectObject(hDst,bmp0);
 	DeleteDC(hDst);
-	
+
 	int i=0;
 	int n=size*rc.top;
 	for (;i<n;i++)

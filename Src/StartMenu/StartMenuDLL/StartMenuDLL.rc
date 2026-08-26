@@ -1073,6 +1073,8 @@ BEGIN
     IDS_MENU_GLASS          "Enable Aero Glass (requires Aero Glass mod)"
     IDS_MENU_GLASS_TIP      "Check this to use glass transparency (requires the Aero Glass mod to be installed)"
     IDS_MAIN_MENU_SETTINGS  "Main Menu"
+	IDS_BUTTON_OFFSET		"Button left offset"
+	IDS_BUTTON_OFFSET_TIP	"Offset the start button horizontally by the amount of pixels specified"
 END
 
 STRINGTABLE 
