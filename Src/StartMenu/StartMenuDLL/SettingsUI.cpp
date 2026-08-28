@@ -5176,7 +5176,7 @@ static void StoreButtonSettings( void )
 	if (g_ButtonPath==START_BUTTON_CUSTOM)
 		g_ButtonPath=CalcFNVHash(GetSettingString(L"StartButtonPath"));
 	g_ButtonSize=GetSettingInt(L"StartButtonSize");
-	g_ButtonOffset = GetSettingInt(L"StartButtonOffset");
+	g_ButtonOffset=GetSettingInt(L"StartButtonOffset");
 	g_ButtonIconSize=GetSettingInt(L"StartButtonIconSize");
 }
 
