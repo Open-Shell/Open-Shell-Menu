@@ -5193,7 +5193,7 @@ static void UpdateButtons( bool bForce )
 	}
 	if (path==START_BUTTON_CUSTOM)
 		path=CalcFNVHash(GetSettingString(L"StartButtonPath"));
-	bool bRecreate = (g_bButtonEnable != GetSettingBool(L"EnableStartButton") || path != g_ButtonPath || g_ButtonSize != GetSettingInt(L"StartButtonSize") || g_ButtonOffset != GetSettingInt(L"StartButtonOffset")
+	bool bRecreate=(g_bButtonEnable!=GetSettingBool(L"EnableStartButton") || path!=g_ButtonPath || g_ButtonSize!=GetSettingInt(L"StartButtonSize") || g_ButtonOffset!=GetSettingInt(L"StartButtonOffset")
 		|| g_ButtonIcon!=icon || g_ButtonIconSize!=GetSettingInt(L"StartButtonIconSize") || g_ButtonText!=text || g_ButtonTip!=tip);
 	if ((g_bTaskbarsChanged && !g_bTaskbarsUpdated) || bForce || bRecreate)
 	{
