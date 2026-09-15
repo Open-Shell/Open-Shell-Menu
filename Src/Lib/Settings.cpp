@@ -1110,6 +1110,7 @@ class CSettingsDlg: public CResizeableDlg<CSettingsDlg>
 public:
 	CSettingsDlg( void );
 	void Init( CSetting *pSettings, ICustomSettings *pCustom, int tab, const wchar_t* appId );
+	bool NavigateTab( bool bPrevious );
 
 	BEGIN_MSG_MAP( CSettingsDlg )
 		MESSAGE_HANDLER( WM_INITDIALOG, OnInitDialog )
@@ -1119,7 +1120,6 @@ public:
 		MESSAGE_HANDLER( WM_KEYDOWN, OnKeyDown )
 		MESSAGE_HANDLER( WM_SYSCOMMAND, OnSysCommand )
 		MESSAGE_HANDLER( WM_CLEAR, OnResetUI )
-		MESSAGE_HANDLER( WM_APP+37, OnAccessibleTabOrder )
 		COMMAND_HANDLER( IDOK, BN_CLICKED, OnOK )
 		COMMAND_HANDLER( IDCANCEL, BN_CLICKED, OnCancel )
 		COMMAND_HANDLER( IDC_BUTTONBACKUP, BN_CLICKED, OnBackup )
@@ -1160,7 +1160,6 @@ protected:
 	LRESULT OnKeyDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled );
 	LRESULT OnSysCommand( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled );
 	LRESULT OnResetUI( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled );
-	LRESULT OnAccessibleTabOrder( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled );
 	LRESULT OnOK( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
 	LRESULT OnCancel( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
 	LRESULT OnBackup( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
@@ -1189,7 +1188,6 @@ private:
 
 	void AddTabs( int name, const CSetting *pSelect=NULL );
 	void SetCurTab( int index, bool bReset, const CSetting *pSelect=NULL, bool bFocusPanel=true );
-	void SetAccessibleTabOrder( void );
 	bool IsTabValid( void );
 	void StorePlacement( void );
 
@@ -1416,7 +1414,6 @@ LRESULT CSettingsDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 	if (m_InitialTab)
 		pos.tab=m_InitialTab;
 	AddTabs(pos.tab);
-	PostMessage(WM_APP+37);
 	if (pos.tab && bPosValid)
 	{
 		SetStoreRect(pos.rc);
@@ -1804,40 +1801,52 @@ void CSettingsDlg::SetCurTab( int index, bool bReset, const CSetting *pSelect, b
 		if (m_Panel) ::ShowWindow(m_Panel,SW_HIDE);
 		m_Panel=hwnd;
 	}
-	PostMessage(WM_APP+37);
 	if (bFocusPanel) ::SetFocus(m_Panel);
 }
 
-LRESULT CSettingsDlg::OnAccessibleTabOrder( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+bool CSettingsDlg::NavigateTab( bool bPrevious )
 {
-	SetAccessibleTabOrder();
-	return 0;
-}
+	HWND focus=::GetFocus();
+	HWND firstPanel=m_Panel?::GetNextDlgTabItem(m_Panel,NULL,FALSE):NULL;
+	HWND lastPanel=m_Panel?::GetNextDlgTabItem(m_Panel,NULL,TRUE):NULL;
+	HWND targets[]={
+		GetDlgItem(IDC_BUTTONBACKUP),
+		GetDlgItem(IDC_CHECKALL),
+		GetDlgItem(IDC_EDITSEARCH),
+		GetDlgItem(IDC_TABSETTINGS),
+		firstPanel,
+		GetDlgItem(IDOK),
+		GetDlgItem(IDCANCEL),
+		GetDlgItem(IDC_LINKHELP),
+		GetDlgItem(IDC_LINKWEB),
+	};
 
-void CSettingsDlg::SetAccessibleTabOrder( void )
-{
-	// Tab order: Backup, Show all, Search, tabs, page, OK, Cancel,
-	// Help, Homepage. Reapply after changing pages because panels are dynamic.
-	HWND previous=HWND_TOP;
-	const int controls[]={IDC_BUTTONBACKUP,IDC_CHECKALL,IDC_EDITSEARCH,IDC_TABSETTINGS};
-	for (int i=0;i<_countof(controls);i++)
+	int current=-1;
+	if (m_Panel && (focus==m_Panel || ::IsChild(m_Panel,focus)))
 	{
-		HWND control=GetDlgItem(controls[i]);
-		::SetWindowPos(control,previous,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
-		previous=control;
+		HWND next=::GetNextDlgTabItem(m_Panel,focus,bPrevious);
+		HWND wrapped=bPrevious?lastPanel:firstPanel;
+		if (next && next!=wrapped)
+			return false; // Let IsDialogMessage move within the active page.
+		current=4;
 	}
-	if (m_Panel)
+	else
 	{
-		::SetWindowPos(m_Panel,previous,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
-		previous=m_Panel;
+		for (int i=0;i<_countof(targets);i++)
+			if (focus==targets[i]) { current=i; break; }
 	}
-	const int trailing[]={IDOK,IDCANCEL,IDC_LINKHELP,IDC_LINKWEB};
-	for (int i=0;i<_countof(trailing);i++)
+	if (current<0) return false;
+
+	for (int step=1;step<=_countof(targets);step++)
 	{
-		HWND control=GetDlgItem(trailing[i]);
-		::SetWindowPos(control,previous,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
-		previous=control;
+		int index=(current+(bPrevious?-step:step)+_countof(targets)*2)%_countof(targets);
+		HWND target=(index==4 && bPrevious)?lastPanel:targets[index];
+		if (!target || !::IsWindowVisible(target) || !::IsWindowEnabled(target)) continue;
+		if (index==3 && !(::GetWindowLongPtr(target,GWL_STYLE)&WS_TABSTOP)) continue;
+		::SetFocus(target);
+		return true;
 	}
+	return false;
 }
 
 LRESULT CSettingsDlg::OnSelChanging( int idCtrl, LPNMHDR pnmh, BOOL& bHandled )
@@ -1981,6 +1990,11 @@ bool IsSettingsMessage( MSG *msg )
 	{
 		g_SettingsDlg.SendMessage(WM_KEYDOWN,VK_TAB,msg->lParam);
 		return true;
+	}
+	if (msg->message==WM_KEYDOWN && msg->wParam==VK_TAB)
+	{
+		if (g_SettingsDlg.NavigateTab(GetKeyState(VK_SHIFT)<0))
+			return true;
 	}
 	if (msg->message==WM_KEYDOWN && msg->wParam==VK_RETURN && GetKeyState(VK_CONTROL)<0)
 	{
