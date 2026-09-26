@@ -1816,6 +1816,56 @@ CString GetPropertyStoreString( IPropertyStore *pStore, REFPROPERTYKEY key )
 	return res;
 }
 
+//  Name:     System.AppUserModel.BestShortcut
+//  Type:     Buffer -- VT_VECTOR | VT_UI1 (an ID list)
+//  FormatID: {9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3}, 10
+static const PROPERTYKEY PKEY_AppUserModel_BestShortcut={{0x9F4C2855, 0x9F79, 0x4B39, {0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3}}, 10};
+
+// Checks that the buffer holds a whole ID list, so it can be used as one
+static bool IsValidIDList( const BYTE *data, ULONG size )
+{
+	for (ULONG pos=0;pos+sizeof(USHORT)<=size;)
+	{
+		USHORT cb=*(const USHORT*)(data+pos);
+		if (cb==0) return true;
+		pos+=cb;
+	}
+	return false;
+}
+
+// When the Start Menu has a shortcut to a Metro app, the Apps folder lists the shortcut in place of the app. Its item then has the
+// shortcut's properties (no package, PKEY_MetroAppLauncher=0) and names the shortcut in PKEY_AppUserModel_BestShortcut.
+// Returns the app the shortcut points to, with its property store, the same way a link to a Metro app is resolved
+static bool GetMetroShortcutTarget( IPropertyStore *pStore, CComPtr<IShellItem> &target, CComPtr<IPropertyStore> &targetStore )
+{
+	CComPtr<IShellItem> pShortcut;
+	PROPVARIANT val;
+	PropVariantInit(&val);
+	if (SUCCEEDED(pStore->GetValue(PKEY_AppUserModel_BestShortcut,&val)) && val.vt==(VT_VECTOR|VT_UI1) && IsValidIDList(val.caub.pElems,val.caub.cElems))
+		SHCreateItemFromIDList((PCIDLIST_ABSOLUTE)val.caub.pElems,IID_PPV_ARGS(&pShortcut));
+	PropVariantClear(&val);
+	if (!pShortcut) return false;
+
+	CComPtr<IShellLink> pLink;
+	CAbsolutePidl targetPidl;
+	CComPtr<IShellItem> pTarget;
+	CComPtr<IPropertyStore> pTargetStore;
+	if (FAILED(pShortcut->BindToHandler(NULL,BHID_SFUIObject,IID_PPV_ARGS(&pLink))) || FAILED(pLink->GetIDList(&targetPidl)) ||
+		FAILED(SHCreateItemFromIDList(targetPidl,IID_PPV_ARGS(&pTarget))) || FAILED(pTarget->BindToHandler(NULL,BHID_PropertyStore,IID_PPV_ARGS(&pTargetStore))))
+		return false;
+
+	// only a shortcut to the same app, and only if it is a Metro app
+	if (_wcsicmp(GetPropertyStoreString(pStore,PKEY_AppUserModel_ID),GetPropertyStoreString(pTargetStore,PKEY_AppUserModel_ID))!=0)
+		return false;
+	bool bMetro=SUCCEEDED(pTargetStore->GetValue(PKEY_MetroAppLauncher,&val)) && (val.vt==VT_I4 || val.vt==VT_UI4) && val.intVal;
+	PropVariantClear(&val);
+	if (!bMetro) return false;
+
+	target=std::move(pTarget);
+	targetStore=std::move(pTargetStore);
+	return true;
+}
+
 // doesn't require the lock to be held
 void CItemManager::RefreshItemInfo( ItemInfo *pInfo, int refreshFlags, IShellItem *pItem0, bool bHasWriteLock )
 {
@@ -1935,6 +1985,15 @@ void CItemManager::RefreshItemInfo( ItemInfo *pInfo, int refreshFlags, IShellIte
 				{
 					newInfo.bLink=false;
 					pItem->BindToHandler(NULL,BHID_PropertyStore,IID_IPropertyStore,(void**)&pStore);
+					// an Apps folder item that stands for a shortcut to a Metro app: use the app, or it would be taken for a desktop program
+					// without an appid (wrong icon, and not recognized as a pinned program)
+					CComPtr<IShellItem> target;
+					CComPtr<IPropertyStore> store;
+					if (pStore && GetMetroShortcutTarget(pStore,target,store))
+					{
+						pItem=std::move(target);
+						pStore=store;
+					}
 				}
 				if (pStore)
 				{
