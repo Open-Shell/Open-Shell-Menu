@@ -2016,7 +2016,10 @@ void CItemManager::RefreshItemInfo( ItemInfo *pInfo, int refreshFlags, IShellIte
 							if (newInfo.bMetroApp)
 							{
 								pAppItem=pItem;
-								newInfo.packagePath=GetPropertyStoreString(pStore,PKEY_MetroPackagePath);
+								// the package installed now, not the one named by the item of a shortcut, which is gone after an update
+								newInfo.packagePath=GetPackageInstallPath(GetPackageFullName(newInfo.appid));
+								if (newInfo.packagePath.IsEmpty())
+									newInfo.packagePath=GetPropertyStoreString(pStore,PKEY_MetroPackagePath);
 								if (!newInfo.packagePath.IsEmpty())
 								{
 									FILETIME writeTime={0}, createTime={0};
@@ -2532,6 +2535,16 @@ static bool SetResContextTargetSize( IResourceContext *pResContext, int size )
 
 void CItemManager::LoadMetroIcon( IShellItem *pItem, int &refreshFlags, const IconInfo *&smallIcon, const IconInfo *&largeIcon, const IconInfo *&extraLargeIcon, const DWORD *pMetroColor )
 {
+	CComPtr<IPropertyStore> pStore;
+	pItem->BindToHandler(NULL,BHID_PropertyStore,IID_IPropertyStore,(void**)&pStore);
+	if (!pStore) return;
+
+	// the package installed now. The item of a shortcut names the package the shortcut was created with, which is gone after an update
+	CString packageName=GetPackageFullName(GetPropertyStoreString(pStore,PKEY_AppUserModel_ID));
+	if (packageName.IsEmpty())
+		packageName=GetPropertyStoreString(pStore,PKEY_MetroPackageName);
+	if (packageName.IsEmpty()) return;
+
 	unsigned int hash;
 	{
 		CComString pName;
@@ -2540,6 +2553,7 @@ void CItemManager::LoadMetroIcon( IShellItem *pItem, int &refreshFlags, const Ic
 	}
 
 	hash=CalcFNVHash(pMetroColor,4,hash);
+	hash=CalcFNVHash(packageName,hash); // a new version of the app can come with a new icon
 
 	FindInCache(hash,refreshFlags,smallIcon,largeIcon,extraLargeIcon);
 	if (!refreshFlags) return;
@@ -2547,12 +2561,6 @@ void CItemManager::LoadMetroIcon( IShellItem *pItem, int &refreshFlags, const Ic
 	// extract icon
 	HBITMAP hSmallBitmap=NULL, hLargeBitmap=NULL, hExtraLargeBitmap=NULL;
 
-	CComPtr<IPropertyStore> pStore;
-	pItem->BindToHandler(NULL,BHID_PropertyStore,IID_IPropertyStore,(void**)&pStore);
-	if (!pStore) return;
-
-	CString packageName=GetPropertyStoreString(pStore,PKEY_MetroPackageName);
-	if (packageName.IsEmpty()) return;
 	CString iconName=GetPropertyStoreString(pStore,PKEY_MetroIcon);
 	if (iconName.IsEmpty()) return;
 

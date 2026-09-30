@@ -10,7 +10,9 @@
 #include "ResourceHelper.h"
 #include "Translations.h"
 #include <propkey.h>
+#include <appmodel.h>
 #include <map>
+#include <vector>
 
 PROPERTYKEY PKEY_MetroAppLink={{0x9F4C2855, 0x9F79, 0x4B39, {0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3}}, 10}; // pidl
 PROPERTYKEY PKEY_MetroAppLauncher={{0x9F4C2855, 0x9F79, 0x4B39, {0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3}}, 14}; // =1 for metro apps
@@ -373,8 +375,60 @@ bool IsEdgeDefaultBrowser( void )
 	return false;
 }
 
+// The package of the app as installed now, found from the package family name in the appid. The full name contains the version, so it
+// changes with every update, while the appid does not. A shortcut to a Metro app keeps the full name of the package it was created with,
+// which is gone after an update. And with such a shortcut in the Start Menu, the Apps folder item for the appid is the shortcut, without a package
+static CString GetInstalledPackageFullName(const wchar_t* appId)
+{
+	static auto pGetPackagesByPackageFamily = static_cast<decltype(&GetPackagesByPackageFamily)>((void*)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetPackagesByPackageFamily"));
+	const wchar_t* bang = appId ? wcschr(appId, '!') : nullptr;
+	if (!pGetPackagesByPackageFamily || !bang)
+		return {};
+	CString family(appId, (int)(bang - appId));
+
+	UINT32 count = 0, bufferLength = 0;
+	if (pGetPackagesByPackageFamily(family, &count, nullptr, &bufferLength, nullptr) != ERROR_INSUFFICIENT_BUFFER || count == 0)
+		return {};
+	std::vector<PWSTR> names(count);
+	std::vector<wchar_t> buffer(bufferLength);
+	if (pGetPackagesByPackageFamily(family, &count, names.data(), &bufferLength, buffer.data()) != ERROR_SUCCESS)
+		return {};
+
+	// the family can also list a bundle and resource packages. The app is in the main package, the one without a resource id.
+	// A full name is Name_Version_Architecture_ResourceId_PublisherId, and no part contains '_'
+	for (UINT32 i = 0; i < count; i++)
+	{
+		const wchar_t* resourceId = names[i];
+		for (int part = 0; part < 3 && resourceId; part++)
+		{
+			resourceId = wcschr(resourceId, '_');
+			if (resourceId) resourceId++;
+		}
+		if (resourceId && *resourceId == '_')
+			return names[i];
+	}
+	return {};
+}
+
+// Returns the folder where the package is installed
+CString GetPackageInstallPath(const wchar_t* packageFullName)
+{
+	static auto pGetPackagePathByFullName = static_cast<decltype(&GetPackagePathByFullName)>((void*)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetPackagePathByFullName"));
+	if (!pGetPackagePathByFullName || !packageFullName || !*packageFullName)
+		return {};
+	wchar_t path[_MAX_PATH];
+	UINT32 length = _countof(path);
+	if (pGetPackagePathByFullName(packageFullName, &length, path) != ERROR_SUCCESS)
+		return {};
+	return path;
+}
+
 CString GetPackageFullName(const wchar_t* appId)
 {
+	CString packageName = GetInstalledPackageFullName(appId);
+	if (!packageName.IsEmpty())
+		return packageName;
+
 	CComPtr<IShellItem> item;
 	if (SUCCEEDED(SHCreateItemInKnownFolder(FOLDERID_AppsFolder, 0, appId, IID_PPV_ARGS(&item))))
 	{
