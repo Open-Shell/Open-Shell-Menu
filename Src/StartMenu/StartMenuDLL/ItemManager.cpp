@@ -2540,9 +2540,11 @@ void CItemManager::LoadMetroIcon( IShellItem *pItem, int &refreshFlags, const Ic
 	if (!pStore) return;
 
 	// the package installed now. The item of a shortcut names the package the shortcut was created with, which is gone after an update
-	CString packageName=GetPackageFullName(GetPropertyStoreString(pStore,PKEY_AppUserModel_ID));
+	CString appid=GetPropertyStoreString(pStore,PKEY_AppUserModel_ID);
+	CString savedPackageName=GetPropertyStoreString(pStore,PKEY_MetroPackageName);
+	CString packageName=GetPackageFullName(appid);
 	if (packageName.IsEmpty())
-		packageName=GetPropertyStoreString(pStore,PKEY_MetroPackageName);
+		packageName=savedPackageName;
 	if (packageName.IsEmpty()) return;
 
 	unsigned int hash;
@@ -2561,7 +2563,13 @@ void CItemManager::LoadMetroIcon( IShellItem *pItem, int &refreshFlags, const Ic
 	// extract icon
 	HBITMAP hSmallBitmap=NULL, hLargeBitmap=NULL, hExtraLargeBitmap=NULL;
 
-	CString iconName=GetPropertyStoreString(pStore,PKEY_MetroIcon);
+	// the logo named by the item belongs to the package the item names. When that is another version, or the item is the Apps folder's
+	// stand-in for a shortcut to the app (no package, no logo), take the logo from the manifest of the package installed now
+	CString iconName;
+	if (_wcsicmp(savedPackageName,packageName)==0)
+		iconName=GetPropertyStoreString(pStore,PKEY_MetroIcon);
+	if (iconName.IsEmpty())
+		iconName=GetAppLogoName(appid);
 	if (iconName.IsEmpty()) return;
 
 	CComPtr<IResourceManager> pResManager;

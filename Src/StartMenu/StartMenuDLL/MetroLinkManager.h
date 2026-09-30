@@ -59,3 +59,6 @@ CString GetPackageFullName(const wchar_t* appId);
 
 // Returns the folder where the package is installed
 CString GetPackageInstallPath(const wchar_t* packageFullName);
+
+// Returns the small logo of the app, from the manifest of the package installed now
+CString GetAppLogoName(const wchar_t* appId);

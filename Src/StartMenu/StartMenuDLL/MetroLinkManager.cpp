@@ -11,6 +11,8 @@
 #include "Translations.h"
 #include <propkey.h>
 #include <appmodel.h>
+#include <appxpackaging.h>
+#include <shlwapi.h>
 #include <map>
 #include <vector>
 
@@ -421,6 +423,43 @@ CString GetPackageInstallPath(const wchar_t* packageFullName)
 	if (pGetPackagePathByFullName(packageFullName, &length, path) != ERROR_SUCCESS)
 		return {};
 	return path;
+}
+
+// Returns the small logo of the app (a resource name like Assets\AppList.png), from the manifest of the package installed now
+CString GetAppLogoName(const wchar_t* appId)
+{
+	const wchar_t* bang = appId ? wcschr(appId, '!') : nullptr;
+	if (!bang)
+		return {};
+	CString path = GetPackageInstallPath(GetInstalledPackageFullName(appId));
+	if (path.IsEmpty())
+		return {};
+	path += L"\\AppxManifest.xml";
+
+	CComPtr<IAppxFactory> factory;
+	CComPtr<IStream> stream;
+	CComPtr<IAppxManifestReader> reader;
+	CComPtr<IAppxManifestApplicationsEnumerator> apps;
+	if (FAILED(factory.CoCreateInstance(__uuidof(AppxFactory))) || FAILED(SHCreateStreamOnFileEx(path, STGM_READ | STGM_SHARE_DENY_NONE, 0, FALSE, nullptr, &stream)) ||
+		FAILED(factory->CreateManifestReader(stream, &reader)) || FAILED(reader->GetApplications(&apps)))
+		return {};
+
+	BOOL bHasCurrent = FALSE;
+	for (; SUCCEEDED(apps->GetHasCurrent(&bHasCurrent)) && bHasCurrent; apps->MoveNext(&bHasCurrent))
+	{
+		CComPtr<IAppxManifestApplication> app;
+		CComString id;
+		if (FAILED(apps->GetCurrent(&app)) || FAILED(app->GetStringValue(L"Id", &id)) || _wcsicmp(id, bang + 1) != 0)
+			continue;
+		CComString logo;
+		if (SUCCEEDED(app->GetStringValue(L"Square44x44Logo", &logo)) && logo && *logo)
+			return (const wchar_t*)logo;
+		logo.Clear();
+		if (SUCCEEDED(app->GetStringValue(L"SmallLogo", &logo)) && logo && *logo) // the name in Windows 8 manifests
+			return (const wchar_t*)logo;
+		break;
+	}
+	return {};
 }
 
 CString GetPackageFullName(const wchar_t* appId)
