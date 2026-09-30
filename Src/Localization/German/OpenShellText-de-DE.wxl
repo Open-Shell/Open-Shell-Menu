@@ -15,6 +15,7 @@
   <String Id="ReadmeDesc" Overridable="yes">Open-Shell Einführung anzeigen</String>
   <String Id="ExplorerSettingsDesc" Overridable="yes">Classic Explorer Einstellungen bearbeiten</String>
   <String Id="StartSettingsDesc" Overridable="yes">Open-Shell Menü Einstellungen bearbeiten</String>
+  <String Id="MenuDesc" Overridable="yes">Start the classic start menu</String>
   <String Id="IESettingsDesc" Overridable="yes">Einstellungen der Internet Explorer Titelleiste und der Statusleiste bearbeiten</String>
   <String Id="UpdateSettingsDesc" Overridable="yes">Einstellungen für die Überprüfung auf eine neue Open-Shell Version</String>
   <String Id="StartMenuFolder" Overridable="yes">Startmenü Ordner erstellen</String>
@@ -27,6 +28,7 @@
   <String Id="UpdateItem" Overridable="yes">Open-Shell Aktualisierung</String>
   <String Id="ExplorerItem" Overridable="yes">Classic Explorer Einstellungen</String>
   <String Id="StartMenuItem" Overridable="yes">Open-Shell Menü Einstellungen</String>
+  <String Id="MenuItem" Overridable="yes">Open-Shell Menu</String>
   <String Id="IEItem" Overridable="yes">Classic IE Einstellungen</String>
   <String Id="StartScreenDesc" Overridable="yes">Startbildschirm öffnen</String>
   <String Id="OpenShellDesc" Overridable="yes">Open-Shell ist eine Sammlung von Bedienungsverbesserungen für Windows</String>

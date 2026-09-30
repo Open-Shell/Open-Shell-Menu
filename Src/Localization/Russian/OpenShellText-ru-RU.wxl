@@ -15,6 +15,7 @@
   <String Id="ReadmeDesc" Overridable="yes">Просмотр руководства пользователя Open-Shell</String>
   <String Id="ExplorerSettingsDesc" Overridable="yes">Изменить параметры Classic Explorer</String>
   <String Id="StartSettingsDesc" Overridable="yes">Изменить параметры классического меню Пуск</String>
+  <String Id="MenuDesc" Overridable="yes">Start the classic start menu</String>
   <String Id="IESettingsDesc" Overridable="yes">Изменить параметры заголовка окна и строки состояния Internet Explorer</String>
   <String Id="UpdateSettingsDesc" Overridable="yes">Изменить параметры проверки новой версии Open-Shell</String>
   <String Id="StartMenuFolder" Overridable="yes">Создать папку в меню Пуск</String>
@@ -27,6 +28,7 @@
   <String Id="UpdateItem" Overridable="yes">Open-Shell Update</String>
   <String Id="ExplorerItem" Overridable="yes">Параметры Classic Explorer</String>
   <String Id="StartMenuItem" Overridable="yes">Параметры классического меню Пуск</String>
+  <String Id="MenuItem" Overridable="yes">Open-Shell Menu</String>
   <String Id="IEItem" Overridable="yes">Параметры Classic IE</String>
   <String Id="StartScreenDesc" Overridable="yes">Открыть начальный экран</String>
   <String Id="OpenShellDesc" Overridable="yes">Open-Shell — это набор улучшений для Windows</String>

@@ -15,6 +15,7 @@
   <String Id="ReadmeDesc" Overridable="yes">檢視 Open-Shell 介紹</String>
   <String Id="ExplorerSettingsDesc" Overridable="yes">編輯 Classic Explorer 的設定</String>
   <String Id="StartSettingsDesc" Overridable="yes">編輯 Open-Shell Menu 的設定</String>
+  <String Id="MenuDesc" Overridable="yes">Start the classic start menu</String>
   <String Id="IESettingsDesc" Overridable="yes">編輯 Internet Explorer 標題列和狀態列的設定</String>
   <String Id="UpdateSettingsDesc" Overridable="yes">編輯 Open-Shell 的新版本檢查設定</String>
   <String Id="StartMenuFolder" Overridable="yes">建立 [\[]開始[\]] 功能表資料夾</String>
@@ -27,6 +28,7 @@
   <String Id="UpdateItem" Overridable="yes">Open-Shell 更新</String>
   <String Id="ExplorerItem" Overridable="yes">Classic Explorer 設定</String>
   <String Id="StartMenuItem" Overridable="yes">Open-Shell Menu 設定</String>
+  <String Id="MenuItem" Overridable="yes">Open-Shell Menu</String>
   <String Id="IEItem" Overridable="yes">Classic IE 設定</String>
   <String Id="StartScreenDesc" Overridable="yes">開啟 [\[]開始[\]] 畫面</String>
   <String Id="OpenShellDesc" Overridable="yes">Open-Shell 是增強 Windows 可用性的工具集</String>

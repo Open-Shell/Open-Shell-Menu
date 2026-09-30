@@ -15,6 +15,7 @@
   <String Id="ReadmeDesc" Overridable="yes">查看 Open-Shell 的介绍文档</String>
   <String Id="ExplorerSettingsDesc" Overridable="yes">编辑 Classic Explorer 的配置</String>
   <String Id="StartSettingsDesc" Overridable="yes">编辑经典开始菜单的配置</String>
+  <String Id="MenuDesc" Overridable="yes">Start the classic start menu</String>
   <String Id="IESettingsDesc" Overridable="yes">编辑 Internet Explorer 的标题栏和状态栏配置</String>
   <String Id="UpdateSettingsDesc" Overridable="yes">修改 Open-Shell 的新版本检查方式</String>
   <String Id="StartMenuFolder" Overridable="yes">创建开始菜单文件夹</String>
@@ -27,6 +28,7 @@
   <String Id="UpdateItem" Overridable="yes">更新 Open-Shell</String>
   <String Id="ExplorerItem" Overridable="yes">经典资源管理器设置</String>
   <String Id="StartMenuItem" Overridable="yes">经典开始菜单设置</String>
+  <String Id="MenuItem" Overridable="yes">Open-Shell Menu</String>
   <String Id="IEItem" Overridable="yes">经典 IE 设置</String>
   <String Id="StartScreenDesc" Overridable="yes">打开开始屏幕</String>
   <String Id="OpenShellDesc" Overridable="yes">Open-Shell，使你的 Windows 操作系统用得更得心应手</String>

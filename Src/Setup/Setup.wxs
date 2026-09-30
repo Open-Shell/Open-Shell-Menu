@@ -103,6 +103,7 @@
 				<ComponentRef Id="Immersive.skin7" />
 				<ComponentRef Id="AutoRun" />
 				<ComponentRef Id="MenuSettingsLink" />
+				<ComponentRef Id="MenuLink" />
 			</Feature>
 			<Feature Id="ClassicIE" Level="2" Title="!(loc.IETitle)" ConfigurableDirectory="APPLICATIONFOLDER" AllowAdvertise="no" Description="!(loc.IEDesc)">
 				<ComponentRef Id="ClassicIEDLL_32.dll" />
@@ -630,6 +631,11 @@
 				<Shortcut Id="MenuSettingsLink" Name="!(loc.StartMenuItem)" Advertise="no" Description="!(loc.StartSettingsDesc)" Target="[APPLICATIONFOLDER]StartMenu.exe" WorkingDirectory="APPLICATIONFOLDER" Arguments="-settings">
 					<ShortcutProperty Key="System.AppUserModel.ID" Value="OpenShell.StartMenu.Settings" />
 				</Shortcut>
+				<CreateFolder />
+				<Condition>START_MENU_FOLDER=1</Condition>
+			</Component>
+			<Component Id="MenuLink" Guid="3A628273-810A-49AC-8410-4192C0013AE0">
+				<Shortcut Id="MenuLink" Name="!(loc.MenuItem)" Advertise="no" Description="!(loc.MenuDesc)" Target="[APPLICATIONFOLDER]StartMenu.exe" WorkingDirectory="APPLICATIONFOLDER" />
 				<CreateFolder />
 				<Condition>START_MENU_FOLDER=1</Condition>
 			</Component>

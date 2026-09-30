@@ -15,6 +15,7 @@
   <String Id="ReadmeDesc" Overridable="yes">مشاهده معرفی Open-Shell</String>
   <String Id="ExplorerSettingsDesc" Overridable="yes">تغییر تنظیمات کاوشگر کلاسیک</String>
   <String Id="StartSettingsDesc" Overridable="yes">تغییر تنظیمات منوی شروع کلاسیک</String>
+  <String Id="MenuDesc" Overridable="yes">Start the classic start menu</String>
   <String Id="IESettingsDesc" Overridable="yes">تغییر تنظیمات نوار عنوان و وضعیت کاوشگر اینترنت</String>
   <String Id="UpdateSettingsDesc" Overridable="yes">تغییر تنظیمات به‌روزرسان  Open-Shell</String>
   <String Id="StartMenuFolder" Overridable="yes">ایجاد پوشه در منوی شروع</String>
@@ -27,6 +28,7 @@
   <String Id="UpdateItem" Overridable="yes">به‌روزرسانی Open-Shell</String>
   <String Id="ExplorerItem" Overridable="yes">تنظیمات کاوشگر کلاسیک</String>
   <String Id="StartMenuItem" Overridable="yes">تنظیمات منوی شروع کلاسیک</String>
+  <String Id="MenuItem" Overridable="yes">Open-Shell Menu</String>
   <String Id="IEItem" Overridable="yes">تنظیمات کاوشگر اینترنت کلاسیک</String>
   <String Id="StartScreenDesc" Overridable="yes">صفحه شروع را باز کن</String>
   <String Id="OpenShellDesc" Overridable="yes">Open-Shell محجموعه‌ای از قابلیت‌های توسعه‌یافته برای ویندوز است</String>

@@ -15,6 +15,7 @@
   <String Id="ReadmeDesc" Overridable="yes">Voir une introduction à Open-Shell</String>
   <String Id="ExplorerSettingsDesc" Overridable="yes">Éditer les paramètres de Classic Explorer</String>
   <String Id="StartSettingsDesc" Overridable="yes">Éditer les paramètres de Open-Shell Menu</String>
+  <String Id="MenuDesc" Overridable="yes">Start the classic start menu</String>
   <String Id="IESettingsDesc" Overridable="yes">Éditer les paramètres de la barre de titre et de la barre d’état de Internet Explorer</String>
   <String Id="UpdateSettingsDesc" Overridable="yes">Éditer les paramètres pour la vérification des mises à jour de Open-Shell</String>
   <String Id="StartMenuFolder" Overridable="yes">Créer un dossier de menu de démarrage</String>
@@ -27,6 +28,7 @@
   <String Id="UpdateItem" Overridable="yes">Mettre à jour Open-Shell</String>
   <String Id="ExplorerItem" Overridable="yes">Paramètres de Classic Explorer</String>
   <String Id="StartMenuItem" Overridable="yes">Paramètres de Open-Shell Menu</String>
+  <String Id="MenuItem" Overridable="yes">Open-Shell Menu</String>
   <String Id="IEItem" Overridable="yes">Paramètres de Classic IE</String>
   <String Id="StartScreenDesc" Overridable="yes">Ouvrir le menu daccueil</String>
   <String Id="OpenShellDesc" Overridable="yes">Open-Shell est une collection d’utilitaires qui améliorent l’ergonomie de Windows</String>
