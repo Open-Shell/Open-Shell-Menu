@@ -377,16 +377,41 @@ bool IsEdgeDefaultBrowser( void )
 	return false;
 }
 
-// The package of the app as installed now, found from the package family name in the appid. The full name contains the version, so it
-// changes with every update, while the appid does not. A shortcut to a Metro app keeps the full name of the package it was created with,
-// which is gone after an update. And with such a shortcut in the Start Menu, the Apps folder item for the appid is the shortcut, without a package
+// Splits an appid (PackageFamilyName!AppName) into its two parts. Returns false if it is not one
+static bool SplitAppId(const wchar_t* appId, CString& family, CString& appName)
+{
+	const wchar_t* bang = appId ? wcschr(appId, '!') : nullptr;
+	if (!bang)
+		return false;
+	family.SetString(appId, (int)(bang - appId));
+	appName = bang + 1;
+	return true;
+}
+
+// A package family can also list a bundle and resource packages; the app is in the main package, the one
+// without a resource id. A full name is Name_Version_Architecture_ResourceId_PublisherId, and no part contains '_'
+static bool IsMainPackage(const wchar_t* fullName)
+{
+	const wchar_t* resourceId = fullName;
+	for (int part = 0; part < 3 && resourceId; part++)
+	{
+		resourceId = wcschr(resourceId, '_');
+		if (resourceId) resourceId++;
+	}
+	return resourceId && *resourceId == '_';
+}
+
+// The full name of the app's package as installed now, found from the package family name in the appid.
+// The full name contains the version, so it changes with every update, while the appid does not. A shortcut to a
+// Metro app keeps the full name of the package it was created with, which is gone after an update. And with such a
+// shortcut in the Start Menu, the Apps folder item for the appid is the shortcut, without a package.
+// Returns an empty string if the app is not installed, or before Windows 8
 static CString GetInstalledPackageFullName(const wchar_t* appId)
 {
 	static auto pGetPackagesByPackageFamily = static_cast<decltype(&GetPackagesByPackageFamily)>((void*)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetPackagesByPackageFamily"));
-	const wchar_t* bang = appId ? wcschr(appId, '!') : nullptr;
-	if (!pGetPackagesByPackageFamily || !bang)
+	CString family, appName;
+	if (!pGetPackagesByPackageFamily || !SplitAppId(appId, family, appName))
 		return {};
-	CString family(appId, (int)(bang - appId));
 
 	UINT32 count = 0, bufferLength = 0;
 	if (pGetPackagesByPackageFamily(family, &count, nullptr, &bufferLength, nullptr) != ERROR_INSUFFICIENT_BUFFER || count == 0)
@@ -396,23 +421,15 @@ static CString GetInstalledPackageFullName(const wchar_t* appId)
 	if (pGetPackagesByPackageFamily(family, &count, names.data(), &bufferLength, buffer.data()) != ERROR_SUCCESS)
 		return {};
 
-	// the family can also list a bundle and resource packages. The app is in the main package, the one without a resource id.
-	// A full name is Name_Version_Architecture_ResourceId_PublisherId, and no part contains '_'
-	for (UINT32 i = 0; i < count; i++)
+	for (PWSTR name : names)
 	{
-		const wchar_t* resourceId = names[i];
-		for (int part = 0; part < 3 && resourceId; part++)
-		{
-			resourceId = wcschr(resourceId, '_');
-			if (resourceId) resourceId++;
-		}
-		if (resourceId && *resourceId == '_')
-			return names[i];
+		if (IsMainPackage(name))
+			return name;
 	}
 	return {};
 }
 
-// Returns the folder where the package is installed
+// Returns the folder where the package is installed, or an empty string
 CString GetPackageInstallPath(const wchar_t* packageFullName)
 {
 	static auto pGetPackagePathByFullName = static_cast<decltype(&GetPackagePathByFullName)>((void*)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetPackagePathByFullName"));
@@ -425,23 +442,43 @@ CString GetPackageInstallPath(const wchar_t* packageFullName)
 	return path;
 }
 
-// Returns the small logo of the app (a resource name like Assets\AppList.png), from the manifest of the package installed now
-CString GetAppLogoName(const wchar_t* appId)
+// Opens the list of applications in the manifest of an installed package. Returns null if the manifest can't be read
+static CComPtr<IAppxManifestApplicationsEnumerator> ReadManifestApplications(const wchar_t* packagePath)
 {
-	const wchar_t* bang = appId ? wcschr(appId, '!') : nullptr;
-	if (!bang)
-		return {};
-	CString path = GetPackageInstallPath(GetInstalledPackageFullName(appId));
-	if (path.IsEmpty())
-		return {};
+	CString path = packagePath;
 	path += L"\\AppxManifest.xml";
-
 	CComPtr<IAppxFactory> factory;
 	CComPtr<IStream> stream;
 	CComPtr<IAppxManifestReader> reader;
 	CComPtr<IAppxManifestApplicationsEnumerator> apps;
 	if (FAILED(factory.CoCreateInstance(__uuidof(AppxFactory))) || FAILED(SHCreateStreamOnFileEx(path, STGM_READ | STGM_SHARE_DENY_NONE, 0, FALSE, nullptr, &stream)) ||
 		FAILED(factory->CreateManifestReader(stream, &reader)) || FAILED(reader->GetApplications(&apps)))
+		return nullptr;
+	return apps;
+}
+
+// The small logo of a manifest application: Square44x44Logo, or SmallLogo in Windows 8 manifests
+static CString GetManifestLogo(IAppxManifestApplication* app)
+{
+	for (const wchar_t* attribute : {L"Square44x44Logo", L"SmallLogo"})
+	{
+		CComString logo;
+		if (SUCCEEDED(app->GetStringValue(attribute, &logo)) && logo && *logo)
+			return (const wchar_t*)logo;
+	}
+	return {};
+}
+
+// Returns the small logo of the app (a resource name like Assets\AppList.png), from the manifest of the package
+// installed now, or an empty string
+CString GetAppLogoName(const wchar_t* appId)
+{
+	CString family, appName;
+	if (!SplitAppId(appId, family, appName))
+		return {};
+	CString packagePath = GetPackageInstallPath(GetInstalledPackageFullName(appId));
+	CComPtr<IAppxManifestApplicationsEnumerator> apps = packagePath.IsEmpty() ? nullptr : ReadManifestApplications(packagePath);
+	if (!apps)
 		return {};
 
 	BOOL bHasCurrent = FALSE;
@@ -449,15 +486,8 @@ CString GetAppLogoName(const wchar_t* appId)
 	{
 		CComPtr<IAppxManifestApplication> app;
 		CComString id;
-		if (FAILED(apps->GetCurrent(&app)) || FAILED(app->GetStringValue(L"Id", &id)) || _wcsicmp(id, bang + 1) != 0)
-			continue;
-		CComString logo;
-		if (SUCCEEDED(app->GetStringValue(L"Square44x44Logo", &logo)) && logo && *logo)
-			return (const wchar_t*)logo;
-		logo.Clear();
-		if (SUCCEEDED(app->GetStringValue(L"SmallLogo", &logo)) && logo && *logo) // the name in Windows 8 manifests
-			return (const wchar_t*)logo;
-		break;
+		if (SUCCEEDED(apps->GetCurrent(&app)) && SUCCEEDED(app->GetStringValue(L"Id", &id)) && _wcsicmp(id, appName) == 0)
+			return GetManifestLogo(app);
 	}
 	return {};
 }
