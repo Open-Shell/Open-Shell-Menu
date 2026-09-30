@@ -4134,6 +4134,7 @@ if (!g_bTrimHooks)
 						CMD_EXPLORER,
 						CMD_OPEN_PINNED,
 						CMD_RELOAD,
+						CMD_WINX,
 					};
 
 					// right-click on the start button - open the context menu (Settings, Help, Exit)
@@ -4151,7 +4152,8 @@ if (!g_bTrimHooks)
 						AppendMenu(menu,MF_SEPARATOR,0,0);
 					}
 					int count0=GetMenuItemCount(menu);
-					if (GetSettingBool(L"EnableExplorer"))
+					bool bExplorer=GetSettingBool(L"EnableExplorer");
+					if (bExplorer)
 					{
 						if (!GetSettingString(L"ExplorerPath").IsEmpty())
 							AppendMenu(menu,MF_STRING,CMD_EXPLORER,FindTranslation(L"Menu.Explorer",L"Windows Explorer"));
@@ -4160,8 +4162,13 @@ if (!g_bTrimHooks)
 							AppendMenu(menu,MF_STRING,CMD_OPEN_ALL,FindTranslation(L"Menu.OpenAll",L"O&pen All Users"));
 						if (GetSettingInt(L"PinnedPrograms")==PINNED_PROGRAMS_PINNED)
 							AppendMenu(menu,MF_STRING,CMD_OPEN_PINNED,FindTranslation(L"Menu.OpenPinned",L"O&pen Pinned"));
-						AppendMenu(menu,MF_SEPARATOR,0,0);
 					}
+					// the Win+X menu of Windows, which Shift+right-click opens, for those who don't know the shortcut.
+					// it doesn't open folders, so EnableExplorer doesn't remove it
+					if (winVer>=WIN_VER_WIN8)
+						AppendMenu(menu,MF_STRING,CMD_WINX,FindTranslation(L"Menu.WinXMenu",L"Win+X Menu"));
+					if (bExplorer || winVer>=WIN_VER_WIN8)
+						AppendMenu(menu,MF_SEPARATOR,0,0);
 					if (GetSettingBool(L"EnableSettings"))
 						AppendMenu(menu,MF_STRING,CMD_SETTINGS,FindTranslation(L"Menu.MenuSettings",L"Settings"));
 					if (HasHelp())
@@ -4190,6 +4197,10 @@ if (!g_bTrimHooks)
 						int res=TrackPopupMenu(menu,TPM_RIGHTBUTTON|TPM_RETURNCMD|(IsLanguageRTL()?TPM_LAYOUTRTL:0),pt0.x,pt0.y,0,msg->hwnd,NULL);
 						DestroyMenu(menu);
 						g_bInMenu=false;
+						if (res==CMD_WINX)
+						{
+							ShowWinX(); // as Shift+right-click does
+						}
 						if (res==CMD_SETTINGS)
 						{
 							EditSettings(false,0);
