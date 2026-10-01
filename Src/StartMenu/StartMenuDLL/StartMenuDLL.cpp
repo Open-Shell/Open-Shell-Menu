@@ -14,6 +14,7 @@
 #include "ResourceHelper.h"
 #include "LogManager.h"
 #include "TouchHelper.h"
+#include "Win11Taskbar.h"
 #include "IatHookHelper.h"
 #include "dllmain.h"
 #include <uxtheme.h>
@@ -1296,6 +1297,9 @@ static void UpdateStartButtonPosition(const TaskbarInfo* taskBar, const WINDOWPO
 			buttonFlags |= SWP_NOZORDER;
 	}
 
+	// rcTask is nudged by a pixel below for the classic Win32 button. Keep the real bar rect.
+	const RECT rcTaskRaw = rcTask;
+
 	if (!IsStartButtonSmallIcons(taskBar->taskbarId))
 	{
 		bool bClassic;
@@ -1342,6 +1346,23 @@ static void UpdateStartButtonPosition(const TaskbarInfo* taskBar, const WINDOWPO
 			y = rcTask.top;
 		else
 			y = rcTask.bottom - taskBar->startButtonSize.cy;
+
+		// Win11 start hit target, measured at 96 DPI on a 48px bar: a 40px square,
+		// 4px from the top and bottom and 12px from the screen edge. The classic
+		// 1px drop and the left-edge pin leave a custom image low and left of it.
+		if (IsWin11() && GetStartButtonType() == START_BUTTON_CUSTOM && !GetSettingBool(L"StartButtonAlign") && !g_epTaskbar)
+		{
+			const int margin = ScaleForDpi(taskBar->taskBar, 4);
+			const int lead = ScaleForDpi(taskBar->taskBar, 12);
+			int slot = (rcTaskRaw.bottom - rcTaskRaw.top) - margin * 2;
+			if (slot < 1)
+				slot = rcTaskRaw.bottom - rcTaskRaw.top;
+			if (GetWindowLongPtr(taskBar->rebar, GWL_EXSTYLE) & WS_EX_LAYOUTRTL)
+				x = rcTaskRaw.right - lead - slot + (slot - taskBar->startButtonSize.cx) / 2;
+			else
+				x = rcTaskRaw.left + lead + (slot - taskBar->startButtonSize.cx) / 2;
+			y = rcTaskRaw.top + margin + (slot - taskBar->startButtonSize.cy) / 2;
+		}
 
 		// Start button on Win11 is a bit shifted to the right
 		// We will shift our Aero button to cover original button
@@ -1628,7 +1649,8 @@ static void ComputeTaskbarColors( int *data )
 {
 	bool bDefLook;
 	int look=GetSettingInt(L"TaskbarLook",bDefLook);
-	if (GetWinVersion()<WIN_VER_WIN10 || !IsAppThemed() || look==TASKBAR_AEROGLASS || (look==TASKBAR_TRANSPARENT && g_TaskbarTexture))
+	// On Windows 11 a disabled accent is a black plate behind the XAML bar. Keep the accent alive there.
+	if (GetWinVersion()<WIN_VER_WIN10 || !IsAppThemed() || look==TASKBAR_AEROGLASS || (look==TASKBAR_TRANSPARENT && g_TaskbarTexture && !IsWin11()))
 	{
 		memset(data,0,16);
 	}
@@ -2643,6 +2665,8 @@ void UpdateTaskBars( TUpdateTaskbar update )
 		InvalidateRect(taskBar.taskBar,NULL,TRUE);
 		PostMessage(taskBar.taskBar,WM_THEMECHANGED,0,0);
 	}
+	if (IsWin11())
+		ApplyWin11Taskbar();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3227,6 +3251,8 @@ if (!g_bTrimHooks)
 
 	UpdateTaskBars(TASKBAR_RECREATE_BUTTONS);
 	UpdateTaskBars(TASKBAR_UPDATE_TEXTURE);
+	if (IsWin11())
+		StartWin11TaskbarConnect();
 }
 
 static void RecreateStartButton( size_t taskbarId )

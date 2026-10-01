@@ -104,6 +104,8 @@ static bool HookStartMenu( THookMode mode, HWND &menu )
 		int err=GetLastError();
 		DllLogToFile(STARTUP_LOG,L"StartMenu: hook failed: 0x%08X",err);
 	}
+	else
+		ConnectWin11Taskbar(process);
 	PostMessage(g_TaskBar,WM_NULL,0,0); // make sure there is one message in the queue
 
 	return true;

@@ -72,6 +72,9 @@
     <ClCompile Include="TouchHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Win11Taskbar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Accessibility.h">
@@ -123,6 +126,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Win11Taskbar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TouchHelper.h">

@@ -18,6 +18,9 @@ STARTMENUAPI HWND FindTaskBar( DWORD process );
 // WH_GETMESSAGE hook for the explorer's GUI thread. The start menu exe uses this hook to inject code into the explorer process
 STARTMENUAPI LRESULT CALLBACK HookInject( int code, WPARAM wParam, LPARAM lParam );
 
+// Ask Explorer's XAML taskbar to load our tap. Called from StartMenu.exe. No-op on older Windows.
+STARTMENUAPI void ConnectWin11Taskbar( DWORD explorerPid );
+
 // Toggle the start menu. bKeyboard - set to true to show the keyboard cues
 STARTMENUAPI HWND ToggleStartMenu( int taskbarId, bool bKeyboard );
 

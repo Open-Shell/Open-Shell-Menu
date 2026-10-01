@@ -89,6 +89,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="TouchHelper.cpp" />
+    <ClCompile Include="Win11Taskbar.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Accessibility.h" />
@@ -110,6 +111,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TouchHelper.h" />
+    <ClInclude Include="Win11Taskbar.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\Setup\OpenShell.ico" />
