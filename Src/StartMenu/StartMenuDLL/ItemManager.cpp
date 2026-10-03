@@ -3337,19 +3337,19 @@ void CItemManager::LoadCacheFile( void )
 				info.iconColor=data.iconColor;
 				info.iconIndex=data.iconIndex;
 
-				info.smallIcon=data.smallIcon<(int)remapIcons.size()?remapIcons[data.smallIcon]:NULL;
+				info.smallIcon=data.smallIcon>=0 && (size_t)data.smallIcon<remapIcons.size()?remapIcons[data.smallIcon]:NULL;
 				if (!info.smallIcon)
 				{
 					info.validFlags&=~INFO_SMALL_ICON;
 					info.smallIcon=m_DefaultSmallIcon;
 				}
-				info.largeIcon=data.largeIcon<(int)remapIcons.size()?remapIcons[data.largeIcon]:NULL;
+				info.largeIcon=data.largeIcon>=0 && (size_t)data.largeIcon<remapIcons.size()?remapIcons[data.largeIcon]:NULL;
 				if (!info.largeIcon)
 				{
 					info.validFlags&=~INFO_LARGE_ICON;
 					info.largeIcon=m_DefaultLargeIcon;
 				}
-				info.extraLargeIcon=data.extraLargeIcon<(int)remapIcons.size()?remapIcons[data.extraLargeIcon]:NULL;
+				info.extraLargeIcon=data.extraLargeIcon>=0 && (size_t)data.extraLargeIcon<remapIcons.size()?remapIcons[data.extraLargeIcon]:NULL;
 				if (!info.extraLargeIcon)
 				{
 					info.validFlags&=~INFO_EXTRA_LARGE_ICON;
