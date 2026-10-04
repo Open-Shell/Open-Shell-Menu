@@ -3422,7 +3422,7 @@ DWORD CALLBACK CItemManager::SaveCacheFileThread( void *param )
 		RWLock lock(pThis,false,RWLOCK_ICONS);
 		for (std::multimap<unsigned int,IconInfo>::const_iterator it=pThis->m_IconInfos.begin();it!=pThis->m_IconInfos.end();++it)
 		{
-			if (!it->second.PATH.IsEmpty() && it->second.PATH[1]!='#' && it->first!=0)
+			if (!it->second.bTemp && !it->second.bMetro && !it->second.PATH.IsEmpty() && it->second.PATH[1]!='#' && it->first!=0)
 				iconInfos.push_back(&*it);
 		}
 	}
@@ -3433,7 +3433,7 @@ DWORD CALLBACK CItemManager::SaveCacheFileThread( void *param )
 		RWLock lock(pThis,false,RWLOCK_ITEMS);
 		for (std::multimap<unsigned int,ItemInfo>::const_iterator it=pThis->m_ItemInfos.begin();it!=pThis->m_ItemInfos.end();++it)
 		{
-			if (it->first!=0)
+			if (!it->second.bTemp && it->first!=0)
 				itemInfos.push_back(&*it);
 		}
 		for (std::set<unsigned int>::const_iterator it=pThis->m_BlackListInfos10.begin();it!=pThis->m_BlackListInfos10.end();++it)
@@ -3566,6 +3566,15 @@ void CItemManager::SaveCacheFile( void )
 
 void CItemManager::ClearCache( void )
 {
+	// The save thread keeps pointers to persistent cache entries while serializing them.
+	// Let it finish before clearing the containers those pointers refer to.
+	if (m_SaveCacheThread)
+	{
+		WaitForSingleObject(m_SaveCacheThread,INFINITE);
+		CloseHandle(m_SaveCacheThread);
+		m_SaveCacheThread=NULL;
+	}
+
 	Lock cleanupLock(this,LOCK_CLEANUP);
 	RWLock itemLock(this,true,RWLOCK_ITEMS);
 	RWLock iconLock(this,true,RWLOCK_ICONS);
