@@ -19,6 +19,7 @@
 #include <dwmapi.h>
 #include <Ntquery.h>
 #include <algorithm>
+#include <Vsstyle.h>
 
 // CExplorerBHO - a browser helper object that implements Alt+Enter for the folder tree
 
@@ -593,6 +594,128 @@ LRESULT CALLBACK CExplorerBHO::SubclassStatusProc8( HWND hWnd, UINT uMsg, WPARAM
 			return 0;
 		}
 	}
+
+	if (uMsg==WM_SETTINGCHANGE && IsColorSchemeChangeMessage(lParam))
+	{
+		SetWindowTheme(hWnd,ShouldAppsUseDarkMode()?L"DarkMode_Explorer":NULL,NULL);
+		::RedrawWindow(hWnd,NULL,NULL,RDW_INVALIDATE|RDW_ERASE|RDW_FRAME);
+	}
+
+	if (ShouldAppsUseDarkMode())
+	{
+		if (uMsg==WM_NCPAINT)
+		{
+			LRESULT result=DefSubclassProc(hWnd,uMsg,wParam,lParam);
+			HDC hdc=GetWindowDC(hWnd);
+			if (hdc)
+			{
+				RECT rc;
+				GetWindowRect(hWnd,&rc);
+				OffsetRect(&rc,-rc.left,-rc.top);
+				rc.bottom=rc.top+1;
+				SetDCBrushColor(hdc,RGB(0x3A,0x3A,0x3A));
+				FillRect(hdc,&rc,(HBRUSH)GetStockObject(DC_BRUSH));
+				ReleaseDC(hWnd,hdc);
+			}
+			return result;
+		}
+
+		if (uMsg==WM_ERASEBKGND)
+		{
+			HDC hdc=(HDC)wParam;
+			RECT rc;
+			if (GetClipBox(hdc,&rc)!=ERROR)
+			{
+				SetDCBrushColor(hdc,RGB(0x1C,0x1C,0x1C));
+				FillRect(hdc,&rc,(HBRUSH)GetStockObject(DC_BRUSH));
+			}
+			return 1;
+		}
+
+		if (uMsg==WM_PAINT)
+		{
+			PAINTSTRUCT ps;
+			HDC hdc=BeginPaint(hWnd,&ps);
+			if (!hdc)
+				return 0;
+
+			int saved=SaveDC(hdc);
+			RECT client;
+			GetClientRect(hWnd,&client);
+			SetDCBrushColor(hdc,RGB(0x1C,0x1C,0x1C));
+			FillRect(hdc,&ps.rcPaint,(HBRUSH)GetStockObject(DC_BRUSH));
+
+			HFONT font=(HFONT)DefSubclassProc(hWnd,WM_GETFONT,0,0);
+			if (font)
+				SelectObject(hdc,font);
+			SetBkMode(hdc,TRANSPARENT);
+			SetTextColor(hdc,RGB(0xFF,0xFF,0xFF));
+
+			SIZE textSize={};
+			GetTextExtentPoint32(hdc,L"T",1,&textSize);
+			int smallIcon=GetSystemMetrics(SM_CXSMICON);
+
+			// Let the status theme draw a DPI-aware resize grip.
+			HTHEME theme=OpenThemeData(hWnd,L"STATUS");
+			if (theme)
+			{
+				RECT grip;
+				grip.left=client.right-GetSystemMetrics(SM_CXHSCROLL)+(GetDpi(hWnd)<USER_DEFAULT_SCREEN_DPI*1.75?1:6);
+				grip.top=client.bottom-GetSystemMetrics(SM_CYVSCROLL);
+				grip.right=client.right;
+				grip.bottom=client.bottom;
+				DrawThemeBackground(theme,hdc,SP_GRIPPER,0,&grip,&grip);
+				CloseThemeData(theme);
+			}
+
+			SetDCBrushColor(hdc,RGB(0x5E,0x5E,0x5E));
+			HBRUSH separatorBrush=(HBRUSH)GetStockObject(DC_BRUSH);
+			int parts=(int)DefSubclassProc(hWnd,SB_GETPARTS,0,0);
+			for (int i=0;i<parts;i++)
+			{
+				RECT rc;
+				if (!DefSubclassProc(hWnd,SB_GETRECT,i,(LPARAM)&rc))
+					continue;
+
+				RECT intersection;
+				if (!IntersectRect(&intersection,&rc,&ps.rcPaint))
+					continue;
+
+				RECT separator=rc;
+				LRESULT length=DefSubclassProc(hWnd,SB_GETTEXTLENGTH,i,0);
+				int textLength=LOWORD(length);
+				int flags=HIWORD(length);
+
+				HICON icon=(HICON)DefSubclassProc(hWnd,SB_GETICON,i,0);
+				if (icon)
+				{
+					DrawIconEx(hdc,rc.left+2,rc.top+((rc.bottom-rc.top)/2-smallIcon/2),icon,0,0,0,NULL,DI_NORMAL);
+					rc.left+=smallIcon+4;
+				}
+
+				WCHAR text[1024];
+				if (textLength>0 && textLength<(int)_countof(text) && !(flags&SBT_OWNERDRAW))
+				{
+					DefSubclassProc(hWnd,SB_GETTEXT,i,(LPARAM)text);
+					rc.left+=2;
+					rc.top+=(rc.bottom-rc.top)/2-textSize.cy/2;
+					DrawText(hdc,text,-1,&rc,DT_SINGLELINE|DT_VCENTER|DT_LEFT);
+				}
+
+				if (parts>1 && i!=parts-1 && !(flags&SBT_NOBORDERS) && separator.right<client.right-16)
+				{
+					separator.left=separator.right-1;
+					separator.bottom--;
+					FillRect(hdc,&separator,separatorBrush);
+				}
+			}
+
+			RestoreDC(hdc,saved);
+			EndPaint(hWnd,&ps);
+			return 0;
+		}
+	}
+
 	return DefSubclassProc(hWnd,uMsg,wParam,lParam);
 }
 
@@ -1303,6 +1426,8 @@ HRESULT STDMETHODCALLTYPE CExplorerBHO::SetSite( IUnknown *pUnkSite )
 
 						SendMessage(m_Status8,SB_SIMPLE,FALSE,0);
 						SetWindowSubclass(m_Status8,SubclassStatusProc8,(UINT_PTR)this,flags);
+						if (ShouldAppsUseDarkMode())
+							SetWindowTheme(m_Status8,L"DarkMode_Explorer",NULL);
 					}
 					else
 					{
