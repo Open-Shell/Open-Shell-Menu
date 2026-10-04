@@ -841,31 +841,35 @@ static DWORD WINAPI ConnectAttemptThread( LPVOID param )
 	return 0;
 }
 
-static DWORD WINAPI ConnectThread( LPVOID )
+static DWORD FinishConnectThread( HMODULE moduleReference, HMODULE runtime, bool resetConnectionState )
 {
+	if (runtime)
+		FreeLibrary(runtime);
+	if (resetConnectionState)
+		InterlockedExchange(&g_ConnectStarted, 0);
+
+	// The connection worker executes from StartMenuDLL and can outlive the normal
+	// Open-Shell unload path. Release its private module reference and terminate
+	// atomically so the DLL cannot disappear underneath the thread's return path.
+	FreeLibraryAndExitThread(moduleReference, 0);
+	return 0;
+}
+
+static DWORD WINAPI ConnectThread( LPVOID param )
+{
+	HMODULE moduleReference = (HMODULE)param;
 	HMODULE runtime = LoadLibraryEx(L"Windows.UI.Xaml.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
 	if (!runtime)
-	{
-		InterlockedExchange(&g_ConnectStarted, 0);
-		return 0;
-	}
+		return FinishConnectThread(moduleReference, NULL, true);
 
 	InitXamlDiagnosticsEx_t init = (InitXamlDiagnosticsEx_t)GetProcAddress(runtime, "InitializeXamlDiagnosticsEx");
 	if (!init)
-	{
-		FreeLibrary(runtime);
-		InterlockedExchange(&g_ConnectStarted, 0);
-		return 0;
-	}
+		return FinishConnectThread(moduleReference, runtime, true);
 
 	HMODULE module = GetThisModule();
 	wchar_t dllPath[MAX_PATH];
 	if (!module || !GetModuleFileName(module, dllPath, _countof(dllPath)))
-	{
-		FreeLibrary(runtime);
-		InterlockedExchange(&g_ConnectStarted, 0);
-		return 0;
-	}
+		return FinishConnectThread(moduleReference, runtime, true);
 
 	const wchar_t *endpoints[] = { L"VisualDiagConnection1", L"VisualDiagConnection2" };
 	HRESULT last = E_FAIL;
@@ -888,17 +892,14 @@ static DWORD WINAPI ConnectThread( LPVOID )
 			if (SUCCEEDED(last))
 			{
 				LogToFile(STARTUP_LOG, L"Win11StartButton: connected using %s", endpoints[i]);
-				FreeLibrary(runtime);
-				return 0;
+				return FinishConnectThread(moduleReference, runtime, false);
 			}
 		}
 		Sleep(500);
 	}
 
 	LogToFile(STARTUP_LOG, L"Win11StartButton: connection failed 0x%08X", last);
-	FreeLibrary(runtime);
-	InterlockedExchange(&g_ConnectStarted, 0);
-	return 0;
+	return FinishConnectThread(moduleReference, runtime, true);
 }
 
 static void EnsureConnection( void )
@@ -906,11 +907,23 @@ static void EnsureConnection( void )
 	if (InterlockedCompareExchange(&g_ConnectStarted, 1, 0) != 0)
 		return;
 
-	HANDLE thread = CreateThread(NULL, 0, ConnectThread, NULL, 0, NULL);
-	if (thread)
-		CloseHandle(thread);
-	else
+	HMODULE moduleReference = NULL;
+	if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)&ConnectThread, &moduleReference))
+	{
 		InterlockedExchange(&g_ConnectStarted, 0);
+		return;
+	}
+
+	HANDLE thread = CreateThread(NULL, 0, ConnectThread, moduleReference, 0, NULL);
+	if (thread)
+	{
+		CloseHandle(thread);
+	}
+	else
+	{
+		FreeLibrary(moduleReference);
+		InterlockedExchange(&g_ConnectStarted, 0);
+	}
 }
 
 void StartWin11StartButtonMonitor( void )
