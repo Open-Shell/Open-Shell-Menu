@@ -22,6 +22,7 @@ static const GUID CLSID_OpenShellStartButtonTap =
 { 0x7d15741f, 0x2f3b, 0x4971, { 0xb8, 0x91, 0x6a, 0x5d, 0x42, 0xd7, 0x1a, 0x34 } };
 
 static const UINT WM_OS_STARTBUTTON_APPLY = WM_APP + 0x35B;
+static const UINT WM_OS_STARTBUTTON_DESTROY = WM_APP + 0x35C;
 
 static volatile LONG g_StartButtonActive = 0;
 static volatile LONG g_ConnectStarted = 0;
@@ -41,12 +42,18 @@ struct StartElement
 	CString name;
 	bool visibilityOverride;
 	bool hitTestOverride;
+	bool startControlResolved;
+	bool isStartControl;
+	unsigned int discoveryOrder;
 
 	StartElement( void )
 	{
 		parent = 0;
 		visibilityOverride = false;
 		hitTestOverride = false;
+		startControlResolved = false;
+		isStartControl = false;
+		discoveryOrder = 0;
 	}
 };
 
@@ -59,7 +66,7 @@ static bool ContainsText( const CString &text, const wchar_t *part )
 	return text.Find(part) >= 0;
 }
 
-static bool IsStartControl( const StartElement &element )
+static bool IsStartControlCandidate( const StartElement &element )
 {
 	if (!ContainsText(element.type, L"ExperienceToggleButton"))
 		return false;
@@ -88,6 +95,8 @@ public:
 		m_Advised = false;
 		m_Dispatch = NULL;
 		m_PrimaryStart = 0;
+		m_NextDiscoveryOrder = 0;
+		m_InjectionReferenceBalanced = false;
 		InitializeCriticalSection(&m_Lock);
 	}
 
@@ -161,9 +170,33 @@ public:
 		EnterCriticalSection(&m_Lock);
 		m_Elements.clear();
 		m_PrimaryStart = 0;
+		m_NextDiscoveryOrder = 0;
 		LeaveCriticalSection(&m_Lock);
 
 		m_Site = site;
+
+		// InitializeXamlDiagnosticsEx loads the TAP DLL by path even though
+		// StartMenuDLL is already loaded. Balance that injection reference so
+		// Open-Shell can unload and initialize the DLL again after an explicit Exit.
+		if (!m_InjectionReferenceBalanced)
+		{
+			HMODULE module = GetThisModule();
+			if (module)
+			{
+				FreeLibrary(module);
+				m_InjectionReferenceBalanced = true;
+			}
+		}
+
+		// Exit may race a connection attempt. Do not attach a new callback after
+		// shutdown has already begun.
+		if (!InterlockedCompareExchange(&g_StartButtonActive, 0, 0))
+		{
+			m_Site.Release();
+			InterlockedExchange(&g_ConnectStarted, 0);
+			return S_OK;
+		}
+
 		HRESULT hr = site->QueryInterface(__uuidof(IVisualTreeService), (void**)&m_Visual);
 		if (FAILED(hr) || !m_Visual)
 			return hr;
@@ -207,21 +240,12 @@ public:
 			auto it = m_Elements.find(element.Handle);
 			if (it != m_Elements.end())
 			{
-				interesting = it->second.visibilityOverride || it->second.hitTestOverride || IsStartControl(it->second);
+				interesting = it->second.visibilityOverride || it->second.hitTestOverride ||
+					it->second.isStartControl || IsStartControlCandidate(it->second);
 				bool wasPrimary = element.Handle == m_PrimaryStart;
 				m_Elements.erase(it);
 				if (wasPrimary)
-				{
-					m_PrimaryStart = 0;
-					for (auto candidate = m_Elements.begin(); candidate != m_Elements.end(); ++candidate)
-					{
-						if (IsStartControl(candidate->second))
-						{
-							m_PrimaryStart = candidate->first;
-							break;
-						}
-					}
-				}
+					m_PrimaryStart = FindPrimaryStartLocked();
 			}
 		}
 		else if (mutationType == Add)
@@ -236,12 +260,18 @@ public:
 			{
 				record.visibilityOverride = previous->second.visibilityOverride;
 				record.hitTestOverride = previous->second.hitTestOverride;
+				record.startControlResolved = previous->second.startControlResolved;
+				record.isStartControl = previous->second.isStartControl;
+				record.discoveryOrder = previous->second.discoveryOrder;
+			}
+			else
+			{
+				record.discoveryOrder = ++m_NextDiscoveryOrder;
 			}
 			m_Elements[element.Handle] = record;
-			if (IsStartControl(record) && !m_PrimaryStart)
-				m_PrimaryStart = element.Handle;
 
-			interesting = IsStartControl(record) || IsStartGlyph(record) || IsUnderStartButtonLocked(record.parent);
+			interesting = IsStartControlCandidate(record) || IsStartGlyph(record) ||
+				IsUnderStartButtonLocked(record.parent);
 		}
 		LeaveCriticalSection(&m_Lock);
 
@@ -265,6 +295,43 @@ public:
 			PostMessage(m_Dispatch, WM_OS_STARTBUTTON_APPLY, 0, 0);
 	}
 
+	void Shutdown( void )
+	{
+		// Prevent new users of the TAP while teardown is in progress. The caller
+		// holds a reference, so UnadviseVisualTreeChange cannot destroy this object
+		// out from under the shutdown sequence.
+		AcquireSRWLockExclusive(&g_TapLock);
+		if (g_Tap == this)
+			g_Tap = NULL;
+		ReleaseSRWLockExclusive(&g_TapLock);
+
+		// Restore the native XAML state before detaching the callback.
+		RequestApply(true);
+
+		if (m_Visual && m_Advised)
+		{
+			HRESULT hr = m_Visual->UnadviseVisualTreeChange(static_cast<IVisualTreeServiceCallback*>(this));
+			if (FAILED(hr))
+			{
+				// Keep the DLL resident rather than leave XAML with a callback into
+				// unloaded code. Explorer restart remains the safe recovery path.
+				HMODULE module = NULL;
+				GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+					(LPCTSTR)&GetThisModule, &module);
+				LogToFile(STARTUP_LOG, L"Win11StartButton: visual tree unadvise failed 0x%08X", hr);
+				return;
+			}
+			m_Advised = false;
+		}
+
+		m_Visual.Release();
+		m_Site.Release();
+		InterlockedExchange(&g_ConnectStarted, 0);
+
+		if (m_Dispatch)
+			SendMessage(m_Dispatch, WM_OS_STARTBUTTON_DESTROY, 0, 0);
+	}
+
 private:
 	static LRESULT CALLBACK DispatchProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 	{
@@ -280,6 +347,13 @@ private:
 			bool enabled = InterlockedCompareExchange(&g_StartButtonActive, 0, 0) != 0 &&
 				GetSettingBool(L"EnableStartButton");
 			tap->ApplyState(enabled);
+			return 0;
+		}
+		if (msg == WM_OS_STARTBUTTON_DESTROY && tap)
+		{
+			tap->m_Dispatch = NULL;
+			SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);
+			DestroyWindow(hwnd);
 			return 0;
 		}
 		return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -314,7 +388,7 @@ private:
 			auto it = m_Elements.find(parent);
 			if (it == m_Elements.end())
 				break;
-			if (IsStartControl(it->second))
+			if (it->second.isStartControl)
 				return true;
 			parent = it->second.parent;
 		}
@@ -334,7 +408,7 @@ private:
 				auto pit = m_Elements.find(parent);
 				if (pit == m_Elements.end())
 					break;
-				if (IsStartControl(pit->second))
+				if (pit->second.isStartControl)
 				{
 					result = parent;
 					break;
@@ -373,6 +447,78 @@ private:
 			}
 			CoTaskMemFree(values);
 		}
+	}
+
+	InstanceHandle FindPrimaryStartLocked( void ) const
+	{
+		InstanceHandle primary = 0;
+		unsigned int bestOrder = 0;
+		for (auto it = m_Elements.begin(); it != m_Elements.end(); ++it)
+		{
+			if (!it->second.isStartControl)
+				continue;
+			if (!primary || it->second.discoveryOrder < bestOrder)
+			{
+				primary = it->first;
+				bestOrder = it->second.discoveryOrder;
+			}
+		}
+		return primary;
+	}
+
+	HRESULT ResolveStartControl( InstanceHandle handle, const StartElement &element, bool *isStartControl )
+	{
+		*isStartControl = false;
+		if (!IsStartControlCandidate(element))
+			return S_OK;
+
+		// Older taskbar implementations may expose a distinct x:Name.
+		if (element.name.CompareNoCase(L"StartButton") == 0)
+		{
+			*isStartControl = true;
+			return S_OK;
+		}
+
+		unsigned int sourceCount = 0;
+		unsigned int valueCount = 0;
+		PropertyChainSource *sources = NULL;
+		PropertyChainValue *values = NULL;
+		HRESULT hr = m_Visual->GetPropertyValuesChain(handle, &sourceCount, &sources, &valueCount, &values);
+		if (FAILED(hr))
+		{
+			FreeProperties(sources, sourceCount, values, valueCount);
+			return hr;
+		}
+
+		for (unsigned int i = 0; i < valueCount; i++)
+		{
+			if (!values[i].PropertyName || !values[i].Value)
+				continue;
+			if (_wcsicmp(values[i].PropertyName, L"AutomationId") != 0 &&
+				_wcsicmp(values[i].PropertyName, L"AutomationProperties.AutomationId") != 0)
+				continue;
+			if (_wcsicmp(values[i].Value, L"StartButton") == 0)
+			{
+				*isStartControl = true;
+				break;
+			}
+		}
+
+		FreeProperties(sources, sourceCount, values, valueCount);
+		return S_OK;
+	}
+
+	void SetControlClassification( InstanceHandle handle, bool isStartControl )
+	{
+		EnterCriticalSection(&m_Lock);
+		auto it = m_Elements.find(handle);
+		if (it != m_Elements.end())
+		{
+			it->second.startControlResolved = true;
+			it->second.isStartControl = isStartControl;
+			m_PrimaryStart = FindPrimaryStartLocked();
+		}
+		LeaveCriticalSection(&m_Lock);
 	}
 
 	HRESULT FindProperty( InstanceHandle handle, const wchar_t *name, unsigned int *index, CString *typeName )
@@ -452,11 +598,32 @@ private:
 			return;
 
 		std::vector<std::pair<InstanceHandle, StartElement>> elements;
+		EnterCriticalSection(&m_Lock);
+		for (auto it = m_Elements.begin(); it != m_Elements.end(); ++it)
+			elements.push_back(*it);
+		LeaveCriticalSection(&m_Lock);
+
+		// Start and Task View share ExperienceToggleButton#LaunchListButton on
+		// current Windows 11 builds. Resolve the attached AutomationId on the XAML
+		// UI thread before changing any control or descendant.
+		for (size_t i = 0; i < elements.size(); i++)
+		{
+			StartElement &record = elements[i].second;
+			if (!IsStartControlCandidate(record) || record.startControlResolved)
+				continue;
+
+			bool isStartControl = false;
+			if (SUCCEEDED(ResolveStartControl(elements[i].first, record, &isStartControl)))
+			{
+				record.startControlResolved = true;
+				record.isStartControl = isStartControl;
+				SetControlClassification(elements[i].first, isStartControl);
+			}
+		}
+
 		InstanceHandle primaryStart = 0;
 		EnterCriticalSection(&m_Lock);
 		primaryStart = m_PrimaryStart;
-		for (auto it = m_Elements.begin(); it != m_Elements.end(); ++it)
-			elements.push_back(*it);
 		LeaveCriticalSection(&m_Lock);
 
 		const bool allTaskbars = GetSettingBool(L"AllTaskbars");
@@ -466,7 +633,7 @@ private:
 			InstanceHandle handle = elements[i].first;
 			StartElement record = elements[i].second;
 
-			if (IsStartControl(record))
+			if (record.isStartControl)
 			{
 				bool target = allTaskbars || !primaryStart || handle == primaryStart;
 				if (enabled && target)
@@ -532,6 +699,8 @@ private:
 	CComPtr<IUnknown> m_Site;
 	CComPtr<IVisualTreeService> m_Visual;
 	InstanceHandle m_PrimaryStart;
+	unsigned int m_NextDiscoveryOrder;
+	bool m_InjectionReferenceBalanced;
 	std::unordered_map<InstanceHandle, StartElement> m_Elements;
 };
 
@@ -737,9 +906,7 @@ void StopWin11StartButtonMonitor( void )
 	CWin11StartButtonTap *tap = GetTapRef();
 	if (tap)
 	{
-		// Synchronous restore: don't let Open-Shell exit while the native
-		// Start button is still carrying our XAML overrides.
-		tap->RequestApply(true);
+		tap->Shutdown();
 		tap->Release();
 	}
 }
