@@ -4229,6 +4229,17 @@ if (!g_bTrimHooks)
 				}
 				else if (bShowWinX)
 				{
+					// Win+X is shown asynchronously on Windows 11. Cancel any pending
+					// hover-open timer first, otherwise it can open the configured
+					// hover menu a moment later and dismiss Win+X again.
+					if (taskBar->bTimer)
+					{
+						taskBar->bTimer=false;
+						if (taskBar->startButton)
+							KillTimer(taskBar->startButton,'CLSM');
+						if (taskBar->oldButton && taskBar->oldButton!=taskBar->startButton)
+							KillTimer(taskBar->oldButton,'CLSM');
+					}
 					ShowWinX();
 				}
 				else if (bShowWin7)
