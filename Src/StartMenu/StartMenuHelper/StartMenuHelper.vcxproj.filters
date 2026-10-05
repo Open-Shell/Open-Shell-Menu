@@ -43,6 +43,9 @@
     <ClCompile Include="ModernSettingsContextMenu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Win11StartButtonTap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="StartMenuHelper.idl">
@@ -98,6 +101,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ModernSettingsContextMenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Win11StartButtonTap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
