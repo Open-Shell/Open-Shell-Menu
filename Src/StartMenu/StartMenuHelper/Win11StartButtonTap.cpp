@@ -89,14 +89,6 @@ static bool IsStartGlyph( const StartElement &element )
 	return false;
 }
 
-static void FreeVisualElementStrings( VisualElement &element )
-{
-	SysFreeString(element.Type);
-	SysFreeString(element.Name);
-	SysFreeString(element.SrcInfo.FileName);
-	SysFreeString(element.SrcInfo.Hash);
-}
-
 class CWin11StartButtonTap: public IObjectWithSite, public IVisualTreeServiceCallback2
 {
 public:
@@ -274,9 +266,8 @@ public:
 
 	STDMETHODIMP OnVisualTreeChange( ParentChildRelation relation, VisualElement element, VisualMutationType mutationType )
 	{
-		// Add notifications transfer ownership of VisualElement's BSTRs to the
-		// callback. For Remove notifications only element.Handle is valid.
-		const bool ownsElementStrings = mutationType == Add;
+		// VisualElement is an [in] parameter. The XAML diagnostics runtime owns
+		// the BSTR fields; copy the values we need but never free callback input.
 		bool interesting = false;
 
 		EnterCriticalSection(&m_Lock);
@@ -322,8 +313,6 @@ public:
 
 		if (interesting)
 			RequestApply(false);
-		if (ownsElementStrings)
-			FreeVisualElementStrings(element);
 		return S_OK;
 	}
 
