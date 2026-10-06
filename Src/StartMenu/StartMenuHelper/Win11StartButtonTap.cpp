@@ -822,7 +822,7 @@ static DWORD WINAPI ConnectThread( LPVOID param )
 			if (SUCCEEDED(last))
 			{
 				LogToFile(STARTUP_LOG, L"Win11StartButton: connected using %s", endpoints[i]);
-				return FinishConnectThread(moduleReference, runtime, false);
+				return FinishConnectThread(moduleReference, runtime, true);
 			}
 		}
 		Sleep(500);
