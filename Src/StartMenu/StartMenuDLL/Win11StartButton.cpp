@@ -45,8 +45,7 @@ static bool LoadStartButtonTap( void )
 			if (_countof(helperName) <= remaining)
 			{
 				wcscpy_s(name, remaining, helperName);
-				module = LoadLibraryEx(path, NULL,
-					LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
+				module = LoadLibrary(path);
 			}
 		}
 	}
