@@ -750,22 +750,6 @@ HRESULT GetWin11StartButtonTapClassObject( REFCLSID clsid, REFIID riid, LPVOID *
 
 typedef HRESULT (WINAPI *InitXamlDiagnosticsEx_t)( LPCWSTR, DWORD, LPCWSTR, LPCWSTR, CLSID, LPCWSTR );
 
-struct ConnectAttempt
-{
-	InitXamlDiagnosticsEx_t init;
-	const wchar_t *endpoint;
-	wchar_t dllPath[MAX_PATH];
-	HRESULT hr;
-};
-
-static DWORD WINAPI ConnectAttemptThread( LPVOID param )
-{
-	ConnectAttempt *attempt = (ConnectAttempt*)param;
-	attempt->hr = attempt->init(attempt->endpoint, GetCurrentProcessId(), NULL,
-		attempt->dllPath, CLSID_OpenShellStartButtonTap, NULL);
-	return 0;
-}
-
 static DWORD FinishConnectThread( HMODULE moduleReference, HMODULE runtime, bool connected )
 {
 	if (runtime)
@@ -802,18 +786,8 @@ static DWORD WINAPI ConnectThread( LPVOID param )
 	{
 		for (int i = 0; i < _countof(endpoints); i++)
 		{
-			ConnectAttempt attempt = {};
-			attempt.init = init;
-			attempt.endpoint = endpoints[i];
-			Strcpy(attempt.dllPath, _countof(attempt.dllPath), dllPath);
-			attempt.hr = E_FAIL;
-
-			HANDLE thread = CreateThread(NULL, 0, ConnectAttemptThread, &attempt, 0, NULL);
-			if (!thread)
-				continue;
-			WaitForSingleObject(thread, INFINITE);
-			CloseHandle(thread);
-			last = attempt.hr;
+			last = init(endpoints[i], GetCurrentProcessId(), NULL,
+				dllPath, CLSID_OpenShellStartButtonTap, NULL);
 			if (SUCCEEDED(last))
 			{
 				LogToFile(STARTUP_LOG, L"Win11StartButton: connected using %s", endpoints[i]);
@@ -829,6 +803,8 @@ static DWORD WINAPI ConnectThread( LPVOID param )
 
 static void EnsureConnection( void )
 {
+	// Connection probing retries endpoints and may sleep, so keep it off the
+	// Explorer taskbar thread. ConnectThread is the only worker we need here.
 	bool expected = false;
 	if (!g_ConnectStarted.compare_exchange_strong(expected, true))
 		return;
