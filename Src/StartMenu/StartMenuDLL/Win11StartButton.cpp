@@ -24,29 +24,36 @@ static bool LoadStartButtonTap( void )
 	if (g_StartButtonTapModule)
 		return true;
 
-	wchar_t path[MAX_PATH];
-	DWORD pathLength = GetModuleFileName(g_Instance, path, _countof(path));
-	if (!pathLength || pathLength >= _countof(path))
-		return false;
-
-	wchar_t *name = wcsrchr(path, L'\\');
-	if (!name)
-		return false;
-	name++;
-
 #ifdef _WIN64
 	const wchar_t helperName[] = L"StartMenuHelper64.dll";
 #else
 	const wchar_t helperName[] = L"StartMenuHelper32.dll";
 #endif
 
-	const size_t remaining = path + _countof(path) - name;
-	if (_countof(helperName) > remaining)
-		return false;
-	wcscpy_s(name, remaining, helperName);
+	// Prefer a helper next to StartMenuDLL for local development builds, but
+	// installed Open-Shell keeps StartMenuHelper in System32.
+	HMODULE module = NULL;
+	wchar_t path[MAX_PATH];
+	DWORD pathLength = GetModuleFileName(g_Instance, path, _countof(path));
+	if (pathLength && pathLength < _countof(path))
+	{
+		wchar_t *name = wcsrchr(path, L'\\');
+		if (name)
+		{
+			name++;
+			const size_t remaining = path + _countof(path) - name;
+			if (_countof(helperName) <= remaining)
+			{
+				wcscpy_s(name, remaining, helperName);
+				module = LoadLibraryEx(path, NULL,
+					LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
+			}
+		}
+	}
 
-	HMODULE module = LoadLibraryEx(path, NULL,
-		LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
+	if (!module)
+		module = LoadLibraryEx(helperName, NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
+
 	if (!module)
 	{
 		LogToFile(STARTUP_LOG, L"Win11StartButton: unable to load TAP helper 0x%08X", GetLastError());
