@@ -251,44 +251,44 @@ public:
 
 		{
 			std::lock_guard<std::mutex> lock(m_Mutex);
-		if (mutationType == Remove)
-		{
-			auto it = m_Elements.find(element.Handle);
-			if (it != m_Elements.end())
+			if (mutationType == Remove)
 			{
-				interesting = it->second.visibilityOverride || it->second.hitTestOverride ||
-					it->second.isStartControl || IsStartControlCandidate(it->second);
-				bool wasPrimary = element.Handle == m_PrimaryStart;
-				m_Elements.erase(it);
-				if (wasPrimary)
-					m_PrimaryStart = FindPrimaryStartLocked();
+				auto it = m_Elements.find(element.Handle);
+				if (it != m_Elements.end())
+				{
+					interesting = it->second.visibilityOverride || it->second.hitTestOverride ||
+						it->second.isStartControl || IsStartControlCandidate(it->second);
+					bool wasPrimary = element.Handle == m_PrimaryStart;
+					m_Elements.erase(it);
+					if (wasPrimary)
+						m_PrimaryStart = FindPrimaryStartLocked();
+				}
 			}
-		}
-		else if (mutationType == Add)
-		{
-			StartElement record;
-			record.parent = relation.Parent;
-			record.type = element.Type ? element.Type : L"";
-			record.name = element.Name ? element.Name : L"";
+			else if (mutationType == Add)
+			{
+				StartElement record;
+				record.parent = relation.Parent;
+				record.type = element.Type ? element.Type : L"";
+				record.name = element.Name ? element.Name : L"";
 
-			auto previous = m_Elements.find(element.Handle);
-			if (previous != m_Elements.end())
-			{
-				record.visibilityOverride = previous->second.visibilityOverride;
-				record.hitTestOverride = previous->second.hitTestOverride;
-				record.startControlResolved = previous->second.startControlResolved;
-				record.isStartControl = previous->second.isStartControl;
-				record.discoveryOrder = previous->second.discoveryOrder;
-			}
-			else
-			{
-				record.discoveryOrder = ++m_NextDiscoveryOrder;
-			}
-			m_Elements[element.Handle] = record;
+				auto previous = m_Elements.find(element.Handle);
+				if (previous != m_Elements.end())
+				{
+					record.visibilityOverride = previous->second.visibilityOverride;
+					record.hitTestOverride = previous->second.hitTestOverride;
+					record.startControlResolved = previous->second.startControlResolved;
+					record.isStartControl = previous->second.isStartControl;
+					record.discoveryOrder = previous->second.discoveryOrder;
+				}
+				else
+				{
+					record.discoveryOrder = ++m_NextDiscoveryOrder;
+				}
+				m_Elements[element.Handle] = record;
 
-			interesting = IsStartControlCandidate(record) || IsStartGlyph(record) ||
-				IsUnderStartButtonLocked(record.parent);
-		}
+				interesting = IsStartControlCandidate(record) || IsStartGlyph(record) ||
+					IsUnderStartButtonLocked(record.parent);
+			}
 		}
 
 		if (interesting)
@@ -380,9 +380,8 @@ private:
 
 	InstanceHandle GetStartAncestor( InstanceHandle handle )
 	{
+		std::lock_guard<std::mutex> lock(m_Mutex);
 		InstanceHandle result = 0;
-		{
-			std::lock_guard<std::mutex> lock(m_Mutex);
 		auto it = m_Elements.find(handle);
 		if (it != m_Elements.end())
 		{
@@ -399,7 +398,6 @@ private:
 				}
 				parent = pit->second.parent;
 			}
-		}
 		}
 		return result;
 	}
@@ -494,15 +492,13 @@ private:
 
 	void SetControlClassification( InstanceHandle handle, bool isStartControl )
 	{
-		{
-			std::lock_guard<std::mutex> lock(m_Mutex);
+		std::lock_guard<std::mutex> lock(m_Mutex);
 		auto it = m_Elements.find(handle);
 		if (it != m_Elements.end())
 		{
 			it->second.startControlResolved = true;
 			it->second.isStartControl = isStartControl;
 			m_PrimaryStart = FindPrimaryStartLocked();
-		}
 		}
 	}
 
@@ -565,8 +561,7 @@ private:
 
 	void SetOverrideFlags( InstanceHandle handle, bool *visibility, bool *hitTest )
 	{
-		{
-			std::lock_guard<std::mutex> lock(m_Mutex);
+		std::lock_guard<std::mutex> lock(m_Mutex);
 		auto it = m_Elements.find(handle);
 		if (it != m_Elements.end())
 		{
@@ -574,7 +569,6 @@ private:
 				it->second.visibilityOverride = *visibility;
 			if (hitTest)
 				it->second.hitTestOverride = *hitTest;
-		}
 		}
 	}
 
@@ -586,8 +580,9 @@ private:
 		std::vector<std::pair<InstanceHandle, StartElement>> elements;
 		{
 			std::lock_guard<std::mutex> lock(m_Mutex);
-		for (auto it = m_Elements.begin(); it != m_Elements.end(); ++it)
-			elements.push_back(*it);
+			elements.reserve(m_Elements.size());
+			for (const auto &element : m_Elements)
+				elements.push_back(element);
 		}
 
 		// Start and Task View share ExperienceToggleButton#LaunchListButton on
@@ -611,7 +606,7 @@ private:
 		InstanceHandle primaryStart = 0;
 		{
 			std::lock_guard<std::mutex> lock(m_Mutex);
-		primaryStart = m_PrimaryStart;
+			primaryStart = m_PrimaryStart;
 		}
 
 		const bool allTaskbars = g_AllTaskbars.load();
