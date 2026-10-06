@@ -808,22 +808,19 @@ static void EnsureConnection( void )
 		return;
 
 	HMODULE moduleReference = NULL;
-	if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)&ConnectThread, &moduleReference))
+	if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)&ConnectThread, &moduleReference))
 	{
-		g_ConnectStarted = false;
-		return;
+		HANDLE thread = CreateThread(NULL, 0, ConnectThread, moduleReference, 0, NULL);
+		if (thread)
+		{
+			CloseHandle(thread);
+			return;
+		}
+		FreeLibrary(moduleReference);
 	}
 
-	HANDLE thread = CreateThread(NULL, 0, ConnectThread, moduleReference, 0, NULL);
-	if (thread)
-	{
-		CloseHandle(thread);
-	}
-	else
-	{
-		FreeLibrary(moduleReference);
-		g_ConnectStarted = false;
-	}
+	// A worker was not started, so connection can be attempted again later.
+	g_ConnectStarted = false;
 }
 
 extern "C" void StartWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
