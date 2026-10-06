@@ -22,7 +22,6 @@
 #include <mutex>
 #include <shared_mutex>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 static const GUID CLSID_OpenShellStartButtonTap =
@@ -95,7 +94,7 @@ public:
 	~CWin11StartButtonTap( void )
 	{
 		{
-			std::unique_lock<std::shared_mutex> lock(g_TapMutex);
+			std::unique_lock lock(g_TapMutex);
 			if (g_Tap == this)
 				g_Tap = NULL;
 		}
@@ -110,7 +109,7 @@ public:
 			DestroyWindow(dispatch);
 		}
 
-		g_ConnectStarted.store(false);
+		g_ConnectStarted = false;
 		_AtlModule.Unlock();
 	}
 
@@ -159,7 +158,7 @@ public:
 		}
 
 		{
-			std::unique_lock<std::shared_mutex> lock(g_TapMutex);
+			std::unique_lock lock(g_TapMutex);
 			if (g_Tap == this)
 				g_Tap = NULL;
 		}
@@ -168,7 +167,7 @@ public:
 		m_Site.Release();
 
 		{
-			std::lock_guard<std::mutex> lock(m_Mutex);
+			std::lock_guard lock(m_Mutex);
 			m_Elements.clear();
 			m_PrimaryStart = 0;
 			m_NextDiscoveryOrder = 0;
@@ -184,11 +183,10 @@ public:
 				DestroyWindow(dispatch);
 			}
 
-			g_ConnectStarted.store(false);
+			g_ConnectStarted = false;
 			return S_OK;
 		}
 
-		CComPtr<IUnknown> newSite = site;
 		CComPtr<IVisualTreeService> newVisual;
 
 		// XAML Diagnostics keeps the TAP site object and its module loaded for
@@ -219,12 +217,12 @@ public:
 			return hr;
 		}
 
-		m_Site = std::move(newSite);
-		m_Visual = std::move(newVisual);
+		m_Site = site;
+		m_Visual = newVisual;
 		m_Advised = true;
 
 		{
-			std::unique_lock<std::shared_mutex> lock(g_TapMutex);
+			std::unique_lock lock(g_TapMutex);
 			g_Tap = this;
 		}
 
@@ -250,7 +248,7 @@ public:
 		bool interesting = false;
 
 		{
-			std::lock_guard<std::mutex> lock(m_Mutex);
+			std::lock_guard lock(m_Mutex);
 			if (mutationType == Remove)
 			{
 				auto it = m_Elements.find(element.Handle);
@@ -334,7 +332,7 @@ private:
 		}
 		if (msg == WM_OS_STARTBUTTON_APPLY && tap)
 		{
-			bool enabled = g_StartButtonActive.load() && g_StartButtonEnabled.load();
+			bool enabled = g_StartButtonActive && g_StartButtonEnabled;
 			tap->ApplyState(enabled);
 			return 0;
 		}
@@ -380,7 +378,7 @@ private:
 
 	InstanceHandle GetStartAncestor( InstanceHandle handle )
 	{
-		std::lock_guard<std::mutex> lock(m_Mutex);
+		std::lock_guard lock(m_Mutex);
 		InstanceHandle result = 0;
 		auto it = m_Elements.find(handle);
 		if (it != m_Elements.end())
@@ -492,7 +490,7 @@ private:
 
 	void SetControlClassification( InstanceHandle handle, bool isStartControl )
 	{
-		std::lock_guard<std::mutex> lock(m_Mutex);
+		std::lock_guard lock(m_Mutex);
 		auto it = m_Elements.find(handle);
 		if (it != m_Elements.end())
 		{
@@ -561,7 +559,7 @@ private:
 
 	void SetOverrideFlags( InstanceHandle handle, bool *visibility, bool *hitTest )
 	{
-		std::lock_guard<std::mutex> lock(m_Mutex);
+		std::lock_guard lock(m_Mutex);
 		auto it = m_Elements.find(handle);
 		if (it != m_Elements.end())
 		{
@@ -579,7 +577,7 @@ private:
 
 		std::vector<std::pair<InstanceHandle, StartElement>> elements;
 		{
-			std::lock_guard<std::mutex> lock(m_Mutex);
+			std::lock_guard lock(m_Mutex);
 			elements.reserve(m_Elements.size());
 			for (const auto &element : m_Elements)
 				elements.push_back(element);
@@ -605,11 +603,11 @@ private:
 
 		InstanceHandle primaryStart = 0;
 		{
-			std::lock_guard<std::mutex> lock(m_Mutex);
+			std::lock_guard lock(m_Mutex);
 			primaryStart = m_PrimaryStart;
 		}
 
-		const bool allTaskbars = g_AllTaskbars.load();
+		const bool allTaskbars = g_AllTaskbars;
 
 		for (size_t i = 0; i < elements.size(); i++)
 		{
@@ -688,7 +686,7 @@ private:
 
 static CComPtr<CWin11StartButtonTap> GetTapRef( void )
 {
-	std::shared_lock<std::shared_mutex> lock(g_TapMutex);
+	std::shared_lock lock(g_TapMutex);
 	return CComPtr<CWin11StartButtonTap>(g_Tap);
 }
 
@@ -755,7 +753,7 @@ static DWORD FinishConnectThread( HMODULE moduleReference, HMODULE runtime, bool
 	if (runtime)
 		FreeLibrary(runtime);
 	if (!connected)
-		g_ConnectStarted.store(false);
+		g_ConnectStarted = false;
 
 	// Keep a private StartMenuHelper reference while this worker is running.
 	// Release it atomically with thread termination so a failed diagnostics
@@ -782,7 +780,7 @@ static DWORD WINAPI ConnectThread( LPVOID param )
 
 	const wchar_t *endpoints[] = { L"VisualDiagConnection1", L"VisualDiagConnection2" };
 	HRESULT last = E_FAIL;
-	for (int retry = 0; retry < 8 && g_StartButtonActive.load(); retry++)
+	for (int retry = 0; retry < 8 && g_StartButtonActive; retry++)
 	{
 		for (int i = 0; i < _countof(endpoints); i++)
 		{
@@ -812,7 +810,7 @@ static void EnsureConnection( void )
 	HMODULE moduleReference = NULL;
 	if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)&ConnectThread, &moduleReference))
 	{
-		g_ConnectStarted.store(false);
+		g_ConnectStarted = false;
 		return;
 	}
 
@@ -824,15 +822,15 @@ static void EnsureConnection( void )
 	else
 	{
 		FreeLibrary(moduleReference);
-		g_ConnectStarted.store(false);
+		g_ConnectStarted = false;
 	}
 }
 
 extern "C" void StartWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
 {
-	g_StartButtonEnabled.store(enabled != FALSE);
-	g_AllTaskbars.store(allTaskbars != FALSE);
-	g_StartButtonActive.store(true);
+	g_StartButtonEnabled = enabled != FALSE;
+	g_AllTaskbars = allTaskbars != FALSE;
+	g_StartButtonActive = true;
 
 	auto tap = GetTapRef();
 	if (tap)
@@ -846,15 +844,15 @@ extern "C" void StartWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
 
 extern "C" void UpdateWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
 {
-	g_StartButtonEnabled.store(enabled != FALSE);
-	g_AllTaskbars.store(allTaskbars != FALSE);
+	g_StartButtonEnabled = enabled != FALSE;
+	g_AllTaskbars = allTaskbars != FALSE;
 
 	auto tap = GetTapRef();
 	if (tap)
 	{
 		tap->RequestApply(false);
 	}
-	else if (g_StartButtonActive.load())
+	else if (g_StartButtonActive)
 	{
 		EnsureConnection();
 	}
@@ -862,7 +860,7 @@ extern "C" void UpdateWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
 
 extern "C" void StopWin11StartButtonTap( void )
 {
-	g_StartButtonActive.store(false);
+	g_StartButtonActive = false;
 
 	auto tap = GetTapRef();
 	if (tap)
