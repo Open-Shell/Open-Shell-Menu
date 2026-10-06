@@ -41,24 +41,14 @@ static HMODULE GetThisModule( void )
 
 struct StartElement
 {
-	InstanceHandle parent;
+	InstanceHandle parent = 0;
 	CString type;
 	CString name;
-	bool visibilityOverride;
-	bool hitTestOverride;
-	bool startControlResolved;
-	bool isStartControl;
-	unsigned int discoveryOrder;
-
-	StartElement( void )
-	{
-		parent = 0;
-		visibilityOverride = false;
-		hitTestOverride = false;
-		startControlResolved = false;
-		isStartControl = false;
-		discoveryOrder = 0;
-	}
+	bool visibilityOverride = false;
+	bool hitTestOverride = false;
+	bool startControlResolved = false;
+	bool isStartControl = false;
+	unsigned int discoveryOrder = 0;
 };
 
 class CWin11StartButtonTap;
