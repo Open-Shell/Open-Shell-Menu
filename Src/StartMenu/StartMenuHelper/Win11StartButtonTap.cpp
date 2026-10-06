@@ -18,7 +18,11 @@
 #include <Windows.UI.Xaml.h>
 #include <xamlom.h>
 #include <ocidl.h>
+#include <atomic>
+#include <mutex>
+#include <shared_mutex>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 static const GUID CLSID_OpenShellStartButtonTap =
@@ -26,10 +30,10 @@ static const GUID CLSID_OpenShellStartButtonTap =
 
 static const UINT WM_OS_STARTBUTTON_APPLY = WM_APP + 0x35B;
 
-static volatile LONG g_StartButtonActive = 0;
-static volatile LONG g_StartButtonEnabled = 0;
-static volatile LONG g_AllTaskbars = 0;
-static volatile LONG g_ConnectStarted = 0;
+static std::atomic_bool g_StartButtonActive{ false };
+static std::atomic_bool g_StartButtonEnabled{ false };
+static std::atomic_bool g_AllTaskbars{ false };
+static std::atomic_bool g_ConnectStarted{ false };
 
 static HMODULE GetThisModule( void )
 {
@@ -53,7 +57,7 @@ struct StartElement
 
 class CWin11StartButtonTap;
 static CWin11StartButtonTap *g_Tap = NULL;
-static SRWLOCK g_TapLock = SRWLOCK_INIT;
+static std::shared_mutex g_TapMutex;
 
 static bool ContainsText( const CString &text, const wchar_t *part )
 {
@@ -85,29 +89,28 @@ class CWin11StartButtonTap: public IObjectWithSite, public IVisualTreeServiceCal
 public:
 	CWin11StartButtonTap( void )
 	{
-		m_Refs = 1;
-		m_Advised = false;
-		m_Dispatch = NULL;
-		m_PrimaryStart = 0;
-		m_NextDiscoveryOrder = 0;
-		InitializeCriticalSection(&m_Lock);
 		_AtlModule.Lock();
 	}
 
 	~CWin11StartButtonTap( void )
 	{
+		{
+			std::unique_lock<std::shared_mutex> lock(g_TapMutex);
+			if (g_Tap == this)
+				g_Tap = NULL;
+		}
+
 		if (m_Visual && m_Advised)
 			m_Visual->UnadviseVisualTreeChange(static_cast<IVisualTreeServiceCallback*>(this));
 		if (m_Dispatch && GetWindowThreadProcessId(m_Dispatch, NULL) == GetCurrentThreadId())
-			DestroyWindow(m_Dispatch);
+		{
+			HWND dispatch = m_Dispatch;
+			m_Dispatch = NULL;
+			SetWindowLongPtr(dispatch, GWLP_USERDATA, 0);
+			DestroyWindow(dispatch);
+		}
 
-		AcquireSRWLockExclusive(&g_TapLock);
-		if (g_Tap == this)
-			g_Tap = NULL;
-		ReleaseSRWLockExclusive(&g_TapLock);
-
-		InterlockedExchange(&g_ConnectStarted, 0);
-		DeleteCriticalSection(&m_Lock);
+		g_ConnectStarted.store(false);
 		_AtlModule.Unlock();
 	}
 
@@ -130,15 +133,15 @@ public:
 
 	STDMETHODIMP_(ULONG) AddRef( void )
 	{
-		return (ULONG)InterlockedIncrement(&m_Refs);
+		return ++m_Refs;
 	}
 
 	STDMETHODIMP_(ULONG) Release( void )
 	{
-		LONG refs = InterlockedDecrement(&m_Refs);
+		ULONG refs = --m_Refs;
 		if (!refs)
 			delete this;
-		return (ULONG)refs;
+		return refs;
 	}
 
 	STDMETHODIMP SetSite( IUnknown *site )
@@ -154,22 +157,25 @@ public:
 			}
 			m_Advised = false;
 		}
+
+		{
+			std::unique_lock<std::shared_mutex> lock(g_TapMutex);
+			if (g_Tap == this)
+				g_Tap = NULL;
+		}
+
 		m_Visual.Release();
 		m_Site.Release();
 
-		if (!site)
 		{
-			AcquireSRWLockExclusive(&g_TapLock);
-			if (g_Tap == this)
-				g_Tap = NULL;
-			ReleaseSRWLockExclusive(&g_TapLock);
-
-			EnterCriticalSection(&m_Lock);
+			std::lock_guard<std::mutex> lock(m_Mutex);
 			m_Elements.clear();
 			m_PrimaryStart = 0;
 			m_NextDiscoveryOrder = 0;
-			LeaveCriticalSection(&m_Lock);
+		}
 
+		if (!site)
+		{
 			if (m_Dispatch && GetWindowThreadProcessId(m_Dispatch, NULL) == GetCurrentThreadId())
 			{
 				HWND dispatch = m_Dispatch;
@@ -178,57 +184,29 @@ public:
 				DestroyWindow(dispatch);
 			}
 
-			InterlockedExchange(&g_ConnectStarted, 0);
+			g_ConnectStarted.store(false);
 			return S_OK;
 		}
 
-		EnterCriticalSection(&m_Lock);
-		m_Elements.clear();
-		m_PrimaryStart = 0;
-		m_NextDiscoveryOrder = 0;
-		LeaveCriticalSection(&m_Lock);
-
-		m_Site = site;
+		CComPtr<IUnknown> newSite = site;
+		CComPtr<IVisualTreeService> newVisual;
 
 		// XAML Diagnostics keeps the TAP site object and its module loaded for
-		// the lifetime of the diagnostics session. Do not reject a late SetSite
-		// when Open-Shell is inactive: keeping the site attached lets a later
-		// StartMenuDLL instance reuse the same resident TAP safely.
-		HRESULT hr = site->QueryInterface(__uuidof(IVisualTreeService), (void**)&m_Visual);
-		if (FAILED(hr) || !m_Visual)
-		{
-			m_Visual.Release();
-			m_Site.Release();
-			InterlockedExchange(&g_ConnectStarted, 0);
+		// the lifetime of the diagnostics session. Build the new COM state in
+		// locals first, and publish it only after the subscription succeeds.
+		HRESULT hr = site->QueryInterface(__uuidof(IVisualTreeService), (void**)&newVisual);
+		if (FAILED(hr))
 			return hr;
-		}
+		if (!newVisual)
+			return E_NOINTERFACE;
 
 		if (!CreateDispatchWindow())
-		{
-			DWORD error = GetLastError();
-			m_Visual.Release();
-			m_Site.Release();
-			InterlockedExchange(&g_ConnectStarted, 0);
-			return HRESULT_FROM_WIN32(error);
-		}
+			return HRESULT_FROM_WIN32(GetLastError());
 
 		// Advise replays the existing tree. OnVisualTreeChange only records
 		// element handles; all property access is dispatched afterwards.
-		hr = m_Visual->AdviseVisualTreeChange(static_cast<IVisualTreeServiceCallback*>(this));
-		if (SUCCEEDED(hr))
-		{
-			m_Advised = true;
-
-			// Publish the TAP only after the subscription is fully established.
-			// Otherwise an Advise failure can leave g_Tap pointing at an object
-			// that the XAML runtime is about to release.
-			AcquireSRWLockExclusive(&g_TapLock);
-			g_Tap = this;
-			ReleaseSRWLockExclusive(&g_TapLock);
-
-			RequestApply(false);
-		}
-		else
+		hr = newVisual->AdviseVisualTreeChange(static_cast<IVisualTreeServiceCallback*>(this));
+		if (FAILED(hr))
 		{
 			if (m_Dispatch)
 			{
@@ -237,10 +215,20 @@ public:
 				SetWindowLongPtr(dispatch, GWLP_USERDATA, 0);
 				DestroyWindow(dispatch);
 			}
-			m_Visual.Release();
-			m_Site.Release();
-			InterlockedExchange(&g_ConnectStarted, 0);
+			LogToFile(STARTUP_LOG, L"Win11StartButton: visual tree advise 0x%08X", hr);
+			return hr;
 		}
+
+		m_Site = std::move(newSite);
+		m_Visual = std::move(newVisual);
+		m_Advised = true;
+
+		{
+			std::unique_lock<std::shared_mutex> lock(g_TapMutex);
+			g_Tap = this;
+		}
+
+		RequestApply(false);
 		LogToFile(STARTUP_LOG, L"Win11StartButton: visual tree advise 0x%08X", hr);
 		return hr;
 	}
@@ -261,7 +249,8 @@ public:
 		// the BSTR fields; copy the values we need but never free callback input.
 		bool interesting = false;
 
-		EnterCriticalSection(&m_Lock);
+		{
+			std::lock_guard<std::mutex> lock(m_Mutex);
 		if (mutationType == Remove)
 		{
 			auto it = m_Elements.find(element.Handle);
@@ -300,7 +289,7 @@ public:
 			interesting = IsStartControlCandidate(record) || IsStartGlyph(record) ||
 				IsUnderStartButtonLocked(record.parent);
 		}
-		LeaveCriticalSection(&m_Lock);
+		}
 
 		if (interesting)
 			RequestApply(false);
@@ -345,8 +334,7 @@ private:
 		}
 		if (msg == WM_OS_STARTBUTTON_APPLY && tap)
 		{
-			bool enabled = InterlockedCompareExchange(&g_StartButtonActive, 0, 0) != 0 &&
-				InterlockedCompareExchange(&g_StartButtonEnabled, 0, 0) != 0;
+			bool enabled = g_StartButtonActive.load() && g_StartButtonEnabled.load();
 			tap->ApplyState(enabled);
 			return 0;
 		}
@@ -393,7 +381,8 @@ private:
 	InstanceHandle GetStartAncestor( InstanceHandle handle )
 	{
 		InstanceHandle result = 0;
-		EnterCriticalSection(&m_Lock);
+		{
+			std::lock_guard<std::mutex> lock(m_Mutex);
 		auto it = m_Elements.find(handle);
 		if (it != m_Elements.end())
 		{
@@ -411,7 +400,7 @@ private:
 				parent = pit->second.parent;
 			}
 		}
-		LeaveCriticalSection(&m_Lock);
+		}
 		return result;
 	}
 
@@ -505,7 +494,8 @@ private:
 
 	void SetControlClassification( InstanceHandle handle, bool isStartControl )
 	{
-		EnterCriticalSection(&m_Lock);
+		{
+			std::lock_guard<std::mutex> lock(m_Mutex);
 		auto it = m_Elements.find(handle);
 		if (it != m_Elements.end())
 		{
@@ -513,7 +503,7 @@ private:
 			it->second.isStartControl = isStartControl;
 			m_PrimaryStart = FindPrimaryStartLocked();
 		}
-		LeaveCriticalSection(&m_Lock);
+		}
 	}
 
 	HRESULT FindProperty( InstanceHandle handle, const wchar_t *name, unsigned int *index, CString *typeName )
@@ -575,7 +565,8 @@ private:
 
 	void SetOverrideFlags( InstanceHandle handle, bool *visibility, bool *hitTest )
 	{
-		EnterCriticalSection(&m_Lock);
+		{
+			std::lock_guard<std::mutex> lock(m_Mutex);
 		auto it = m_Elements.find(handle);
 		if (it != m_Elements.end())
 		{
@@ -584,7 +575,7 @@ private:
 			if (hitTest)
 				it->second.hitTestOverride = *hitTest;
 		}
-		LeaveCriticalSection(&m_Lock);
+		}
 	}
 
 	void ApplyState( bool enabled )
@@ -593,10 +584,11 @@ private:
 			return;
 
 		std::vector<std::pair<InstanceHandle, StartElement>> elements;
-		EnterCriticalSection(&m_Lock);
+		{
+			std::lock_guard<std::mutex> lock(m_Mutex);
 		for (auto it = m_Elements.begin(); it != m_Elements.end(); ++it)
 			elements.push_back(*it);
-		LeaveCriticalSection(&m_Lock);
+		}
 
 		// Start and Task View share ExperienceToggleButton#LaunchListButton on
 		// current Windows 11 builds. Resolve the attached AutomationId on the XAML
@@ -617,11 +609,12 @@ private:
 		}
 
 		InstanceHandle primaryStart = 0;
-		EnterCriticalSection(&m_Lock);
+		{
+			std::lock_guard<std::mutex> lock(m_Mutex);
 		primaryStart = m_PrimaryStart;
-		LeaveCriticalSection(&m_Lock);
+		}
 
-		const bool allTaskbars = InterlockedCompareExchange(&g_AllTaskbars, 0, 0) != 0;
+		const bool allTaskbars = g_AllTaskbars.load();
 
 		for (size_t i = 0; i < elements.size(); i++)
 		{
@@ -687,33 +680,26 @@ private:
 		}
 	}
 
-	LONG m_Refs;
-	bool m_Advised;
-	HWND m_Dispatch;
-	CRITICAL_SECTION m_Lock;
+	std::atomic<ULONG> m_Refs{ 1 };
+	bool m_Advised = false;
+	HWND m_Dispatch = NULL;
+	std::mutex m_Mutex;
 	CComPtr<IUnknown> m_Site;
 	CComPtr<IVisualTreeService> m_Visual;
-	InstanceHandle m_PrimaryStart;
-	unsigned int m_NextDiscoveryOrder;
+	InstanceHandle m_PrimaryStart = 0;
+	unsigned int m_NextDiscoveryOrder = 0;
 	std::unordered_map<InstanceHandle, StartElement> m_Elements;
 };
 
-static CWin11StartButtonTap *GetTapRef( void )
+static CComPtr<CWin11StartButtonTap> GetTapRef( void )
 {
-	CWin11StartButtonTap *tap = NULL;
-	AcquireSRWLockShared(&g_TapLock);
-	tap = g_Tap;
-	if (tap)
-		tap->AddRef();
-	ReleaseSRWLockShared(&g_TapLock);
-	return tap;
+	std::shared_lock<std::shared_mutex> lock(g_TapMutex);
+	return CComPtr<CWin11StartButtonTap>(g_Tap);
 }
 
 class CStartButtonTapFactory: public IClassFactory
 {
 public:
-	CStartButtonTapFactory( void ) { m_Refs = 1; }
-
 	STDMETHODIMP QueryInterface( REFIID riid, void **ppv )
 	{
 		if (!ppv)
@@ -726,8 +712,8 @@ public:
 		return S_OK;
 	}
 
-	STDMETHODIMP_(ULONG) AddRef( void ) { return (ULONG)InterlockedIncrement(&m_Refs); }
-	STDMETHODIMP_(ULONG) Release( void ) { return (ULONG)InterlockedDecrement(&m_Refs); }
+	STDMETHODIMP_(ULONG) AddRef( void ) { return ++m_Refs; }
+	STDMETHODIMP_(ULONG) Release( void ) { return --m_Refs; }
 
 	STDMETHODIMP CreateInstance( IUnknown *outer, REFIID riid, void **ppv )
 	{
@@ -755,7 +741,7 @@ public:
 	}
 
 private:
-	LONG m_Refs;
+	std::atomic<ULONG> m_Refs{ 1 };
 };
 
 static CStartButtonTapFactory g_Factory;
@@ -785,12 +771,12 @@ static DWORD WINAPI ConnectAttemptThread( LPVOID param )
 	return 0;
 }
 
-static DWORD FinishConnectThread( HMODULE moduleReference, HMODULE runtime, bool resetConnectionState )
+static DWORD FinishConnectThread( HMODULE moduleReference, HMODULE runtime, bool connected )
 {
 	if (runtime)
 		FreeLibrary(runtime);
-	if (resetConnectionState)
-		InterlockedExchange(&g_ConnectStarted, 0);
+	if (!connected)
+		g_ConnectStarted.store(false);
 
 	// Keep a private StartMenuHelper reference while this worker is running.
 	// Release it atomically with thread termination so a failed diagnostics
@@ -804,20 +790,20 @@ static DWORD WINAPI ConnectThread( LPVOID param )
 	HMODULE moduleReference = (HMODULE)param;
 	HMODULE runtime = LoadLibraryEx(L"Windows.UI.Xaml.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
 	if (!runtime)
-		return FinishConnectThread(moduleReference, NULL, true);
+		return FinishConnectThread(moduleReference, NULL, false);
 
 	InitXamlDiagnosticsEx_t init = (InitXamlDiagnosticsEx_t)GetProcAddress(runtime, "InitializeXamlDiagnosticsEx");
 	if (!init)
-		return FinishConnectThread(moduleReference, runtime, true);
+		return FinishConnectThread(moduleReference, runtime, false);
 
 	HMODULE module = GetThisModule();
 	wchar_t dllPath[MAX_PATH];
 	if (!module || !GetModuleFileName(module, dllPath, _countof(dllPath)))
-		return FinishConnectThread(moduleReference, runtime, true);
+		return FinishConnectThread(moduleReference, runtime, false);
 
 	const wchar_t *endpoints[] = { L"VisualDiagConnection1", L"VisualDiagConnection2" };
 	HRESULT last = E_FAIL;
-	for (int retry = 0; retry < 8 && InterlockedCompareExchange(&g_StartButtonActive, 0, 0); retry++)
+	for (int retry = 0; retry < 8 && g_StartButtonActive.load(); retry++)
 	{
 		for (int i = 0; i < _countof(endpoints); i++)
 		{
@@ -843,18 +829,19 @@ static DWORD WINAPI ConnectThread( LPVOID param )
 	}
 
 	LogToFile(STARTUP_LOG, L"Win11StartButton: connection failed 0x%08X", last);
-	return FinishConnectThread(moduleReference, runtime, true);
+	return FinishConnectThread(moduleReference, runtime, false);
 }
 
 static void EnsureConnection( void )
 {
-	if (InterlockedCompareExchange(&g_ConnectStarted, 1, 0) != 0)
+	bool expected = false;
+	if (!g_ConnectStarted.compare_exchange_strong(expected, true))
 		return;
 
 	HMODULE moduleReference = NULL;
 	if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)&ConnectThread, &moduleReference))
 	{
-		InterlockedExchange(&g_ConnectStarted, 0);
+		g_ConnectStarted.store(false);
 		return;
 	}
 
@@ -866,21 +853,20 @@ static void EnsureConnection( void )
 	else
 	{
 		FreeLibrary(moduleReference);
-		InterlockedExchange(&g_ConnectStarted, 0);
+		g_ConnectStarted.store(false);
 	}
 }
 
 extern "C" void StartWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
 {
-	InterlockedExchange(&g_StartButtonEnabled, enabled ? 1 : 0);
-	InterlockedExchange(&g_AllTaskbars, allTaskbars ? 1 : 0);
-	InterlockedExchange(&g_StartButtonActive, 1);
+	g_StartButtonEnabled.store(enabled != FALSE);
+	g_AllTaskbars.store(allTaskbars != FALSE);
+	g_StartButtonActive.store(true);
 
-	CWin11StartButtonTap *tap = GetTapRef();
+	auto tap = GetTapRef();
 	if (tap)
 	{
 		tap->RequestApply(false);
-		tap->Release();
 		return;
 	}
 
@@ -889,16 +875,15 @@ extern "C" void StartWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
 
 extern "C" void UpdateWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
 {
-	InterlockedExchange(&g_StartButtonEnabled, enabled ? 1 : 0);
-	InterlockedExchange(&g_AllTaskbars, allTaskbars ? 1 : 0);
+	g_StartButtonEnabled.store(enabled != FALSE);
+	g_AllTaskbars.store(allTaskbars != FALSE);
 
-	CWin11StartButtonTap *tap = GetTapRef();
+	auto tap = GetTapRef();
 	if (tap)
 	{
 		tap->RequestApply(false);
-		tap->Release();
 	}
-	else if (InterlockedCompareExchange(&g_StartButtonActive, 0, 0))
+	else if (g_StartButtonActive.load())
 	{
 		EnsureConnection();
 	}
@@ -906,14 +891,13 @@ extern "C" void UpdateWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
 
 extern "C" void StopWin11StartButtonTap( void )
 {
-	InterlockedExchange(&g_StartButtonActive, 0);
+	g_StartButtonActive.store(false);
 
-	CWin11StartButtonTap *tap = GetTapRef();
+	auto tap = GetTapRef();
 	if (tap)
 	{
 		HRESULT hr = tap->Deactivate();
 		if (FAILED(hr))
 			LogToFile(STARTUP_LOG, L"Win11StartButtonTap: deactivate failed 0x%08X", hr);
-		tap->Release();
 	}
 }
