@@ -14,6 +14,7 @@
 #include "StringUtils.h"
 #include "..\StartMenuDLL\LogManager.h"
 
+#undef GetCurrentTime
 #include <Windows.UI.Xaml.h>
 #include <xamlom.h>
 #include <ocidl.h>
