@@ -305,6 +305,17 @@ private:
 		m_NextDiscoveryOrder = 0;
 	}
 
+	bool HasOverrides( void )
+	{
+		std::lock_guard lock(m_Mutex);
+		for (const auto &element : m_Elements)
+		{
+			if (element.second.visibilityOverride || element.second.hitTestOverride)
+				return true;
+		}
+		return false;
+	}
+
 	HRESULT RequestApply( bool synchronous, bool enabled )
 	{
 		HWND dispatch = m_Dispatch;
@@ -399,6 +410,13 @@ private:
 					L"Win11StartButtonTap: synchronous restore failed 0x%08X", hr);
 				return hr;
 			}
+		}
+		else if (HasOverrides())
+		{
+			// Do not discard bookkeeping for live overrides if the UI dispatch
+			// path vanished. Keeping the subscription/state is safer than
+			// leaving a native Start property overridden with no retry path.
+			return HRESULT_FROM_WIN32(ERROR_INVALID_WINDOW_HANDLE);
 		}
 
 		if (m_Visual && m_Advised)
