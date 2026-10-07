@@ -2537,10 +2537,11 @@ void CMenuContainer::InitItems( void )
 			}
 	}
 
-	if (m_Items.empty() && m_Path1[0] && m_pDropFolder[0])
+	if (!m_bSubMenu && m_Items.empty() && m_Path1[0] && m_pDropFolder[0])
 	{
-		// add (Empty) item to the empty submenus
-		MenuItem item(m_bSubMenu?MENU_EMPTY:MENU_EMPTY_TOP);
+		// Keep the top-level drop target placeholder. Submenus defer their
+		// empty-state decision until after custom/standard items are appended.
+		MenuItem item(MENU_EMPTY_TOP);
 		item.name=FindTranslation(L"Menu.Empty",L"(Empty)");
 		m_Items.push_back(item);
 	}

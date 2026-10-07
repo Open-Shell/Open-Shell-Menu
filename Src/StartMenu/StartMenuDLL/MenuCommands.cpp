@@ -63,14 +63,6 @@ static auto ExecuteOnSTAThread(TFunc&& func) -> decltype(func())
 	return result;
 }
 
-// Wrapper for IContextMenu::InvokeCommand that runs on separate STA thread and pumps messages
-static HRESULT InvokeCommandSafe(IContextMenu* pMenu, LPCMINVOKECOMMANDINFO pInfo)
-{
-	return ExecuteOnSTAThread([&]() {
-		return pMenu->InvokeCommand(pInfo);
-	});
-}
-
 // Wrapper for SHOpenFolderAndSelectItems that runs on separate STA thread and pumps messages
 static HRESULT SHOpenFolderAndSelectItemsSafe(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD dwFlags)
 {
@@ -3182,12 +3174,13 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 			{
 				HRESULT hr{};
 				auto verb = GetContextMenuItemVerb(pInvokeMenu, (UINT_PTR)info.lpVerbW);
-				// if the verb is "properties", we need to invoke it directly in this UI thread (as it needs to be called on thread that crated context menu object),
-				// otherwise we will invoke the command on separate STA thread to make sure it won't block UI thread
-				if (verb.CompareNoCase(L"properties") == 0)
-					hr = pInvokeMenu->InvokeCommand((LPCMINVOKECOMMANDINFO)&info);
+				// "opencontaining" may block the UI thread on recent Windows 11 versions.
+				// Use the shell API on a worker STA for that operation, without passing
+				// the apartment-bound IContextMenu interface to another thread.
+				if (verb.CompareNoCase(L"opencontaining") == 0)
+					hr = SHOpenFolderAndSelectItemsSafe(pItemPidl1, 0, NULL, 0);
 				else
-					hr = InvokeCommandSafe(pInvokeMenu, (LPCMINVOKECOMMANDINFO)&info);
+					hr = pInvokeMenu->InvokeCommand((LPCMINVOKECOMMANDINFO)&info);
 				LOG_MENU(LOG_EXECUTE,L"Invoke command, ptr=%p, res=%d",this,hr);
 				executeSuccess=SUCCEEDED(hr);
 			}
