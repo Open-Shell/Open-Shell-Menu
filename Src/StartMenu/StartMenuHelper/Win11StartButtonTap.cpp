@@ -218,8 +218,6 @@ public:
 		if (!ppv)
 			return E_POINTER;
 		*ppv = NULL;
-
-		std::lock_guard lock(m_LifecycleMutex);
 		if (!m_Site)
 			return E_FAIL;
 		return m_Site->QueryInterface(riid, ppv);
