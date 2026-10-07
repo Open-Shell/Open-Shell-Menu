@@ -285,6 +285,7 @@ LRESULT CSkinSettingsDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam,
 
 LRESULT CSkinSettingsDlg::OnDestroy( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
+	ClearSettingsTreeItemAccessibility(m_Tree);
 	m_EditMode=SKIN_OPTION_NONE;
 	bHandled=FALSE;
 	return 0;

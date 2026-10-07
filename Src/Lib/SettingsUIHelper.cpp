@@ -157,6 +157,7 @@ void ClearSettingsTreeItemAccessibility( HWND tree )
 		}
 		item=next;
 	}
+	props->ClearHwndProps(tree,OBJID_CLIENT,CHILDID_SELF,properties,_countof(properties));
 }
 
 void SetControlAccessibleName( HWND control, const wchar_t *name )
@@ -2778,6 +2779,7 @@ LRESULT CTreeSettingsDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam,
 
 LRESULT CTreeSettingsDlg::OnDestroy( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
+	ClearSettingsTreeItemAccessibility(m_Tree);
 	DestroyIcon(m_PlayIcon);
 	bHandled=FALSE;
 	m_EditMode=EDIT_NONE;
