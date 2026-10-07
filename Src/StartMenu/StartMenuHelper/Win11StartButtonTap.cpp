@@ -466,6 +466,7 @@ private:
 
 		if (GetWindowThreadProcessId(dispatch, NULL) == GetCurrentThreadId())
 		{
+			DrainApplyMessages(dispatch);
 			SetWindowLongPtr(dispatch, GWLP_USERDATA, 0);
 			if (!DestroyWindow(dispatch))
 				return HRESULT_FROM_WIN32(GetLastError());
@@ -492,6 +493,14 @@ private:
 		return S_OK;
 	}
 
+	static void DrainApplyMessages( HWND hwnd )
+	{
+		MSG pending;
+		while (PeekMessage(&pending, hwnd, WM_OS_STARTBUTTON_APPLY, WM_OS_STARTBUTTON_APPLY, PM_REMOVE))
+		{
+		}
+	}
+
 	static LRESULT CALLBACK DispatchProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 	{
 		CWin11StartButtonTap *tap = (CWin11StartButtonTap*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -503,6 +512,7 @@ private:
 		}
 		if (msg == WM_OS_STARTBUTTON_DESTROY)
 		{
+			DrainApplyMessages(hwnd);
 			SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);
 			DestroyWindow(hwnd);
 			return 0;
