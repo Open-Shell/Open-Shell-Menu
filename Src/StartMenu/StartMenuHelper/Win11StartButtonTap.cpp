@@ -503,7 +503,9 @@ private:
 		}
 		if (msg == WM_OS_STARTBUTTON_APPLY && tap)
 		{
-			tap->ApplyState(wParam != 0);
+			// A queued enable request must never re-apply overrides after Stop.
+			bool enabled = wParam != 0 && g_StartButtonActive && g_StartButtonEnabled;
+			tap->ApplyState(enabled);
 			return 0;
 		}
 		return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -829,6 +831,8 @@ private:
 	CComPtr<IVisualTreeService> m_Visual;
 	InstanceHandle m_PrimaryStart = 0;
 	unsigned int m_NextDiscoveryOrder = 0;
+	// Keep the replayed ancestry while subscribed. Parent links are required to
+	// recognize glyphs under a Start control, and the map is cleared on unadvise.
 	std::unordered_map<InstanceHandle, StartElement> m_Elements;
 };
 
