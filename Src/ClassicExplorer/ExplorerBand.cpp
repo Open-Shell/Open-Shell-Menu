@@ -19,6 +19,7 @@
 #include <shdeprecated.h>
 #include <propkey.h>
 #include <algorithm>
+#include <uxtheme.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -229,6 +230,17 @@ LRESULT CALLBACK CBandWindow::ToolbarSubclassProc( HWND hWnd, UINT uMsg, WPARAM 
 		// Also refresh the buttons when the folder settings change
 		if (pThis->HasFolderSettings())
 			::PostMessage((HWND)dwRefData,CBandWindow::BWM_UPDATETOOLBAR,0,0);
+
+		if (IsColorSchemeChangeMessage(lParam))
+		{
+			HWND tooltips=(HWND)::SendMessage(pThis->GetToolbar(),TB_GETTOOLTIPS,0,0);
+			if (tooltips)
+				SetWindowTheme(tooltips,ShouldAppsUseDarkMode()?L"DarkMode_Explorer":NULL,NULL);
+
+			HWND rebar=::GetParent((HWND)dwRefData);
+			if (rebar)
+				::RedrawWindow(rebar,NULL,NULL,RDW_INVALIDATE|RDW_ERASE|RDW_FRAME|RDW_ALLCHILDREN);
+		}
 	}
 	if (uMsg==WM_PAINT)
 	{
@@ -239,8 +251,149 @@ LRESULT CALLBACK CBandWindow::ToolbarSubclassProc( HWND hWnd, UINT uMsg, WPARAM 
 	return DefSubclassProc(hWnd,uMsg,wParam,lParam);
 }
 
+// Custom-draw the Classic Explorer toolbar on Windows 10+ so it follows the
+// Windows application theme. Keeping this on the band window preserves the
+// existing toolbar message handling and right-click behavior.
+LRESULT CALLBACK CBandWindow::BandSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData )
+{
+	CBandWindow *pThis=(CBandWindow*)uIdSubclass;
+	if (uMsg!=WM_NOTIFY || !lParam || !pThis || GetWinVersion()<WIN_VER_WIN10)
+		return DefSubclassProc(hWnd,uMsg,wParam,lParam);
+
+	LPNMHDR header=(LPNMHDR)lParam;
+	if (header->hwndFrom!=pThis->GetToolbar() || header->code!=NM_CUSTOMDRAW)
+		return DefSubclassProc(hWnd,uMsg,wParam,lParam);
+
+	LPNMTBCUSTOMDRAW draw=(LPNMTBCUSTOMDRAW)lParam;
+	DWORD stage=draw->nmcd.dwDrawStage;
+	if (!ShouldAppsUseDarkMode())
+		return DefSubclassProc(hWnd,uMsg,wParam,lParam);
+
+	if (stage==CDDS_PREPAINT)
+	{
+		FillRect(draw->nmcd.hdc,&draw->nmcd.rc,pThis->m_DarkBackgroundBrush);
+		return CDRF_DODEFAULT|CDRF_NOTIFYITEMDRAW;
+	}
+
+	if (stage==CDDS_ITEMPREPAINT)
+	{
+		TBBUTTONINFO info={sizeof(info),TBIF_STYLE|TBIF_STATE|TBIF_IMAGE};
+		if (::SendMessage(pThis->GetToolbar(),TB_GETBUTTONINFO,(WPARAM)draw->nmcd.dwItemSpec,(LPARAM)&info)==-1)
+			return CDRF_DODEFAULT;
+
+		bool dropDown=(info.fsStyle&(BTNS_DROPDOWN|BTNS_WHOLEDROPDOWN))!=0;
+		bool checked=(info.fsState&TBSTATE_CHECKED)!=0;
+
+		// Checked toolbar buttons need explicit rendering. The standard toolbar
+		// theme otherwise paints a light checked background in dark mode.
+		if (checked && !dropDown && info.iImage!=I_IMAGENONE)
+		{
+			size_t itemIndex=(size_t)draw->nmcd.lItemlParam;
+			HIMAGELIST images=(HIMAGELIST)::SendMessage(header->hwndFrom,TB_GETIMAGELIST,0,0);
+			if (images && itemIndex<pThis->m_Items.size())
+			{
+				const wchar_t *label=pThis->m_Items[itemIndex].label;
+				int iconSize=GetSettingInt(GetSettingBool(L"UseBigButtons")?L"LargeIconSize":L"SmallIconSize");
+				SIZE textSize={};
+				RECT itemRect=draw->nmcd.rc;
+				RECT paintRect=itemRect;
+				paintRect.right++;
+				HDC hdc=draw->nmcd.hdc;
+
+				int saved=SaveDC(hdc);
+				HBRUSH brush=(HBRUSH)GetStockObject(DC_BRUSH);
+				SetDCBrushColor(hdc,RGB(0x4D,0x4D,0x4D));
+				HRGN background=CreateRoundRectRgn(paintRect.left,paintRect.top,paintRect.right,paintRect.bottom,4,4);
+				if (background)
+				{
+					FillRgn(hdc,background,brush);
+					SetDCBrushColor(hdc,RGB(0x63,0x63,0x63));
+					FrameRgn(hdc,background,brush,1,1);
+				}
+
+				if (label)
+				{
+					SetBkMode(hdc,TRANSPARENT);
+					SetTextColor(hdc,RGB(0xFF,0xFF,0xFF));
+					SelectObject(hdc,(HGDIOBJ)::SendMessage(header->hwndFrom,WM_GETFONT,0,0));
+					GetTextExtentPoint32(hdc,L"T",1,&textSize);
+				}
+
+				if (!GetSettingBool(L"ToolbarListMode"))
+				{
+					int iconY=itemRect.top+((itemRect.bottom-itemRect.top)/2-(iconSize+(label?textSize.cy:0))/2)+1-(label?2:0);
+					ImageList_Draw(images,info.iImage,hdc,itemRect.left+((itemRect.right-itemRect.left)/2-iconSize/2)+1,iconY,ILD_NORMAL);
+					if (label)
+					{
+						RECT textRect=itemRect;
+						textRect.left++;
+						textRect.top=iconY+iconSize+1;
+						DrawText(hdc,label,-1,&textRect,DT_SINGLELINE|DT_TOP|DT_CENTER);
+					}
+				}
+				else
+				{
+					int iconX=itemRect.left+(label?4:5);
+					ImageList_Draw(images,info.iImage,hdc,iconX,itemRect.top+((itemRect.bottom-itemRect.top)/2-iconSize/2)+1,ILD_NORMAL);
+					if (label)
+					{
+						RECT textRect=itemRect;
+						textRect.left=iconX+iconSize+4;
+						textRect.top+=(textRect.bottom-textRect.top)/2-textSize.cy/2;
+						DrawText(hdc,label,-1,&textRect,DT_SINGLELINE|DT_TOP|DT_LEFT);
+					}
+				}
+
+				if (background)
+					DeleteObject(background);
+				RestoreDC(hdc,saved);
+				return CDRF_SKIPDEFAULT;
+			}
+		}
+
+		draw->clrText=RGB(0xFF,0xFF,0xFF);
+		UINT flags=CDRF_DODEFAULT|TBCDRF_USECDCOLORS;
+		if (dropDown)
+			flags|=CDRF_NOTIFYPOSTPAINT;
+		else
+		{
+			draw->clrHighlightHotTrack=RGB(0x47,0x47,0x47);
+			flags|=TBCDRF_HILITEHOTTRACK;
+		}
+		return flags;
+	}
+
+	if (stage==CDDS_ITEMPOSTPAINT)
+	{
+		RECT rc=draw->nmcd.rc;
+		UINT dpi=GetDpi(hWnd);
+		int triangleLeft=rc.right-(dpi>USER_DEFAULT_SCREEN_DPI?ScaleForDpi(hWnd,10):9);
+		int triangleTop=(rc.bottom-rc.top)/2+MulDiv(2,USER_DEFAULT_SCREEN_DPI,dpi);
+		int width=ScaleForDpi(hWnd,6);
+		width-=width%2;
+		POINT vertices[]={{triangleLeft,triangleTop},{triangleLeft+width,triangleTop},{triangleLeft+width/2,triangleTop+width/2}};
+
+		int saved=SaveDC(draw->nmcd.hdc);
+		SetDCPenColor(draw->nmcd.hdc,RGB(0xDE,0xDE,0xDE));
+		SetDCBrushColor(draw->nmcd.hdc,RGB(0xDE,0xDE,0xDE));
+		SelectObject(draw->nmcd.hdc,GetStockObject(DC_PEN));
+		SelectObject(draw->nmcd.hdc,GetStockObject(DC_BRUSH));
+		Polygon(draw->nmcd.hdc,vertices,_countof(vertices));
+		RestoreDC(draw->nmcd.hdc,saved);
+		return CDRF_DODEFAULT;
+	}
+
+	return CDRF_DODEFAULT;
+}
+
 LRESULT CBandWindow::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
+	if (GetWinVersion()>=WIN_VER_WIN10)
+	{
+		m_DarkBackgroundBrush=CreateSolidBrush(RGB(0x19,0x19,0x19));
+		m_DarkBorderBrush=CreateSolidBrush(RGB(0x3A,0x3A,0x3A));
+	}
+
 	ParseToolbar();
 
 	bool bLabels=false;
@@ -260,6 +413,14 @@ LRESULT CBandWindow::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 	m_Toolbar.SendMessage(TB_BUTTONSTRUCTSIZE,sizeof(TBBUTTON));
 	m_Toolbar.SendMessage(TB_SETMAXTEXTROWS,1);
 	SetWindowSubclass(m_Toolbar,ToolbarSubclassProc,(UINT_PTR)this,(DWORD_PTR)m_hWnd);
+
+	if (GetWinVersion()>=WIN_VER_WIN10)
+	{
+		SetWindowSubclass(m_hWnd,BandSubclassProc,(UINT_PTR)this,(DWORD_PTR)m_hWnd);
+		HWND tooltips=(HWND)m_Toolbar.SendMessage(TB_GETTOOLTIPS,0,0);
+		if (tooltips && ShouldAppsUseDarkMode())
+			SetWindowTheme(tooltips,L"DarkMode_Explorer",NULL);
+	}
 
 	int iconSize=GetSettingInt(GetSettingBool(L"UseBigButtons")?L"LargeIconSize":L"SmallIconSize");
 	if (iconSize<8) iconSize=8;
@@ -397,6 +558,20 @@ LRESULT CBandWindow::OnDestroy( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 		if (it->menuIconD) DeleteObject(it->menuIconD);
 	}
 	m_Items.clear();
+
+	if (GetWinVersion()>=WIN_VER_WIN10)
+		RemoveWindowSubclass(m_hWnd,BandSubclassProc,(UINT_PTR)this);
+	if (m_DarkBackgroundBrush)
+	{
+		DeleteObject(m_DarkBackgroundBrush);
+		m_DarkBackgroundBrush=NULL;
+	}
+	if (m_DarkBorderBrush)
+	{
+		DeleteObject(m_DarkBorderBrush);
+		m_DarkBorderBrush=NULL;
+	}
+
 	bHandled=FALSE;
 	return 0;
 }
@@ -2028,6 +2203,34 @@ LRESULT CALLBACK CExplorerBand::RebarSubclassProc( HWND hWnd, UINT uMsg, WPARAM 
 				}
 				return res;
 			}
+		}
+	}
+
+	if (GetWinVersion()>=WIN_VER_WIN10 && ShouldAppsUseDarkMode())
+	{
+		CExplorerBand *pThis=(CExplorerBand*)uIdSubclass;
+		if (uMsg==WM_ERASEBKGND)
+		{
+			HDC hdc=(HDC)wParam;
+			RECT rc;
+			if (GetClipBox(hdc,&rc)!=ERROR)
+				FillRect(hdc,&rc,pThis->m_BandWindow.GetDarkBackgroundBrush());
+			return 1;
+		}
+		if (uMsg==WM_NCPAINT)
+		{
+			LRESULT result=DefSubclassProc(hWnd,uMsg,wParam,lParam);
+			HDC hdc=GetWindowDC(hWnd);
+			if (hdc)
+			{
+				RECT rc;
+				GetWindowRect(hWnd,&rc);
+				OffsetRect(&rc,-rc.left,-rc.top);
+				rc.top=rc.bottom-1;
+				FillRect(hdc,&rc,pThis->m_BandWindow.GetDarkBorderBrush());
+				ReleaseDC(hWnd,hdc);
+			}
+			return result;
 		}
 	}
 
