@@ -140,10 +140,8 @@ void EnableSettingsTreeAccessibility( HWND tree )
 	server->Release();
 }
 
-void ClearSettingsTreeItemAccessibility( HWND tree )
+static void ClearSettingsTreeItemAccessibilityImpl( IAccPropServices *props, HWND tree )
 {
-	CComPtr<IAccPropServices> props;
-	if (FAILED(CoCreateInstance(CLSID_SettingsAccPropServices,NULL,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&props)))) return;
 	MSAAPROPID properties[]={PROPID_SettingsAccState,PROPID_SettingsAccName,PROPID_SettingsAccRole};
 	for (HTREEITEM item=TreeView_GetRoot(tree);item;)
 	{
@@ -157,6 +155,27 @@ void ClearSettingsTreeItemAccessibility( HWND tree )
 		}
 		item=next;
 	}
+}
+
+void ClearSettingsTreeItemAccessibility( HWND tree )
+{
+	if (!tree || !IsWindow(tree)) return;
+	CComPtr<IAccPropServices> props;
+	if (FAILED(CoCreateInstance(CLSID_SettingsAccPropServices,NULL,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&props)))) return;
+	ClearSettingsTreeItemAccessibilityImpl(props,tree);
+}
+
+void ClearSettingsTreeAccessibility( HWND tree )
+{
+	if (!tree || !IsWindow(tree)) return;
+	CComPtr<IAccPropServices> props;
+	if (FAILED(CoCreateInstance(CLSID_SettingsAccPropServices,NULL,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&props)))) return;
+
+	// Release all per-item servers while their accessibility IDs can still be
+	// resolved, then remove the container server and the tree-level name.
+	ClearSettingsTreeItemAccessibilityImpl(props,tree);
+	MSAAPROPID properties[]={PROPID_SettingsAccState,PROPID_SettingsAccName,PROPID_SettingsAccRole};
+	props->ClearHwndProps(tree,OBJID_CLIENT,CHILDID_SELF,properties,_countof(properties));
 }
 
 void SetControlAccessibleName( HWND control, const wchar_t *name )
@@ -2778,6 +2797,7 @@ LRESULT CTreeSettingsDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam,
 
 LRESULT CTreeSettingsDlg::OnDestroy( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
+	ClearSettingsTreeAccessibility(m_Tree);
 	DestroyIcon(m_PlayIcon);
 	bHandled=FALSE;
 	m_EditMode=EDIT_NONE;
