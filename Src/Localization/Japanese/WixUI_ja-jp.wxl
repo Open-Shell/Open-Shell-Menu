@@ -1,0 +1,606 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+  <copyright file="WixUI_ja-jp.wxl" company="Outercurve Foundation">
+    Copyright (c) 2004, Outercurve Foundation.
+    This software is released under Microsoft Reciprocal License (MS-RL).
+    The license and further copyright text can be found in the file
+    LICENSE.TXT at the root directory of the distribution.
+  </copyright>
+-->
+<WixLocalization Culture="ja-jp" Codepage="932" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+    <UI Dialog="AdvancedWelcomeEulaDlg" Control="Print" X="50" />
+    <UI Dialog="AdvancedWelcomeEulaDlg" Control="Advanced" X="124" Width="85" />
+
+    <String Id="WixUIBack" Overridable="yes">戻る(&amp;B)</String>
+    <String Id="WixUINext" Overridable="yes">次へ(&amp;N)</String>
+    <String Id="WixUICancel" Overridable="yes">キャンセル</String>
+    <String Id="WixUIFinish" Overridable="yes">完了(&amp;F)</String>
+    <String Id="WixUIRetry" Overridable="yes">再試行(&amp;R)</String>
+    <String Id="WixUIIgnore" Overridable="yes">無視(&amp;I)</String>
+    <String Id="WixUIYes" Overridable="yes">はい(&amp;Y)</String>
+    <String Id="WixUINo" Overridable="yes">いいえ(&amp;N)</String>
+    <String Id="WixUIOK" Overridable="yes">OK</String>
+    <String Id="WixUIPrint" Overridable="yes">印刷(&amp;P)</String>
+
+    <String Id="AdvancedWelcomeEulaDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="AdvancedWelcomeEulaDlgBannerBitmap" Overridable="yes">WixUI_Bmp_Banner</String>
+    <String Id="AdvancedWelcomeEulaDlgTitle" Overridable="yes">{\WixUI_Font_Title}[ProductName] の使用許諾契約書をお読みください</String>
+    <String Id="AdvancedWelcomeEulaDlgLicenseAcceptedCheckBox" Overridable="yes">使用許諾契約の条項に同意します(&amp;A)</String>
+    <String Id="AdvancedWelcomeEulaDlgDescriptionPerMachine" Overridable="yes">[インストール] をクリックすると、デフォルト設定で全ユーザー向けにインストールします。[詳細] をクリックすると、インストール設定を変更できます。</String>
+    <String Id="AdvancedWelcomeEulaDlgDescriptionPerUser" Overridable="yes">[インストール] をクリックすると、デフォルト設定で現在のユーザー向けにインストールします。[詳細] をクリックすると、インストール設定を変更できます。</String>
+    <String Id="AdvancedWelcomeEulaDlgInstall" Overridable="yes">インストール(&amp;I)</String>
+    <String Id="AdvancedWelcomeEulaDlgAdvanced" Overridable="yes">詳細(&amp;A)</String>
+    <String Id="Advanced_Font_Normal_Size" Overridable="yes">9</String>
+    <String Id="Advanced_Font_Bigger_Size" Overridable="yes">12</String>
+    <String Id="Advanced_Font_Title_Size" Overridable="yes">9</String>
+    <String Id="Advanced_Font_Emphasized_Size" Overridable="yes">9</String>
+    <String Id="Advanced_Font_FaceName" Overridable="yes">メイリオ</String>
+
+    <String Id="BrowseDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="BrowseDlgComboLabel" Overridable="yes">ファイルの場所(&amp;I):</String>
+    <String Id="BrowseDlgWixUI_Bmp_Up" Overridable="yes">WixUI_Bmp_Up</String>
+    <String Id="BrowseDlgWixUI_Bmp_UpTooltip" Overridable="yes">1つ上のフォルダーへ</String>
+    <String Id="BrowseDlgNewFolder" Overridable="yes">WixUI_Bmp_New</String>
+    <String Id="BrowseDlgNewFolderTooltip" Overridable="yes">新しいフォルダーの作成</String>
+    <String Id="BrowseDlgPathLabel" Overridable="yes">フォルダー名(&amp;F):</String>
+    <String Id="BrowseDlgBannerBitmap" Overridable="yes">WixUI_Bmp_Banner</String>
+    <String Id="BrowseDlgDescription" Overridable="yes">インストール先のフォルダーを選択してください</String>
+    <String Id="BrowseDlgTitle" Overridable="yes">{\WixUI_Font_Title}インストール先の変更</String>
+
+    <String Id="CancelDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="CancelDlgText" Overridable="yes">本当に [ProductName] のセットアップを中止しますか？</String>
+    <String Id="CancelDlgIcon" Overridable="yes">WixUI_Ico_Info</String>
+    <String Id="CancelDlgIconTooltip" Overridable="yes">情報アイコン</String>
+
+    <String Id="CustomizeDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="CustomizeDlgTree" Overridable="yes">機能の選択ツリー</String>
+    <String Id="CustomizeDlgBrowse" Overridable="yes">参照(&amp;B)...</String>
+    <String Id="CustomizeDlgReset" Overridable="yes">リセット(&amp;R)</String>
+    <String Id="CustomizeDlgDiskCost" Overridable="yes">ディスク使用量(&amp;D)</String>
+    <String Id="CustomizeDlgBannerBitmap" Overridable="yes">WixUI_Bmp_Banner</String>
+    <String Id="CustomizeDlgText" Overridable="yes">機能のインストール方法を変更するには、下のツリー内のアイコンをクリックしてください。</String>
+    <String Id="CustomizeDlgDescription" Overridable="yes">機能のインストール方法を選択します。</String>
+    <String Id="CustomizeDlgTitle" Overridable="yes">{\WixUI_Font_Title}カスタム セットアップ</String>
+    <String Id="CustomizeDlgItemDescription" Overridable="yes">CustomizeDlgItemDescription-CustomizeDlgItemDescription</String>
+    <String Id="CustomizeDlgItemSize" Overridable="yes">CustomizeDlgItemSize-CustomizeDlgItemSize</String>
+    <String Id="CustomizeDlgLocation" Overridable="yes">CustomizeDlgLocation-CustomizeDlgLocation</String>
+    <String Id="CustomizeDlgLocationLabel" Overridable="yes">場所:</String>
+
+    <String Id="DiskCostDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="DiskCostDlgBannerBitmap" Overridable="yes">WixUI_Bmp_Banner</String>
+    <String Id="DiskCostDlgText" Overridable="yes">選択したドライブには、選択した機能をインストールするための空き容量が不足しています。選択したドライブから不要なファイルを削除するか、インストールする機能を減らすか、別のドライブを選択してください。</String>
+    <String Id="DiskCostDlgDescription" Overridable="yes">選択した機能に必要なディスク領域。</String>
+    <String Id="DiskCostDlgTitle" Overridable="yes">{\WixUI_Font_Title}ディスク領域の要件</String>
+    <String Id="DiskCostDlgVolumeList" Overridable="yes">{120}{70}{70}{70}{70}</String>
+
+    <String Id="ErrorDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="ErrorDlgErrorText" Overridable="yes">テキスト情報</String>
+    <String Id="ErrorDlgErrorIcon" Overridable="yes">WixUI_Ico_Info</String>
+    <String Id="ErrorDlgErrorIconTooltip" Overridable="yes">情報アイコン</String>
+
+    <String Id="ExitDialog_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="ExitDialogBitmap" Overridable="yes">WixUI_Bmp_Dialog</String>
+    <String Id="ExitDialogDescription" Overridable="yes">[完了] をクリックしてセットアップ ウィザードを終了してください。</String>
+    <String Id="ExitDialogTitle" Overridable="yes">{\WixUI_Font_Bigger}[ProductName] のセットアップが完了しました</String>
+
+    <String Id="FatalError_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="FatalErrorBitmap" Overridable="yes">WixUI_Bmp_Dialog</String>
+    <String Id="FatalErrorTitle" Overridable="yes">{\WixUI_Font_Bigger}[ProductName] セットアップ ウィザードが中断されました</String>
+    <String Id="FatalErrorDescription1" Overridable="yes">エラーが発生したため、[ProductName] セットアップ ウィザードは完了できませんでした。システムは変更されていません。後でこのプログラムをインストールする場合は、セットアップを再実行してください。</String>
+    <String Id="FatalErrorDescription2" Overridable="yes">[完了] をクリックしてセットアップ ウィザードを終了してください。</String>
+
+    <String Id="FeaturesDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="FeaturesDlgTree" Overridable="yes">製品機能</String>
+    <String Id="FeaturesDlgBannerBitmap" Overridable="yes">WixUI_Bmp_Banner</String>
+    <String Id="FeaturesDlgDescription" Overridable="yes">機能のインストール方法を選択します。</String>
+    <String Id="FeaturesDlgTitle" Overridable="yes">{\WixUI_Font_Title}製品機能</String>
+    <String Id="FeaturesDlgItemDescription" Overridable="yes">FeaturesDlgItemDescription</String>
+    <String Id="FeaturesDlgItemSize" Overridable="yes">FeaturesDlgItemSize</String>
+    <String Id="FeaturesDlgInstall" Overridable="yes">インストール(&amp;I)</String>
+    <String Id="FeaturesDlgChange" Overridable="yes">変更(&amp;C)</String>
+
+    <String Id="FilesInUse_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="FilesInUseExit" Overridable="yes">終了(&amp;E)</String>
+    <String Id="FilesInUseBannerBitmap" Overridable="yes">WixUI_Bmp_Banner</String>
+    <String Id="FilesInUseText" Overridable="yes">以下のアプリケーションが、更新が必要なファイルを使用しています。これらのアプリケーションを閉じてから [再試行] をクリックして続行するか、[終了] をクリックしてセットアップを終了してください。</String>
+    <String Id="FilesInUseDescription" Overridable="yes">更新が必要な一部のファイルが使用中です。</String>
+    <String Id="FilesInUseTitle" Overridable="yes">{\WixUI_Font_Title}使用中のファイル</String>
+
+    <String Id="InstallDirDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="InstallDirDlgChange" Overridable="yes">変更(&amp;C)...</String>
+    <String Id="InstallDirDlgTitle" Overridable="yes">{\WixUI_Font_Title}インストール先フォルダー</String>
+    <String Id="InstallDirDlgDescription" Overridable="yes">デフォルトのフォルダーにインストールする場合は [次へ] を、別のフォルダーを選択する場合は [変更] をクリックしてください。</String>
+    <String Id="InstallDirDlgBannerBitmap" Overridable="yes">WixUI_Bmp_Banner</String>
+    <String Id="InstallDirDlgFolderLabel" Overridable="yes">[ProductName] のインストール先:</String>
+
+    <String Id="InstallScopeDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="InstallScopeDlgBannerBitmap" Overridable="yes">WixUI_Bmp_Banner</String>
+    <String Id="InstallScopeDlgDescription" Overridable="yes">インストールの範囲とフォルダーを選択してください</String>
+    <String Id="InstallScopeDlgTitle" Overridable="yes">{\WixUI_Font_Title}インストールの範囲</String>
+    <String Id="InstallScopeDlgPerUser" Overridable="yes">{\WixUI_Font_Emphasized}現在のユーザー ([LogonUser]) のみにインストールする(&amp;M)</String>
+    <String Id="InstallScopeDlgPerUserDescription" Overridable="yes">[ProductName] はユーザーのフォルダーにインストールされ、現在のユーザーのみが利用できます。ローカル管理者の権限は不要です。</String>
+    <String Id="InstallScopeDlgNoPerUserDescription" Overridable="yes">[ProductName] はユーザー単位のインストールをサポートしていません。</String>
+    <String Id="InstallScopeDlgPerMachine" Overridable="yes">{\WixUI_Font_Emphasized}このコンピュータのすべてのユーザー向けにインストールする(&amp;A)</String>
+    <String Id="InstallScopeDlgPerMachineDescription" Overridable="yes">[ProductName] は標準の場所にインストールされ、すべてのユーザーが利用できます。デフォルトの場所は変更可能です。ローカル管理者の権限が必要です。</String>
+    <String Id="InstallScopeDlgFolderLabel" Overridable="yes">インストール先フォルダー(&amp;F):</String>
+    <String Id="InstallScopeDlgChange" Overridable="yes">変更(&amp;C)...</String>
+
+    <String Id="InvalidDirDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="InvalidDirDlgText" Overridable="yes">インストール先フォルダーはローカルのハードドライブ上に指定する必要があります。</String>
+    <String Id="InvalidDirDlgIcon" Overridable="yes">WixUI_Ico_Info</String>
+    <String Id="InvalidDirDlgIconTooltip" Overridable="yes">情報アイコン</String>
+
+    <String Id="LicenseAgreementDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="LicenseAgreementDlgLicenseAcceptedCheckBox" Overridable="yes">使用許諾契約の条項に同意します(&amp;A)</String>
+    <String Id="LicenseAgreementDlgBannerBitmap" Overridable="yes">WixUI_Bmp_Banner</String>
+    <String Id="LicenseAgreementDlgDescription" Overridable="yes">以下の使用許諾契約書をよくお読みください</String>
+    <String Id="LicenseAgreementDlgTitle" Overridable="yes">{\WixUI_Font_Title}使用許諾契約</String>
+
+    <String Id="MaintenanceTypeDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="MaintenanceTypeDlgChangeButton" Overridable="yes">変更(&amp;C)</String>
+    <String Id="MaintenanceTypeDlgChangeButtonTooltip" Overridable="yes">インストールの変更</String>
+    <String Id="MaintenanceTypeDlgRepairButton" Overridable="yes">修復(&amp;R)</String>
+    <String Id="MaintenanceTypeDlgRepairButtonTooltip" Overridable="yes">インストールの修復</String>
+    <String Id="MaintenanceTypeDlgRemoveButton" Overridable="yes">削除(&amp;M)</String>
+    <String Id="MaintenanceTypeDlgRemoveButtonTooltip" Overridable="yes">インストールの削除</String>
+    <String Id="MaintenanceTypeDlgBannerBitmap" Overridable="yes">WixUI_Bmp_Banner</String>
+    <String Id="MaintenanceTypeDlgDescription" Overridable="yes">実行する操作を選択してください。</String>
+    <String Id="MaintenanceTypeDlgTitle" Overridable="yes">{\WixUI_Font_Title}インストールの変更、修復、または削除</String>
+    <String Id="MaintenanceTypeDlgChangeText" Overridable="yes">インストールの構成を変更できます。</String>
+    <String Id="MaintenanceTypeDlgChangeDisabledText" Overridable="yes">[ProductName] には個別選択可能な機能がありません。</String>
+    <String Id="MaintenanceTypeDlgRemoveText" Overridable="yes">[ProductName] をコンピュータから削除します。</String>
+    <String Id="MaintenanceTypeDlgRemoveDisabledText" Overridable="yes">[ProductName] を削除できません。</String>
+    <String Id="MaintenanceTypeDlgRepairText" Overridable="yes">不足している、または破損しているファイル、ショートカット、レジストリ項目を復元して直前のインストールを修正します。</String>
+    <String Id="MaintenanceTypeDlgRepairDisabledText" Overridable="yes">[ProductName] を修復できません。</String>
+
+    <String Id="MaintenanceWelcomeDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="MaintenanceWelcomeDlgBitmap" Overridable="yes">WixUI_Bmp_Dialog</String>
+    <String Id="MaintenanceWelcomeDlgDescription" Overridable="yes">セットアップ ウィザードを使用すると、コンピュータ上の [ProductName] の機能構成を変更したり、削除したりできます。続行するには [次へ] を、ウィザードを終了するには [キャンセル] をクリックしてください。</String>
+    <String Id="MaintenanceWelcomeDlgTitle" Overridable="yes">{\WixUI_Font_Bigger}[ProductName] セットアップ ウィザードへようこそ</String>
+
+    <String Id="MsiRMFilesInUse_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="MsiRMFilesInUseBannerBitmap" Overridable="yes">WixUI_Bmp_Banner</String>
+    <String Id="MsiRMFilesInUseText" Overridable="yes">以下のアプリケーションが、更新が必要なファイルを使用しています。セットアップ ウィザードで閉じて再起動を試みることができます。または、後でコンピュータを再起動することもできます。</String>
+    <String Id="MsiRMFilesInUseDescription" Overridable="yes">更新が必要な一部のファイルが使用中です。</String>
+    <String Id="MsiRMFilesInUseTitle" Overridable="yes">{\WixUI_Font_Title}使用中のファイル</String>
+    <String Id="MsiRMFilesInUseUseRM" Overridable="yes">アプリケーションを閉じて再起動を試みる(&amp;C)</String>
+    <String Id="MsiRMFilesInUseDontUseRM" Overridable="yes">アプリケーションを閉じない (再起動が必要になります)(&amp;D)</String>
+
+    <String Id="OutOfDiskDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="OutOfDiskDlgBannerBitmap" Overridable="yes">WixUI_Bmp_Banner</String>
+    <String Id="OutOfDiskDlgText" Overridable="yes">選択したドライブには、現在選択されている機能をインストールするための空き容量が不足しています。選択したドライブから不要なファイルを削除するか、インストールする機能を減らすか、別のドライブを選択してください。</String>
+    <String Id="OutOfDiskDlgDescription" Overridable="yes">インストールに必要なディスク領域が不足しています。</String>
+    <String Id="OutOfDiskDlgTitle" Overridable="yes">{\WixUI_Font_Title}ディスク領域不足</String>
+    <String Id="OutOfDiskDlgVolumeList" Overridable="yes">{120}{70}{70}{70}{70}</String>
+
+    <String Id="OutOfRbDiskDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="OutOfRbDiskDlgBannerBitmap" Overridable="yes">WixUI_Bmp_Banner</String>
+    <String Id="OutOfRbDiskDlgText" Overridable="yes">選択したドライブには、選択した機能をインストールするための空き容量が不足しています。選択したドライブから不要なファイルを削除するか、インストールする機能を減らすか、別のドライブを選択してください。</String>
+    <String Id="OutOfRbDiskDlgDescription" Overridable="yes">インストールに必要なディスク領域が不足しています。</String>
+    <String Id="OutOfRbDiskDlgTitle" Overridable="yes">{\WixUI_Font_Title}ディスク領域不足</String>
+    <String Id="OutOfRbDiskDlgVolumeList" Overridable="yes">{120}{70}{70}{70}{70}</String>
+    <String Id="OutOfRbDiskDlgText2" Overridable="yes">ロールバック機能を無効にすることもできます。ロールバックを無効にすると、インストールの失敗や中断が発生した場合に元の状態に戻せなくなります。ロールバックを無効にする場合は [はい] をクリックしてください。</String>
+
+    <String Id="PrepareDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="PrepareDlgBitmap" Overridable="yes">WixUI_Bmp_Dialog</String>
+    <String Id="PrepareDlgDescription" Overridable="yes">セットアップの準備処理が完了するまでお待ちください。</String>
+    <String Id="PrepareDlgTitle" Overridable="yes">{\WixUI_Font_Bigger}[ProductName] セットアップ ウィザードへようこそ</String>
+
+    <String Id="ProgressDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="ProgressDlgBannerBitmap" Overridable="yes">WixUI_Bmp_Banner</String>
+    <String Id="ProgressDlgTextInstalling" Overridable="yes">[ProductName] をインストールしています。しばらくお待ちください。</String>
+    <String Id="ProgressDlgTitleInstalling" Overridable="yes">{\WixUI_Font_Title}[ProductName] をインストール中</String>
+    <String Id="ProgressDlgTextChanging" Overridable="yes">[ProductName] を変更しています。しばらくお待ちください。</String>
+    <String Id="ProgressDlgTitleChanging" Overridable="yes">{\WixUI_Font_Title}[ProductName] を変更中</String>
+    <String Id="ProgressDlgTextRepairing" Overridable="yes">[ProductName] を修復しています。しばらくお待ちください。</String>
+    <String Id="ProgressDlgTitleRepairing" Overridable="yes">{\WixUI_Font_Title}[ProductName] を修復中</String>
+    <String Id="ProgressDlgTextRemoving" Overridable="yes">[ProductName] を削除しています。しばらくお待ちください。</String>
+    <String Id="ProgressDlgTitleRemoving" Overridable="yes">{\WixUI_Font_Title}[ProductName] を削除中</String>
+    <String Id="ProgressTextUpdating" Overridable="yes">[ProductName] を更新しています。しばらくお待ちください。</String>
+    <String Id="ProgressDlgTitleUpdating" Overridable="yes">{\WixUI_Font_Title}[ProductName] を更新中</String>
+    <String Id="ProgressDlgProgressBar" Overridable="yes">進捗状況</String>
+    <String Id="ProgressDlgStatusLabel" Overridable="yes">ステータス:</String>
+
+    <String Id="ResumeDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="ResumeDlgInstall" Overridable="yes">インストール(&amp;I)</String>
+    <String Id="ResumeDlgBitmap" Overridable="yes">WixUI_Bmp_Dialog</String>
+    <String Id="ResumeDlgDescription" Overridable="yes">セットアップ ウィザードは、コンピュータへの [ProductName] のインストールを完了します。続行するには [インストール] を、ウィザードを終了するには [キャンセル] をクリックしてください。</String>
+    <String Id="ResumeDlgTitle" Overridable="yes">{\WixUI_Font_Bigger}[ProductName] セットアップ ウィザードの再開</String>
+
+    <String Id="SetupTypeDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="SetupTypeDlgTypicalButton" Overridable="yes">標準(&amp;T)</String>
+    <String Id="SetupTypeDlgTypicalButtonTooltip" Overridable="yes">標準インストール</String>
+    <String Id="SetupTypeDlgCustomButton" Overridable="yes">カスタム(&amp;C)</String>
+    <String Id="SetupTypeDlgCustomButtonTooltip" Overridable="yes">カスタム インストール</String>
+    <String Id="SetupTypeDlgCompleteButton" Overridable="yes">完全(&amp;P)</String>
+    <String Id="SetupTypeDlgCompleteButtonTooltip" Overridable="yes">完全インストール</String>
+    <String Id="SetupTypeDlgBannerBitmap" Overridable="yes">WixUI_Bmp_Banner</String>
+    <String Id="SetupTypeDlgTitle" Overridable="yes">{\WixUI_Font_Title}セットアップの種類を選択</String>
+    <String Id="SetupTypeDlgDescription" Overridable="yes">ご希望のセットアップの種類を選択してください</String>
+    <String Id="SetupTypeDlgTypicalText" Overridable="yes">最も一般的な機能をインストールします。大部分のユーザーにおすすめです。</String>
+    <String Id="SetupTypeDlgCustomText" Overridable="yes">インストールする機能とその場所を個別に選択できます。上級ユーザーにおすすめです。</String>
+    <String Id="SetupTypeDlgCompleteText" Overridable="yes">すべてのプログラム機能をインストールします。最も多くのディスク容量を必要とします。</String>
+
+    <String Id="UserExit_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="UserExitBitmap" Overridable="yes">WixUI_Bmp_Dialog</String>
+    <String Id="UserExitTitle" Overridable="yes">{\WixUI_Font_Bigger}[ProductName] セットアップ ウィザードが中断されました</String>
+    <String Id="UserExitDescription1" Overridable="yes">[ProductName] のセットアップが中断されました。システムは変更されていません。後でこのプログラムをインストールする場合は、セットアップを再実行してください。</String>
+    <String Id="UserExitDescription2" Overridable="yes">[完了] をクリックしてセットアップ ウィザードを終了してください。</String>
+
+    <String Id="VerifyReadyDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="VerifyReadyDlgBannerBitmap" Overridable="yes">WixUI_Bmp_Banner</String>
+    <String Id="VerifyReadyDlgInstall" Overridable="yes">インストール(&amp;I)</String>
+    <String Id="VerifyReadyDlgInstallText" Overridable="yes">[インストール] をクリックしてインストールを開始してください。設定の確認や変更を行う場合は [戻る] を、ウィザードを終了する場合は [キャンセル] をクリックしてください。</String>
+    <String Id="VerifyReadyDlgInstallTitle" Overridable="yes">{\WixUI_Font_Title}[ProductName] をインストールする準備ができました</String>
+    <String Id="VerifyReadyDlgChange" Overridable="yes">変更(&amp;C)</String>
+    <String Id="VerifyReadyDlgChangeText" Overridable="yes">[変更] をクリックしてインストールを開始してください。設定の確認や変更を行う場合は [戻る] を、ウィザードを終了する場合は [キャンセル] をクリックしてください。</String>
+    <String Id="VerifyReadyDlgChangeTitle" Overridable="yes">{\WixUI_Font_Title}[ProductName] を変更する準備ができました</String>
+    <String Id="VerifyReadyDlgRepair" Overridable="yes">修復(&amp;R)</String>
+    <String Id="VerifyReadyDlgRepairText" Overridable="yes">[修復] をクリックして [ProductName] を修復してください。設定の確認や変更を行う場合は [戻る] を、ウィザードを終了する場合は [キャンセル] をクリックしてください。</String>
+    <String Id="VerifyReadyDlgRepairTitle" Overridable="yes">{\WixUI_Font_Title}[ProductName] を修復する準備ができました</String>
+    <String Id="VerifyReadyDlgRemove" Overridable="yes">削除(&amp;M)</String>
+    <String Id="VerifyReadyDlgRemoveText" Overridable="yes">[削除] をクリックして [ProductName] をコンピュータから削除してください。設定の確認や変更を行う場合は [戻る] を、ウィザードを終了する場合は [キャンセル] をクリックしてください。</String>
+    <String Id="VerifyReadyDlgRemoveTitle" Overridable="yes">{\WixUI_Font_Title}[ProductName] を削除する準備ができました</String>
+    <String Id="VerifyReadyDlgUpdate" Overridable="yes">更新(&amp;U)</String>
+    <String Id="VerifyReadyDlgUpdateText" Overridable="yes">[更新] をクリックして [ProductName] を更新してください。設定の確認や変更を行う場合は [戻る] を、ウィザードを終了する場合は [キャンセル] をクリックしてください。</String>
+    <String Id="VerifyReadyDlgUpdateTitle" Overridable="yes">{\WixUI_Font_Title}[ProductName] を更新する準備ができました</String>
+
+    <String Id="WaitForCostingDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="WaitForCostingDlgReturn" Overridable="yes">戻る(&amp;R)</String>
+    <String Id="WaitForCostingDlgText" Overridable="yes">インストーラーがディスク領域の必要量を算出するまでお待ちください。</String>
+    <String Id="WaitForCostingDlgIcon" Overridable="yes">WixUI_Ico_Exclam</String>
+    <String Id="WaitForCostingDlgIconTooltip" Overridable="yes">感嘆符</String>
+
+    <String Id="WelcomeDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="WelcomeDlgBitmap" Overridable="yes">WixUI_Bmp_Dialog</String>
+    <String Id="WelcomeDlgDescription" Overridable="yes">セットアップ ウィザードが [ProductName] をコンピュータにインストールします。続行するには [次へ] を、セットアップ ウィザードを終了するには [キャンセル] をクリックしてください。</String>
+    <String Id="WelcomeUpdateDlgDescriptionUpdate" Overridable="yes">セットアップ ウィザードがコンピュータの [ProductName] を更新します。続行するには [次へ] を、セットアップ ウィザードを終了するには [キャンセル] をクリックしてください。</String>
+    <String Id="WelcomeDlgTitle" Overridable="yes">{\WixUI_Font_Bigger}[ProductName] セットアップ ウィザードへようこそ</String>
+
+    <String Id="WelcomeEulaDlg_Title" Overridable="yes">[ProductName] のセットアップ</String>
+    <String Id="WelcomeEulaDlgBitmap" Overridable="yes">WixUI_Bmp_Dialog</String>
+    <String Id="WelcomeEulaDlgLicenseAcceptedCheckBox" Overridable="yes">使用許諾契約の条項に同意します(&amp;A)</String>
+    <String Id="WelcomeEulaDlgInstall" Overridable="yes">インストール(&amp;I)</String>
+    <String Id="WelcomeEulaDlgUpdate" Overridable="yes">更新(&amp;U)</String>
+    <String Id="WelcomeEulaDlgTitle" Overridable="yes">{\WixUI_Font_Title}[ProductName] の使用許諾契約書をお読みください</String>
+
+    <String Id="ProgressTextInstallValidate" Overridable="yes">インストールの検証中</String>
+    <String Id="ProgressTextInstallFiles" Overridable="yes">新しいファイルをコピー中</String>
+    <String Id="ProgressTextInstallFilesTemplate" Overridable="yes">ファイル: [1]、フォルダー: [9]、サイズ: [6]</String>
+    <String Id="ProgressTextInstallAdminPackage" Overridable="yes">ネットワーク インストール ファイルをコピー中</String>
+    <String Id="ProgressTextInstallAdminPackageTemplate" Overridable="yes">ファイル: [1]、フォルダー: [9]、サイズ: [6]</String>
+    <String Id="ProgressTextFileCost" Overridable="yes">必要な領域を計算中</String>
+    <String Id="ProgressTextCostInitialize" Overridable="yes">必要な領域を計算中</String>
+    <String Id="ProgressTextCostFinalize" Overridable="yes">必要な領域を計算中</String>
+    <String Id="ProgressTextCreateShortcuts" Overridable="yes">ショートカットを作成中</String>
+    <String Id="ProgressTextCreateShortcutsTemplate" Overridable="yes">ショートカット: [1]</String>
+    <String Id="ProgressTextPublishComponents" Overridable="yes">限定コンポーネントを公開中</String>
+    <String Id="ProgressTextPublishComponentsTemplate" Overridable="yes">コンポーネント ID: [1]、修飾子: [2]</String>
+    <String Id="ProgressTextPublishFeatures" Overridable="yes">製品機能を公開中</String>
+    <String Id="ProgressTextPublishFeaturesTemplate" Overridable="yes">機能: [1]</String>
+    <String Id="ProgressTextPublishProduct" Overridable="yes">製品情報を公開中</String>
+    <String Id="ProgressTextRegisterClassInfo" Overridable="yes">クラス サーバーを登録中</String>
+    <String Id="ProgressTextRegisterClassInfoTemplate" Overridable="yes">クラス ID: [1]</String>
+    <String Id="ProgressTextRegisterExtensionInfo" Overridable="yes">拡張サーバーを登録中</String>
+    <String Id="ProgressTextRegisterExtensionInfoTemplate" Overridable="yes">拡張子: [1]</String>
+    <String Id="ProgressTextRegisterMIMEInfo" Overridable="yes">MIME 情報を登録中</String>
+    <String Id="ProgressTextRegisterMIMEInfoTemplate" Overridable="yes">MIME コンテンツ タイプ: [1]、拡張子: [2]</String>
+    <String Id="ProgressTextRegisterProgIdInfo" Overridable="yes">プログラム ID を登録中</String>
+    <String Id="ProgressTextRegisterProgIdInfoTemplate" Overridable="yes">プログラム ID: [1]</String>
+    <String Id="ProgressTextAllocateRegistrySpace" Overridable="yes">レジストリ領域を割り当て中</String>
+    <String Id="ProgressTextAllocateRegistrySpaceTemplate" Overridable="yes">空き領域: [1]</String>
+    <String Id="ProgressTextAppSearch" Overridable="yes">インストール済みのアプリケーションを検索中</String>
+    <String Id="ProgressTextAppSearchTemplate" Overridable="yes">プロパティ: [1]、署名: [2]</String>
+    <String Id="ProgressTextBindImage" Overridable="yes">実行可能ファイルをバインド中</String>
+    <String Id="ProgressTextBindImageTemplate" Overridable="yes">ファイル: [1]</String>
+    <String Id="ProgressTextCCPSearch" Overridable="yes">修飾された製品を検索中</String>
+    <String Id="ProgressTextCreateFolders" Overridable="yes">フォルダーを作成中</String>
+    <String Id="ProgressTextCreateFoldersTemplate" Overridable="yes">フォルダー: [1]</String>
+    <String Id="ProgressTextDeleteServices" Overridable="yes">サービスを削除中</String>
+    <String Id="ProgressTextDeleteServicesTemplate" Overridable="yes">サービス: [1]</String>
+    <String Id="ProgressTextDuplicateFiles" Overridable="yes">ファイルのコピーを作成中</String>
+    <String Id="ProgressTextDuplicateFilesTemplate" Overridable="yes">ファイル: [1]、フォルダー: [9]、サイズ: [6]</String>
+    <String Id="ProgressTextFindRelatedProducts" Overridable="yes">関連アプリケーションを検索中</String>
+    <String Id="ProgressTextFindRelatedProductsTemplate" Overridable="yes">検出されたアプリケーション: [1]</String>
+    <String Id="ProgressTextInstallODBC" Overridable="yes">ODBC コンポーネントをインストール中</String>
+    <String Id="ProgressTextInstallServices" Overridable="yes">新しいサービスをインストール中</String>
+    <String Id="ProgressTextInstallServicesTemplate" Overridable="yes">サービス: [2]</String>
+    <String Id="ProgressTextLaunchConditions" Overridable="yes">起動条件を確認中</String>
+    <String Id="ProgressTextMigrateFeatureStates" Overridable="yes">関連アプリケーションから機能の状態を移行中</String>
+    <String Id="ProgressTextMigrateFeatureStatesTemplate" Overridable="yes">アプリケーション: [1]</String>
+    <String Id="ProgressTextMoveFiles" Overridable="yes">ファイルを移動中</String>
+    <String Id="ProgressTextMoveFilesTemplate" Overridable="yes">ファイル: [1]、フォルダー: [9]、サイズ: [6]</String>
+    <String Id="ProgressTextPatchFiles" Overridable="yes">ファイルにパッチを適用中</String>
+    <String Id="ProgressTextPatchFilesTemplate" Overridable="yes">ファイル: [1]、フォルダー: [2]、サイズ: [3]</String>
+    <String Id="ProgressTextProcessComponents" Overridable="yes">コンポーネントの登録情報を更新中</String>
+    <String Id="ProgressTextRegisterComPlus" Overridable="yes">COM+ アプリケーションおよびコンポーネントを登録中</String>
+    <String Id="ProgressTextRegisterComPlusTemplate" Overridable="yes">アプリ ID: [1]{{、タイプ: [2]、ユーザー: [3]、RSN: [4]}}</String>
+    <String Id="ProgressTextRegisterFonts" Overridable="yes">フォントを登録中</String>
+    <String Id="ProgressTextRegisterFontsTemplate" Overridable="yes">フォント: [1]</String>
+    <String Id="ProgressTextRegisterProduct" Overridable="yes">製品を登録中</String>
+    <String Id="ProgressTextRegisterProductTemplate" Overridable="yes">[1]</String>
+    <String Id="ProgressTextRegisterTypeLibraries" Overridable="yes">タイプ ライブラリを登録中</String>
+    <String Id="ProgressTextRegisterTypeLibrariesTemplate" Overridable="yes">ライブラリ ID: [1]</String>
+    <String Id="ProgressTextRegisterUser" Overridable="yes">ユーザーを登録中</String>
+    <String Id="ProgressTextRegisterUserTemplate" Overridable="yes">[1]</String>
+    <String Id="ProgressTextRemoveDuplicateFiles" Overridable="yes">重複ファイルを削除中</String>
+    <String Id="ProgressTextRemoveDuplicateFilesTemplate" Overridable="yes">ファイル: [1]、フォルダー: [9]</String>
+    <String Id="ProgressTextRemoveEnvironmentStrings" Overridable="yes">環境変数を更新中</String>
+    <String Id="ProgressTextRemoveEnvironmentStringsTemplate" Overridable="yes">名前: [1]、値: [2]、操作: [3]</String>
+    <String Id="ProgressTextRemoveExistingProducts" Overridable="yes">既存のアプリケーションを削除中</String>
+    <String Id="ProgressTextRemoveExistingProductsTemplate" Overridable="yes">アプリケーション: [1]、コマンドライン: [2]</String>
+    <String Id="ProgressTextRemoveFiles" Overridable="yes">ファイルを削除中</String>
+    <String Id="ProgressTextRemoveFilesTemplate" Overridable="yes">ファイル: [1]、フォルダー: [9]</String>
+    <String Id="ProgressTextRemoveFolders" Overridable="yes">フォルダーを削除中</String>
+    <String Id="ProgressTextRemoveFoldersTemplate" Overridable="yes">フォルダー: [1]</String>
+    <String Id="ProgressTextRemoveIniValues" Overridable="yes">INI ファイル項目を削除中</String>
+    <String Id="ProgressTextRemoveIniValuesTemplate" Overridable="yes">ファイル: [1]、セクション: [2]、キー: [3]、値: [4]</String>
+    <String Id="ProgressTextRemoveODBC" Overridable="yes">ODBC コンポーネントを削除中</String>
+    <String Id="ProgressTextRemoveRegistryValues" Overridable="yes">システム レジストリ値を削除中</String>
+    <String Id="ProgressTextRemoveRegistryValuesTemplate" Overridable="yes">キー: [1]、名前: [2]</String>
+    <String Id="ProgressTextRemoveShortcuts" Overridable="yes">ショートカットを削除中</String>
+    <String Id="ProgressTextRemoveShortcutsTemplate" Overridable="yes">ショートカット: [1]</String>
+    <String Id="ProgressTextRMCCPSearch" Overridable="yes">修飾された製品を検索中</String>
+    <String Id="ProgressTextSelfRegModules" Overridable="yes">モジュールを自己登録中</String>
+    <String Id="ProgressTextSelfRegModulesTemplate" Overridable="yes">ファイル: [1]、フォルダー: [2]</String>
+    <String Id="ProgressTextSelfUnregModules" Overridable="yes">モジュールの自己登録を解除中</String>
+    <String Id="ProgressTextSelfUnregModulesTemplate" Overridable="yes">ファイル: [1]、フォルダー: [2]</String>
+    <String Id="ProgressTextSetODBCFolders" Overridable="yes">ODBC フォルダーを初期化中</String>
+    <String Id="ProgressTextStartServices" Overridable="yes">サービスを開始中</String>
+    <String Id="ProgressTextStartServicesTemplate" Overridable="yes">サービス: [1]</String>
+    <String Id="ProgressTextStopServices" Overridable="yes">サービスを停止中</String>
+    <String Id="ProgressTextStopServicesTemplate" Overridable="yes">サービス: [1]</String>
+    <String Id="ProgressTextUnpublishComponents" Overridable="yes">限定コンポーネントの公開を解除中</String>
+    <String Id="ProgressTextUnpublishComponentsTemplate" Overridable="yes">コンポーネント ID: [1]、修飾子: [2]</String>
+    <String Id="ProgressTextUnpublishFeatures" Overridable="yes">製品機能の公開を解除中</String>
+    <String Id="ProgressTextUnpublishFeaturesTemplate" Overridable="yes">機能: [1]</String>
+    <String Id="ProgressTextUnregisterClassInfo" Overridable="yes">クラス サーバーの登録を解除中</String>
+    <String Id="ProgressTextUnregisterClassInfoTemplate" Overridable="yes">クラス ID: [1]</String>
+    <String Id="ProgressTextUnregisterComPlus" Overridable="yes">COM+ アプリケーションおよびコンポーネントの登録を解除中</String>
+    <String Id="ProgressTextUnregisterComPlusTemplate" Overridable="yes">アプリ ID: [1]{{、アプリ タイプ: [2]}}</String>
+    <String Id="ProgressTextUnregisterExtensionInfo" Overridable="yes">拡張サーバーの登録を解除中</String>
+    <String Id="ProgressTextUnregisterExtensionInfoTemplate" Overridable="yes">拡張子: [1]</String>
+    <String Id="ProgressTextUnregisterFonts" Overridable="yes">フォントの登録を解除中</String>
+    <String Id="ProgressTextUnregisterFontsTemplate" Overridable="yes">フォント: [1]</String>
+    <String Id="ProgressTextUnregisterMIMEInfo" Overridable="yes">MIME 情報の登録を解除中</String>
+    <String Id="ProgressTextUnregisterMIMEInfoTemplate" Overridable="yes">MIME コンテンツ タイプ: [1]、拡張子: [2]</String>
+    <String Id="ProgressTextUnregisterProgIdInfo" Overridable="yes">プログラム ID の登録を解除中</String>
+    <String Id="ProgressTextUnregisterProgIdInfoTemplate" Overridable="yes">プログラム ID: [1]</String>
+    <String Id="ProgressTextUnregisterTypeLibraries" Overridable="yes">タイプ ライブラリの登録を解除中</String>
+    <String Id="ProgressTextUnregisterTypeLibrariesTemplate" Overridable="yes">ライブラリ ID: [1]</String>
+    <String Id="ProgressTextWriteEnvironmentStrings" Overridable="yes">環境変数を更新中</String>
+    <String Id="ProgressTextWriteEnvironmentStringsTemplate" Overridable="yes">名前: [1]、値: [2]、操作: [3]</String>
+    <String Id="ProgressTextWriteIniValues" Overridable="yes">INI ファイル値を書き込み中</String>
+    <String Id="ProgressTextWriteIniValuesTemplate" Overridable="yes">ファイル: [1]、セクション: [2]、キー: [3]、値: [4]</String>
+    <String Id="ProgressTextWriteRegistryValues" Overridable="yes">システム レジストリ値を書き込み中</String>
+    <String Id="ProgressTextWriteRegistryValuesTemplate" Overridable="yes">キー: [1]、名前: [2]、値: [3]</String>
+    <String Id="ProgressTextAdvertise" Overridable="yes">アプリケーションの告知を実行中</String>
+    <String Id="ProgressTextGenerateScript" Overridable="yes">次の操作のスクリプトを生成中:</String>
+    <String Id="ProgressTextGenerateScriptTemplate" Overridable="yes">[1]</String>
+    <String Id="ProgressTextInstallSFPCatalogFile" Overridable="yes">システム カタログをインストール中</String>
+    <String Id="ProgressTextInstallSFPCatalogFileTemplate" Overridable="yes">ファイル: [1]、依存関係: [2]</String>
+    <String Id="ProgressTextMsiPublishAssemblies" Overridable="yes">アセンブリ情報を公開中</String>
+    <String Id="ProgressTextMsiPublishAssembliesTemplate" Overridable="yes">アプリ コンテキスト: [1]、アセンブリ名: [2]</String>
+    <String Id="ProgressTextMsiUnpublishAssemblies" Overridable="yes">アセンブリ情報の公開を解除中</String>
+    <String Id="ProgressTextMsiUnpublishAssembliesTemplate" Overridable="yes">アプリ コンテキスト: [1]、アセンブリ名: [2]</String>
+    <String Id="ProgressTextRollback" Overridable="yes">次の操作をロールバック中:</String>
+    <String Id="ProgressTextRollbackTemplate" Overridable="yes">[1]</String>
+    <String Id="ProgressTextRollbackCleanup" Overridable="yes">バックアップ ファイルを削除中</String>
+    <String Id="ProgressTextRollbackCleanupTemplate" Overridable="yes">ファイル: [1]</String>
+    <String Id="ProgressTextUnmoveFiles" Overridable="yes">移動されたファイルを削除中</String>
+    <String Id="ProgressTextUnmoveFilesTemplate" Overridable="yes">ファイル: [1]、フォルダー: [9]</String>
+    <String Id="ProgressTextUnpublishProduct" Overridable="yes">製品情報の公開を解除中</String>
+
+    <String Id="Error0" Overridable="yes">{{致命的なエラー: }}</String>
+    <String Id="Error1" Overridable="yes">{{エラー [1]。}}</String>
+    <String Id="Error2" Overridable="yes">警告 [1]。</String>
+    <String Id="Error4" Overridable="yes">情報 [1]。</String>
+    <String Id="Error5" Overridable="yes">このパッケージのインストール中に予期しないエラーが発生しました。パッケージに問題がある可能性があります。エラー コードは [1] です。{{引数: [2]、[3]、[4]}}</String>
+    <String Id="Error7" Overridable="yes">{{ディスクがいっぱいです: }}</String>
+    <String Id="Error8" Overridable="yes">操作 [Time]: [1]。[2]</String>
+    <String Id="Error9" Overridable="yes">[ProductName]</String>
+    <String Id="Error10" Overridable="yes">{[2]}{, [3]}{, [4]}</String>
+    <String Id="Error11" Overridable="yes">メッセージ タイプ: [1]、引数: [2]</String>
+    <String Id="Error12" Overridable="yes">=== ログ開始: [Date]  [Time] ===</String>
+    <String Id="Error13" Overridable="yes">=== ログ停止: [Date]  [Time] ===</String>
+    <String Id="Error14" Overridable="yes">操作開始 [Time]: [1]。</String>
+    <String Id="Error15" Overridable="yes">操作終了 [Time]: [1]。リターン コード [2]。</String>
+    <String Id="Error16" Overridable="yes">残り時間: {[1] 分 }{[2] 秒}</String>
+    <String Id="Error17" Overridable="yes">メモリが不足しています。他のアプリケーションを終了して再試行してください。</String>
+    <String Id="Error18" Overridable="yes">インストーラーが応答していません。</String>
+    <String Id="Error19" Overridable="yes">インストーラーが早体終了しました。</String>
+    <String Id="Error20" Overridable="yes">Windows が [ProductName] を構成するまでお待ちください</String>
+    <String Id="Error21" Overridable="yes">必要な情報を収集しています...</String>
+    <String Id="Error22" Overridable="yes">このアプリケーションの旧バージョンを削除しています...</String>
+    <String Id="Error23" Overridable="yes">このアプリケーションの旧バージョンの削除を準備しています...</String>
+    <String Id="Error32" Overridable="yes">{[ProductName]} のインストールが正常に完了しました。</String>
+    <String Id="Error33" Overridable="yes">{[ProductName]} のインストールに失敗しました。</String>
+    <String Id="Error1101" Overridable="yes">ファイルの読み込みエラー: [2]。{{システム エラー [3]。}}ファイルが存在し、アクセス可能であることを確認してください。</String>
+    <String Id="Error1301" Overridable="yes">ファイル '[2]' を作成できません。同名のディレクトリが既に存在します。セットアップをキャンセルし、別のディレクトリにインストールしてください。</String>
+    <String Id="Error1302" Overridable="yes">ディスクを挿入してください: [2]</String>
+    <String Id="Error1303" Overridable="yes">インストーラーにはこのディレクトリにアクセスするための十分な権限がありません: [2]。インストールを続行できません。管理者としてログインするか、システム管理者に問い合わせてください。</String>
+    <String Id="Error1304" Overridable="yes">ファイルへの書き込みエラー: [2]。このディレクトリへのアクセス権があるか確認してください。</String>
+    <String Id="Error1305" Overridable="yes">ファイルの読み込みエラー: [2]。{{システム エラー [3]。}}ファイルが存在し、アクセス可能であることを確認してください。</String>
+    <String Id="Error1306" Overridable="yes">別のアプリケーションがファイル '[2]' を排他的に開いています。すべてのアプリケーションを終了し、[再試行] をクリックしてください。</String>
+    <String Id="Error1307" Overridable="yes">このファイルをインストールするための十分なディスク容量がありません: [2]。ディスク容量を確保して [再試行] をクリックするか、[キャンセル] をクリックして終了してください。</String>
+    <String Id="Error1308" Overridable="yes">ソース ファイルが見つかりません: [2]。ファイルが存在し、アクセス可能であることを確認してください。</String>
+    <String Id="Error1309" Overridable="yes">ファイルの読み込みエラー: [3]。{{システム エラー [2]。}}ファイルが存在し、アクセス可能であることを確認してください。</String>
+    <String Id="Error1310" Overridable="yes">ファイルへの書き込みエラー: [3]。{{システム エラー [2]。}}フォルダーへのアクセス権があるか確認してください。</String>
+    <String Id="Error1311" Overridable="yes">ソース ファイルが見つかりません{{(cabinet)}}: [2]。ファイルが存在し、アクセス可能であることを確認してください。</String>
+    <String Id="Error1312" Overridable="yes">ディレクトリ '[2]' を作成できません。同名のファイルが既に存在します。ファイルを移動または削除して [再試行] をクリックするか、[キャンセル] をクリックして終了してください。</String>
+    <String Id="Error1313" Overridable="yes">ボリューム [2] は現在使用できません。別のボリュームを選択してください。</String>
+    <String Id="Error1314" Overridable="yes">指定されたパス '[2]' は使用できません。</String>
+    <String Id="Error1315" Overridable="yes">指定されたフォルダーへの書き込みができません: [2]。</String>
+    <String Id="Error1316" Overridable="yes">ファイルの読み込み中にネットワーク エラーが発生しました: [2]</String>
+    <String Id="Error1317" Overridable="yes">フォルダーの作成中にエラーが発生しました: [2]</String>
+    <String Id="Error1318" Overridable="yes">フォルダーの作成中にネットワーク エラーが発生しました: [2]</String>
+    <String Id="Error1319" Overridable="yes">ソース CAB ファイルを開く際にネットワーク エラーが発生しました: [2]</String>
+    <String Id="Error1320" Overridable="yes">指定されたパスが長すぎます: [2]</String>
+    <String Id="Error1321" Overridable="yes">インストーラーにはこのファイルを変更するための十分な権限がありません: [2]。</String>
+    <String Id="Error1322" Overridable="yes">フォルダー パス '[2]' の一部が無効です。空であるか、最大長を超えています。</String>
+    <String Id="Error1323" Overridable="yes">フォルダー パス '[2]' にフォルダー パスとして無効な文字列が含まれています。</String>
+    <String Id="Error1324" Overridable="yes">フォルダー パス '[2]' に無効な文字が含まれています。</String>
+    <String Id="Error1325" Overridable="yes">'[2]' は無効なショート ファイル名です。</String>
+    <String Id="Error1326" Overridable="yes">セキュリティ情報の取得エラー: [3] GetLastError: [2]</String>
+    <String Id="Error1327" Overridable="yes">無効なドライブです: [2]</String>
+    <String Id="Error1328" Overridable="yes">ファイル '[2]' へのパッチ適用エラー。ファイルが他の方法で既に更新されているため、このパッチで更新できない可能性があります。詳細については、パッチの提供元にお問い合わせください。{{システム エラー: [3]}}</String>
+    <String Id="Error1329" Overridable="yes">CAB ファイル [2] にデジタル署名がないため、必要なファイルをインストールできません。CAB ファイルが破損している可能性があります。</String>
+    <String Id="Error1330" Overridable="yes">CAB ファイル [2] のデジタル署名が無効なため、必要なファイルをインストールできません。CAB ファイルが破損している可能性があります。{{WinVerifyTrust からエラー [3] が返されました。}}</String>
+    <String Id="Error1331" Overridable="yes">ファイル [2] が正しくコピーされませんでした: CRC エラー。</String>
+    <String Id="Error1332" Overridable="yes">ファイル [2] が正しく移動されませんでした: CRC エラー。</String>
+    <String Id="Error1333" Overridable="yes">ファイル [2] に正しくパッチが適用されませんでした: CRC エラー。</String>
+    <String Id="Error1334" Overridable="yes">CAB ファイル '[3]' 内に見つからないため、ファイル '[2]' をインストールできません。ネットワーク エラー、CD-ROM の読み込みエラー、またはパッケージの問題である可能性があります。</String>
+    <String Id="Error1335" Overridable="yes">このインストールに必要な CAB ファイル '[2]' は破損しているため使用できません。ネットワーク エラー、CD-ROM の読み込みエラー、またはパッケージの問題である可能性があります。</String>
+    <String Id="Error1336" Overridable="yes">このインストールを完了するために必要な一時ファイルの作成中にエラーが発生しました。{{フォルダー: [3]。システム エラー コード: [2]}}</String>
+    <String Id="Error1401" Overridable="yes">キーを作成できませんでした: [2]。{{システム エラー [3]。}} そのキーへの適切なアクセス権があることを確認するか、サポート担当者にお問い合わせください。</String>
+    <String Id="Error1402" Overridable="yes">キーを開くことができませんでした: [2]。{{システム エラー [3]。}} そのキーへの適切なアクセス権があることを確認するか、サポート担当者にお問い合わせください。</String>
+    <String Id="Error1403" Overridable="yes">キー [3] から値 [2] を削除できませんでした。{{システム エラー [4]。}} そのキーへの適切なアクセス権があることを確認するか、サポート担当者にお問い合わせください。</String>
+    <String Id="Error1404" Overridable="yes">キーを削除できませんでした: [2]。{{システム エラー [3]。}} そのキーへの適切なアクセス権があることを確認するか、サポート担当者にお問い合わせください。</String>
+    <String Id="Error1405" Overridable="yes">キー [3] から値 [2] を読み込むことができませんでした。{{システム エラー [4]。}} そのキーへの適切なアクセス権があることを確認するか、サポート担当者にお問い合わせください。</String>
+    <String Id="Error1406" Overridable="yes">キー [3] に値 [2] を書き込むことができませんでした。{{システム エラー [4]。}} そのキーへの適切なアクセス権があることを確認するか、サポート担当者にお問い合わせください。</String>
+    <String Id="Error1407" Overridable="yes">キー [2] の値の名前を取得できませんでした。{{システム エラー [3]。}} そのキーへの適切なアクセス権があることを確認するか、サポート担当者にお問い合わせください。</String>
+    <String Id="Error1408" Overridable="yes">キー [2] のサブキー名を取得できませんでした。{{システム エラー [3]。}} そのキーへの適切なアクセス権があることを確認するか、サポート担当者にお問い合わせください。</String>
+    <String Id="Error1409" Overridable="yes">キー [2] のセキュリティ情報を読み込むことができませんでした。{{システム エラー [3]。}} そのキーへの適切なアクセス権があることを確認するか、サポート担当者にお問い合わせください。</String>
+    <String Id="Error1410" Overridable="yes">利用可能なレジストリ領域を増やせませんでした。このアプリケーションのインストールには [2] KB のレジストリ領域が必要です。</String>
+    <String Id="Error1500" Overridable="yes">別のインストールが進行中です。このインストールを続行する前に、進行中のインストールを完了する必要があります。</String>
+    <String Id="Error1501" Overridable="yes">保護されたデータへのアクセス中にエラーが発生しました。Windows インストーラーが正しく構成されていることを確認して、再試行してください。</String>
+    <String Id="Error1502" Overridable="yes">ユーザー '[2]' は以前に製品 '[3]' のインストールを開始しました。そのユーザーはこの製品を使用する前にインストールを再実行する必要があります。現在のインストールを続行します。</String>
+    <String Id="Error1503" Overridable="yes">ユーザー '[2]' は以前に製品 '[3]' のインストールを開始しました。そのユーザーはこの製品を使用する前にインストールを再実行する必要があります。</String>
+    <String Id="Error1601" Overridable="yes">ディスク領域が不足しています -- ボリューム: '[2]'; 必要容量: [3] KB; 空き容量: [4] KB。ディスク容量を確保してから再試行してください。</String>
+    <String Id="Error1602" Overridable="yes">インストールを取り消しますか？</String>
+    <String Id="Error1603" Overridable="yes">ファイル [2][3] は現在使用中です{ (プロセス名: [4]、PID: [5]、ウィンドウ タイトル: "[6]")}。このアプリケーションを閉じて再試行してください。</String>
+    <String Id="Error1604" Overridable="yes">製品 '[2]' が既にインストールされているため、この製品のインストールを防止しています。これらの製品には互換性がありません。</String>
+    <String Id="Error1605" Overridable="yes">ボリューム '[2]' の容量が不足しています。システムの復元を有効にしたままではインストールを続行できません。必要な容量は [3] KB ですが、利用可能な容量は [4] KB です。復元情報を保存せずにインストールを続行するには [無視] を、ディスク領域を再確認するには [再試行] を、終了するには [キャンセル] をクリックしてください。</String>
+    <String Id="Error1606" Overridable="yes">ネットワーク位置 '[2]' にアクセスできませんでした。</String>
+    <String Id="Error1607" Overridable="yes">セットアップを続行するには、次のアプリケーションを閉じる必要があります:</String>
+    <String Id="Error1608" Overridable="yes">この製品のインストールに必要な、以前にインストールされた互換性のある製品が見つかりませんでした。</String>
+    <String Id="Error1609" Overridable="yes">セキュリティ設定の適用中にエラーが発生しました。[2] は有効なユーザーまたはグループではありません。パッケージの問題か、ネットワーク上のドメイン コントローラーへの接続問題の可能性があります。ネットワーク接続を確認し、[再試行] をクリックするか、[キャンセル] をクリックしてセットアップを終了してください。{{ユーザーの SID が見つかりません。システム エラー: [3]}}</String>
+    <String Id="Error1701" Overridable="yes">指定されたドライブ [2] は無効です。正しいドライブを指定してください。</String>
+    <String Id="Error1702" Overridable="yes">[2] の構成を続行する前に、コンピュータを再起動する必要があります。今すぐ再起動する場合は [はい]、後で手動で再起動する場合は [いいえ] をクリックしてください。</String>
+    <String Id="Error1703" Overridable="yes">"[2]" で行われた変更を有効にするには、コンピュータを再起動する必要があります。今すぐ再起動する場合は [はい]、後で手動で再起動する場合は [いいえ] をクリックしてください。</String>
+    <String Id="Error1704" Overridable="yes">[2] のインストールは現在中断されています。続行する前に、そのインストールによって行われた変更を元に戻す必要があります。変更を元に戻しますか？</String>
+    <String Id="Error1705" Overridable="yes">この製品の以前のインストールが進行中です。続行するには、そのインストールによって行われた変更を元に戻す必要があります。変更を元に戻しますか？</String>
+    <String Id="Error1706" Overridable="yes">製品 [2] のインストール パッケージが見つかりません。インストール パッケージ '[3]' の有効なコピーを使用してインストールを試みてください。</String>
+    <String Id="Error1707" Overridable="yes">正常に完了しました。</String>
+    <String Id="Error1708" Overridable="yes">インストールに失敗しました。</String>
+    <String Id="Error1709" Overridable="yes">製品: [2] — [3]</String>
+    <String Id="Error1710" Overridable="yes">コンピュータを以前の状態に戻すか、後でインストールを続行することができます。以前の状態に戻しますか？</String>
+    <String Id="Error1711" Overridable="yes">インストール情報をディスクに書き込む際にエラーが発生しました。十分なディスク領域があることを確認し、[再試行] をクリックするか、[キャンセル] をクリックしてセットアップを中止してください。</String>
+    <String Id="Error1712" Overridable="yes">コンピュータを以前の状態に戻すために必要な1つ以上のファイルが見つかりませんでした。復元できません。</String>
+    <String Id="Error1713" Overridable="yes">[2] は必須製品の1つをインストールできません。サポート担当者にお問い合わせください。{{システム エラー: [3]。}}</String>
+    <String Id="Error1714" Overridable="yes">[2] の古いバージョンを削除できません。サポート担当者にお問い合わせください。{{システム エラー [3]。}}</String>
+    <String Id="Error1715" Overridable="yes">インストール完了: [2]</String>
+    <String Id="Error1716" Overridable="yes">構成完了: [2]</String>
+    <String Id="Error1717" Overridable="yes">削除完了: [2]</String>
+    <String Id="Error1718" Overridable="yes">ファイル [2] はデジタル署名ポリシーによって拒否されました。</String>
+    <String Id="Error1719" Overridable="yes">Windows インストーラー サービスにアクセスできませんでした。Windows をセーフ モードで実行している場合や、Windows インストーラーが正しくインストールされていない場合に発生する可能性があります。サポート担当者にお問い合わせください。</String>
+    <String Id="Error1720" Overridable="yes">この Windows インストーラー パッケージに問題があります。このインストールを完了するために必要なスクリプトを実行できませんでした。サポート担当者またはパッケージの提供元にお問い合わせください。{{カスタム アクション [2]、スクリプト エラー [3]、[4]: [5]、行 [6]、列 [7]、[8]}}</String>
+    <String Id="Error1721" Overridable="yes">この Windows インストーラー パッケージに問題があります。このインストールを完了するために必要なプログラムを実行できませんでした。サポート担当者またはパッケージの提供元にお問い合わせください。{{アクション: [2]、場所: [3]、コマンド: [4]}}</String>
+    <String Id="Error1722" Overridable="yes">この Windows インストーラー パッケージに問題があります。セットアップの一部として実行されたプログラムが正常に終了しませんでした。サポート担当者またはパッケージの提供元にお問い合わせください。{{アクション: [2]、場所: [3]、コマンド: [4]}}</String>
+    <String Id="Error1723" Overridable="yes">この Windows インストーラー パッケージに問題があります。このインストールを完了するために必要な DLL を実行できませんでした。サポート担当者またはパッケージの提供元にお問い合わせください。{{アクション: [2]、エントリ: [3]、ライブラリ: [4]}}</String>
+    <String Id="Error1724" Overridable="yes">削除が正常に完了しました。</String>
+    <String Id="Error1725" Overridable="yes">削除に失敗しました。</String>
+    <String Id="Error1726" Overridable="yes">告知が正常に完了しました。</String>
+    <String Id="Error1727" Overridable="yes">告知に失敗しました。</String>
+    <String Id="Error1728" Overridable="yes">構成が正常に完了しました。</String>
+    <String Id="Error1729" Overridable="yes">構成に失敗しました。</String>
+    <String Id="Error1730" Overridable="yes">このアプリケーションを削除するには管理者権限が必要です。削除するには、管理者としてログインするか、サポート担当者にお問い合わせください。</String>
+    <String Id="Error1731" Overridable="yes">製品 [2] の元のインストール パッケージがクライアント パッケージと一致しません。インストール パッケージ '[3]' の有効なコピーを使用して再試行してください。</String>
+    <String Id="Error1732" Overridable="yes">[2] のインストールを完了するにはコンピュータを再起動する必要があります。現在他のユーザーがこのコンピュータにログインしており、再起動すると作業内容が失われる可能性があります。今すぐ再起動しますか？</String>
+    <String Id="Error1801" Overridable="yes">パス [2] は無効です。有効なパスを指定してください。</String>
+    <String Id="Error1802" Overridable="yes">メモリが不足しています。他のアプリケーションを終了して再試行してください。</String>
+    <String Id="Error1803" Overridable="yes">ドライブ [2] にディスクがありません。ディスクを挿入して [再試行] をクリックするか、[キャンセル] をクリックして以前に選択したボリュームに戻ります。</String>
+    <String Id="Error1804" Overridable="yes">ドライブ [2] にディスクがありません。ディスクを挿入して [再試行] をクリックするか、[キャンセル] をクリックして参照ダイアログに戻り、別のボリュームを選択してください。</String>
+    <String Id="Error1805" Overridable="yes">フォルダー [2] は存在しません。存在するフォルダーへのパスを指定してください。</String>
+    <String Id="Error1806" Overridable="yes">このフォルダーから読み込むための権限がありません。</String>
+    <String Id="Error1807" Overridable="yes">インストールの有効な送信先フォルダーを決定できませんでした。</String>
+    <String Id="Error1901" Overridable="yes">インストール ソース データベースからの読み込み中にエラーが発生しました: [2]。</String>
+    <String Id="Error1902" Overridable="yes">再起動操作のスケジュール: ファイル [2] の名前を [3] に変更。操作を完了するには再起動が必要です。</String>
+    <String Id="Error1903" Overridable="yes">再起動操作のスケジュール: ファイル [2] の削除。操作を完了するには再起動が必要です。</String>
+    <String Id="Error1904" Overridable="yes">モジュール [2] を登録できませんでした。HRESULT [3]。サポート担当者にお問い合わせください。</String>
+    <String Id="Error1905" Overridable="yes">モジュール [2] の登録を解除できませんでした。HRESULT [3]。サポート担当者にお問い合わせください。</String>
+    <String Id="Error1906" Overridable="yes">パッケージ [2] をキャッシュに保持できませんでした。エラー: [3]。サポート担当者にお問い合わせください。</String>
+    <String Id="Error1907" Overridable="yes">フォント [2] を登録できませんでした。フォントをインストールする十分な権限があること、およびシステムがこのフォントをサポートしていることを確認してください。</String>
+    <String Id="Error1908" Overridable="yes">フォント [2] の登録を解除できませんでした。フォントを削除する十分な権限があることを確認してください。</String>
+    <String Id="Error1909" Overridable="yes">ショートカット [2] を作成できませんでした。送信先フォルダーが存在すること、およびアクセス権があることを確認してください。</String>
+    <String Id="Error1910" Overridable="yes">ショートカット [2] を削除できませんでした。ショートカット ファイルが存在すること、およびアクセス権があることを確認してください。</String>
+    <String Id="Error1911" Overridable="yes">ファイル [2] のタイプ ライブラリを登録できませんでした。サポート担当者にお問い合わせください。</String>
+    <String Id="Error1912" Overridable="yes">ファイル [2] のタイプ ライブラリの登録を解除できませんでした。サポート担当者にお問い合わせください。</String>
+    <String Id="Error1913" Overridable="yes">INI ファイル [2][3] を更新できませんでした。ファイルが存在し、アクセス可能であることを確認してください。</String>
+    <String Id="Error1914" Overridable="yes">再起動時にファイル [3] をファイル [2] に置き換えるスケジュールを設定できませんでした。ファイル [3] への書き込み権限があるか確認してください。</String>
+    <String Id="Error1915" Overridable="yes">ODBC ドライバー マネージャーの削除エラー、ODBC エラー [2]: [3]。サポート担当者にお問い合わせください。</String>
+    <String Id="Error1916" Overridable="yes">ODBC ドライバー マネージャーのインストール エラー、ODBC エラー [2]: [3]。サポート担当者にお問い合わせください。</String>
+    <String Id="Error1917" Overridable="yes">ODBC ドライバーの削除エラー: [4]、ODBC エラー [2]: [3]。ODBC ドライバーを削除するための十分な権限があることを確認してください。</String>
+    <String Id="Error1918" Overridable="yes">ODBC ドライバーのインストール エラー: [4]、ODBC エラー [2]: [3]。ファイル [4] が存在し、アクセス可能であることを確認してください。</String>
+    <String Id="Error1919" Overridable="yes">ODBC データ ソースの設定エラー: [4]、ODBC エラー [2]: [3]。ファイル [4] が存在し、アクセス可能であることを確認してください。</String>
+    <String Id="Error1920" Overridable="yes">サービス '[2]' ([3]) を開始できませんでした。システム サービスを開始する十分な権限があることを確認してください。</String>
+    <String Id="Error1921" Overridable="yes">サービス '[2]' ([3]) を停止できませんでした。システム サービスを停止する十分な権限があることを確認してください。</String>
+    <String Id="Error1922" Overridable="yes">サービス '[2]' ([3]) を削除できませんでした。システム サービスを削除する十分な権限があることを確認してください。</String>
+    <String Id="Error1923" Overridable="yes">サービス '[2]' ([3]) をインストールできませんでした。システム サービスをインストールする十分な権限があることを確認してください。</String>
+    <String Id="Error1924" Overridable="yes">環境変数 '[2]' を更新できませんでした。環境変数を変更する十分な権限があることを確認してください。</String>
+    <String Id="Error1925" Overridable="yes">このコンピュータのすべてのユーザー向けにこのインストールを完了するための十分な権限がありません。管理者としてログインして再試行してください。</String>
+    <String Id="Error1926" Overridable="yes">ファイル '[3]' のセキュリティ権限を設定できませんでした。エラー: [2]。このファイルのセキュリティ権限を変更する十分な権限があることを確認してください。</String>
+    <String Id="Error1927" Overridable="yes">コンポーネント サービス (COM+ 1.0) がこのコンピュータにインストールされていません。このインストールを正常に完了するにはコンポーネント サービスが必要です。コンポーネント サービスは Windows 2000 以降で利用可能です。</String>
+    <String Id="Error1928" Overridable="yes">COM+ アプリケーションの登録中にエラーが発生しました。詳細については、サポート担当者にお問い合わせください。</String>
+    <String Id="Error1929" Overridable="yes">COM+ アプリケーションの登録解除中にエラーが発生しました。詳細については、サポート担当者にお問い合わせください。</String>
+    <String Id="Error1930" Overridable="yes">サービス '[2]' ([3]) の説明を変更できませんでした。</String>
+    <String Id="Error1931" Overridable="yes">Windows インストーラー サービスは、保護された Windows システム ファイル [2] を更新できません。プログラムを正常に動作させるには、オペレーティング システムの更新が必要な場合があります。{{パッケージのバージョン: [3]、OS 保護バージョン: [4]}}</String>
+    <String Id="Error1932" Overridable="yes">Windows インストーラー サービスは、保護された Windows ファイル [2] を更新できません。{{パッケージのバージョン: [3]、OS 保護バージョン: [4]、SFP エラー: [5]}}</String>
+    <String Id="Error1933" Overridable="yes">Windows インストーラー サービスは、1つ以上の保護された Windows ファイルを更新できません。{{SFP エラー: [2]。保護されたファイルのリスト:\r\n[3]}}</String>
+    <String Id="Error1934" Overridable="yes">このコンピュータのポリシーにより、ユーザーごとのインストールは許可されていません。</String>
+    <String Id="Error1935" Overridable="yes">アセンブリ コンポーネント '[6]' のインストール中にエラーが発生しました。詳細についてはヘルプとサポートを参照してください。HRESULT: [3]。{{アセンブリ インターフェイス: [4]、機能: [5]、コンポーネント: [2]}}</String>
+    <String Id="Error1936" Overridable="yes">アセンブリ '[6]' のインストール中にエラーが発生しました。アセンブリに厳密な名前がないか、最小長を満たすキーで署名されていません。HRESULT: [3]。{{アセンブリ インターフェイス: [4]、機能: [5]、コンポーネント: [2]}}</String>
+    <String Id="Error1937" Overridable="yes">アセンブリ '[6]' のインストール中にエラーが発生しました。署名またはカタログを検証できないか、無効です。HRESULT: [3]。{{アセンブリ インターフェイス: [4]、機能: [5]、コンポーネント: [2]}}</String>
+    <String Id="Error1938" Overridable="yes">アセンブリ '[6]' のインストール中にエラーが発生しました。1つ以上のアセンブリ モジュールが見つかりませんでした。HRESULT: [3]。{{アセンブリ インターフェイス: [4]、機能: [5]、コンポーネント: [2]}}</String>
+
+    <String Id="UITextbytes" Overridable="yes">バイト</String>
+    <String Id="UITextGB" Overridable="yes">GB</String>
+    <String Id="UITextKB" Overridable="yes">KB</String>
+    <String Id="UITextMB" Overridable="yes">MB</String>
+    <String Id="UITextMenuAbsent" Overridable="yes">機能は使用できなくなります</String>
+    <String Id="UITextMenuAdvertise" Overridable="yes">機能は必要に応じてインストールされます</String>
+    <String Id="UITextMenuAllCD" Overridable="yes">機能はすべて CD から実行するようにインストールされます</String>
+    <String Id="UITextMenuAllLocal" Overridable="yes">機能はすべてローカルのハードドライブにインストールされます</String>
+    <String Id="UITextMenuAllNetwork" Overridable="yes">機能はすべてネットワークから実行するようにインストールされます</String>
+    <String Id="UITextMenuCD" Overridable="yes">CD から実行するようにインストールされます</String>
+    <String Id="UITextMenuLocal" Overridable="yes">ローカルのハードドライブにインストールされます</String>
+    <String Id="UITextMenuNetwork" Overridable="yes">ネットワークから実行するようにインストールされます</String>
+    <String Id="UITextNewFolder" Overridable="yes">フォルダー|新しいフォルダー</String>
+    <String Id="UITextScriptInProgress" Overridable="yes">必要な情報を収集しています...</String>
+    <String Id="UITextSelAbsentAbsent" Overridable="yes">機能はインストールされません</String>
+    <String Id="UITextSelAbsentAdvertise" Overridable="yes">機能は必要に応じてインストールされます</String>
+    <String Id="UITextSelAbsentCD" Overridable="yes">機能は CD から実行するようにインストールされます</String>
+    <String Id="UITextSelAbsentLocal" Overridable="yes">機能はローカルのハードドライブにインストールされます</String>
+    <String Id="UITextSelAbsentNetwork" Overridable="yes">機能はネットワークから実行するようにインストールされます</String>
+    <String Id="UITextSelAdvertiseAbsent" Overridable="yes">機能は完全に使用できなくなります</String>
+    <String Id="UITextSelAdvertiseAdvertise" Overridable="yes">必要に応じてインストールされます</String>
+    <String Id="UITextSelAdvertiseCD" Overridable="yes">機能は CD から実行できるようになります</String>
+    <String Id="UITextSelAdvertiseLocal" Overridable="yes">機能はローカルのハードドライブにインストールされます</String>
+    <String Id="UITextSelAdvertiseNetwork" Overridable="yes">機能はネットワークから実行できるようになります</String>
+    <String Id="UITextSelCDAbsent" Overridable="yes">機能は完全に削除され、CD から実行できなくなります</String>
+    <String Id="UITextSelCDAdvertise" Overridable="yes">機能は CD から実行できなくなりますが、必要に応じてインストールされます</String>
+    <String Id="UITextSelCDCD" Overridable="yes">機能は CD から実行できるようになります</String>
+    <String Id="UITextSelCDLocal" Overridable="yes">機能は CD から実行できなくなりますが、ローカルのハードドライブにインストールされます</String>
+    <String Id="UITextSelChildCostNeg" Overridable="yes">この機能によりハードドライブ上の空間が [1] 解放されます。</String>
+    <String Id="UITextSelChildCostPos" Overridable="yes">この機能にはハードドライブ上に [1] の空間が必要です。</String>
+    <String Id="UITextSelCostPending" Overridable="yes">この機能に必要な空間を計算しています...</String>
+    <String Id="UITextSelLocalAbsent" Overridable="yes">機能は完全に削除されます</String>
+    <String Id="UITextSelLocalAdvertise" Overridable="yes">機能はローカルのハードドライブから削除されますが、必要に応じてインストールできるようになります</String>
+    <String Id="UITextSelLocalCD" Overridable="yes">機能はローカルのハードドライブから削除されますが、CD から実行できるようになります</String>
+    <String Id="UITextSelLocalLocal" Overridable="yes">機能はローカルのハードドライブ上で使用可能のままになります</String>
+    <String Id="UITextSelLocalNetwork" Overridable="yes">機能はローカルのハードドライブから削除されますが、ネットワークから実行できるようになります</String>
+    <String Id="UITextSelNetworkAbsent" Overridable="yes">機能は完全に削除され、ネットワークから実行できなくなります</String>
+    <String Id="UITextSelNetworkAdvertise" Overridable="yes">機能はネットワークから実行できなくなりますが、必要に応じてインストールされます</String>
+    <String Id="UITextSelNetworkLocal" Overridable="yes">機能はネットワークから実行できなくなりますが、ローカルのハードドライブにインストールされます</String>
+    <String Id="UITextSelNetworkNetwork" Overridable="yes">機能はネットワークから実行できるようになります</String>
+    <String Id="UITextSelParentCostNegNeg" Overridable="yes">この機能によりハードドライブ上の空間が [1] 解放されます。選択されたサブ機能: [3] 中 [2]。サブ機能によりハードドライブ上の空間が [4] 解放されます。</String>
+    <String Id="UITextSelParentCostNegPos" Overridable="yes">この機能によりハードドライブ上の空間が [1] 解放されます。選択されたサブ機能: [3] 中 [2]。サブ機能にはハードドライブ上に [4] の空間が必要です。</String>
+    <String Id="UITextSelParentCostPosNeg" Overridable="yes">この機能にはハードドライブ上に [1] の空間が必要です。選択されたサブ機能: [3] 中 [2]。サブ機能によりハードドライブ上の空間が [4] 解放されます。</String>
+    <String Id="UITextSelParentCostPosPos" Overridable="yes">この機能にはハードドライブ上に [1] の空間が必要です。選択されたサブ機能: [3] 中 [2]。サブ機能にはハードドライブ上に [4] の空間が必要です。</String>
+    <String Id="UITextTimeRemaining" Overridable="yes">残り時間: {[1] 分 }{[2] 秒}</String>
+    <String Id="UITextVolumeCostAvailable" Overridable="yes">利用可能</String>
+    <String Id="UITextVolumeCostDifference" Overridable="yes">差異</String>
+    <String Id="UITextVolumeCostRequired" Overridable="yes">必要容量</String>
+    <String Id="UITextVolumeCostSize" Overridable="yes">ディスクサイズ</String>
+    <String Id="UITextVolumeCostVolume" Overridable="yes">ボリューム</String>
+</WixLocalization>

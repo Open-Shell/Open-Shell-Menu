@@ -1,0 +1,378 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+
+
+
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type"><title>Classic Explorer</title>
+  <style type="text/css">
+h1 {
+  color: #0078d4;
+  font-family: "Segoe UI",Tahoma,sans-serif;
+  font-weight: 600;
+}
+h3 {
+  color: #005a9e;
+  font-weight: 600;
+}
+body {
+  font-family: "Segoe UI",Tahoma,sans-serif;
+}
+
+  </style></head><body>
+<a target="_blank" href="https://github.com/Open-Shell/Open-Shell-Menu"><img src="images/OpenShell.png" style="border: 0px solid ; width: 64px; height: 64px; float:left;" alt="Open-Shell website" title="Open-Shell website"></a><h1 style="padding-top: 12px; padding-bottom: 12px;">&nbsp; Classic Explorer</h1><br>
+<span style="font-weight: bold; color: #2b88d8;">Classic
+Explorer</span> は、Windows Explorer 用のプラグインで、以下を行います：
+
+<ul>
+
+  <li>よく使う操作（親フォルダーへ移動、切り取り、コピー、貼り付け、削除、プロパティ、メール送信）のためのツールバーを Explorer に追加します。ツールバーは完全にカスタマイズ可能です</li>
+  <li>Windows 7 のコピー UI を、Windows XP に似た、より使いやすい「クラシック」版に置き換えます</li>
+  
+  <li>Windows Explorer のフォルダーパネルで Alt+Enter を処理し、選択したフォルダーのプロパティを表示します</li>
+
+  <li>フォルダーパネルを Windows XP 版に似た外観にする、または展開ボタンをフェードさせないようにするためのオプションがあります</li>
+  <li>ステータスバーに空きディスク容量と合計ファイルサイズを表示できます</li>
+  <li>アドレスバーのパンくずリストを無効にできます</li>
+  <li>Windows 7 で壊れている多数の機能を修正します — 共有フォルダーのアイコンオーバーレイの欠落、ナビゲーションウィンドウでのフォルダーの飛び跳ね、リストビューでの並べ替えヘッダーの欠落など<br>
+  </li>
+
+
+
+
+</ul><br>
+
+
+<h1><a name="copy"></a>クラシックコピー UI（Windows 7 のみ）<br>
+</h1>
+
+Vista でファイルをコピーして競合が発生すると、次の画面が表示されます：<br>
+
+<br>
+
+<img src="images/before.png" style="width: 345px;" alt="Before" title="Before"><br>
+
+<p>どこが問題なのでしょうか？</p>
+
+<p>まず、読まなければならない画面半分ものテキストです。また、どの部分がクリック可能なのかがすぐには分かりません。<a target="_blank" href="http://en.wikipedia.org/wiki/Day_of_the_Tentacle">Lucas Arts のアドベンチャーゲーム</a>のように、マウスを動かして UI を探し回る必要があります。そして最後に、キーボードでの使い勝手が最悪です。
+<span style="font-weight: bold; color: #2b88d8;">「はい、分かっています、すべてのファイルを上書きします」</span>と伝えるには、
+<strong><span style="color: #2b88d8;">Alt+D、上、上、上、Space</span></strong> を押さなければなりません！これは Street Fighter 3 で <a target="_blank" href="http://www.youtube.com/watch?v=AErqKebdqjU&amp;feature=fvw">Akuma Kara Demon move</a> を繰り出すより難しいです。そういうものには時と場所がありますが、ファイルのコピーはそうではありません。</p>
+
+<p>Classic Explorer プラグインは、Windows XP のよりシンプルなダイアログボックスを復活させます：<br>
+</p>
+
+<p><img src="images/after.png" style="width: 320px;" alt="After" title="After"><br>
+</p>
+
+<p>どこがクリック可能なのかがすぐに分かり <span style="font-style: italic;">（ヒント — 下部のボタンです）</span>、簡単なキーボード操作ができ（「はい」には <span style="font-weight: bold; color: #2b88d8;">Y</span>、すべてのファイルをコピーするには <span style="font-weight: bold; color: #2b88d8;">A</span> を押します）、どのファイルが新しいか、どちらが大きいかも引き続き確認できます。そしてもちろん Windows XP と同様に、「いいえ」ボタンをクリックしながら <strong style="color: #2b88d8;">Shift</strong> を押し続けると「すべてにいいえ」になります（または <strong style="color: #2b88d8;">Shift+N</strong> を押すだけです）。<br>
+</p>
+
+<p><span style="text-decoration: underline;">詳細…</span> をクリックすると、
+Windows の元のダイアログが表示されます。そこではすべての詳細を確認でき、
+「コピーするが、両方のファイルを保持する」という追加オプションも利用できます。</p>
+<p><span style="font-weight: bold;">重要な注意：</span> 置き換えられるのは UI のみです。実際のコピーを行う基盤システムには影響しません。<br>
+</p>
+<p><br>
+</p>
+
+
+
+<h1><a name="alt_enter"></a>フォルダーパネルでの Alt+Enter</h1>
+
+Alt+Enter は
+Windows 全体で選択項目のプロパティを表示するための普遍的なショートカットです。しかし新しいバージョンの Windows では、フォルダーを表示する左側のパネルでは機能しません。ファイルがある右側では問題なく機能します。これは、Alt+Enter が両方の場所で機能する Windows XP と比べて壊れています。
+<p>この問題を解決するため、Classic Explorer プラグインは Alt+Enter が押されたことを検出し、現在選択されているフォルダーのプロパティを表示します。<br>
+</p>
+<p><br>
+</p>
+
+
+<h1><a name="toolbar"></a>Windows Explorer 用ツールバー</h1>
+Vista の Windows
+Explorer には、Windows XP のようなツールバーがありません。親フォルダーへ移動したい場合はパンくずリストバーを使わなければなりません。マウスでファイルをコピーまたは削除したい場合は、右クリックして削除コマンドを探さなければなりません。シェル拡張をインストールするほど右クリックメニューはどんどん大きくなり、適切なコマンドを見つけるのに時間がかかることがあります。<br>
+<p>この問題を解決するため、Classic Explorer プラグインは新しいツールバーを追加します：<br>
+</p>
+
+&nbsp;<img src="images/toolbar.png" style="width: 545px;" alt="Explorer Toolbar" title="Explorer Toolbar"><br>
+<br>
+利用可能なボタンは次のとおりです：上へ移動、切り取り、コピー、貼り付け、削除、プロパティ、
+メール送信、設定。設定ダイアログからさらにボタンを追加できます。<br>
+<br>
+<span style="font-weight: bold; color: #2b88d8;">ヒント：</span><br>
+&nbsp;&nbsp;&nbsp; - 上へ移動ボタンをクリックするときに <strong>Ctrl キー</strong>を押し続けると、親フォルダーを新しい Explorer ウィンドウで開きます。<br>
+&nbsp;&nbsp;&nbsp; - 削除ボタンをクリックするときに <strong>Shift キー</strong>を押し続けると、ファイルを完全に削除します<br>
+
+<br>
+
+新しいツールバーは、インストール後に Explorer で自動的に表示されません。
+使用する前にいくつかの操作が必要です：<br>
+
+<ol style="font-family: "Segoe UI",Tahoma,sans-serif;">
+
+  <li>新しい Windows Explorer ウィンドウを開きます（Win キー+E）</li>
+  <li>Explorer のメニューをオンにします — ツール（Alt+T）、フォルダー
+オプション、表示タブへ進み、「メニューを常に表示する」がチェックされていることを確認します。</li>
+  <li>メニューバーを右クリックし、「Classic Explorer Bar」を選択して
+ツールバーを表示します。</li>
+  <li>そのオプションが利用できない場合（「ツールバーを固定する」しか表示されない場合）、Internet Explorer からプラグインを有効にする必要があるかもしれません。
+IE を実行し、そのツールバーを右クリックして「Classic Explorer Bar」を選択します。
+このアドオンを有効にするかどうか尋ねられます。「有効にする」を選択し、
+その後手順 1 から 3 をもう一度繰り返します。</li>
+  <li>それでもツールバーが表示されない場合は、システムでブラウザー拡張機能が無効になっている可能性があります。これは通常サーバーの既定値です。「インターネットオプション」を開き、「詳細設定」タブへ進み、
+「サードパーティ製のブラウザー拡張機能を有効にする」オプションをチェックします。<br>
+  </li>
+
+</ol><br>
+<h1><a name="statusbar"></a>ステータスバー<br>
+</h1>
+Classic Explorer は、空きディスク容量と選択したファイルのサイズを表示する元の Explorer ステータスバーを復元します：<br>
+<br>
+<img src="images/statusbar.png" style="width: 380px;" alt="File size in status bar" title="File size in status bar"><br>
+<br>
+組み込みのステータスバーとは異なり、100 個を超えるファイルが選択されている場合でも選択サイズが表示されます。ファイルが選択されていない場合は、フォルダー内のすべてのファイルの合計サイズが表示されます。<br>
+<br><strong>Windows 7 の注意：</strong> Classic Explorer は既定のステータスバーを置き換えるのではなく強化します。表示するには、まず表示メニューからオンにする必要があります。
+ステータスバーは、Explorer の下部に表示される青い
+詳細ウィンドウとは異なります。スペースを節約するために、整理メニューから詳細ウィンドウをオフにできます。また、Windows 7 Explorer には、ステータスバーにテキストが表示されないことがあるバグがあります。ビューを更新してステータステキストを取得するには <strong style="color: #2b88d8;">F5</strong> を押してください。<br>
+<br><strong>Windows 8 以降の注意：</strong> Classic Explorer は独自の
+ステータスバーを追加します。スペースを節約するために、既定のステータスバーを非表示にすることをお勧めします。
+リボンの表示タブを選択し、オプションをクリックします。オプションの
+表示タブを選択します。「ステータスバーを表示する」チェックボックスを見つけて
+チェックを外します。
+<br>
+<br>
+
+
+<h1><a name="settings"></a>設定</h1>Classic Explorer の設定には、ツールバーまたはスタートメニューからアクセスできます：<br>
+<br><img style="width: 512px;" alt="" src="images/explorer_settings.png"><br>
+<br>基本設定のみを表示するか、利用可能なすべての設定を表示するかを選択できます。各設定にマウスを合わせると、その目的の説明が表示されます。検索ボックスに入力して、名前で設定を検索できます。<br>
+すべての設定には既定値があります。既定値は固定の場合もあれば、
+現在のシステム設定に依存する場合もあります。一度設定を編集すると「変更済み」となり、太字で表示されます。既定値に戻すには、設定を右クリックします。<br>
+<br>設定を XML ファイルに保存し、後で読み込み直すことができます。
+これらの機能にアクセスするには <span style="font-weight: bold;">バックアップ</span> ボタンを押します。そこから
+すべての設定を既定値にリセットすることもできます。<br>
+
+<br>
+
+設定を保存するには OK を押します。ほとんどの設定は
+次に新しい Explorer ウィンドウを開いたときに適用されます。少数の設定は
+変更を確認するためにログオフが必要です。<br>
+
+<br>
+
+<span style="font-weight: bold;">注意：</span> すべての設定ウィンドウはサイズ変更可能です。サイズを変更し、好きな場所に配置してください。新しい位置を記憶します。<br>
+
+<br>
+カスタマイズできるものの一例を次に示します：<br>
+
+    <img src="images/titlebar.png" style="width: 545px;" alt="Title bar tweaks" title="Title bar tweaks"><br>
+<br>
+ツールバーをカスタマイズするには <span style="font-weight: bold;">ツールバーボタン</span> タブをクリックします：<br>
+<img style="width: 512px;" alt="" src="images/toolbar_settings.png"><br>
+<br>左側の列にはツールバーの現在のボタンが表示され、
+右側の列にはツールバーに追加できるボタンが一覧表示されます。右側の列から左側へボタンをドラッグアンドドロップできます。
+ボタンを上下にドラッグして並べ替えることができます。あるボタンを別のボタンの内側にドロップすると、サブメニューを作成できます。<br>
+各ボタンにマウスを合わせると、その機能の短い説明が表示されます。各
+ボタンを右クリックすると、より多くの機能（削除、名前の変更など）にアクセスできます。右クリックメニューから
+ツールバーを元の状態にリセットすることもできます。<br>
+左側の列の各項目には一意の名前が必要です。これは
+項目の識別子であり、英字、数字、アンダースコアのみを含めることができます。一部の項目（SEPARATOR など）は名前を変更できません。<br>
+<br>
+<span style="font-weight: bold;">重要な注意：</span> 利用可能なすべてのコマンドに既定のアイコンやテキストがあるわけではありません。これは Windows に <span style="font-weight: bold;">元に戻す</span>、<span style="font-weight: bold;">すべて選択</span> などのアイコンがないためです。そのようなボタンをツールバーで使用したい場合は、独自のアイコンを用意する必要があります。方法は以下を参照してください。<br>
+<br>
+ツールバーにボタンを配置した後、その属性を編集できます。編集するにはボタンをダブルクリックします：<br>
+<img style="width: 335px;" alt="Edit toolbar button" title="Edit toolbar button" src="images/button_settings.png"><br>
+ここでボタンのコマンド、テキスト、アイコンを選択できます。選択したコマンドの既定のテキストとアイコンを取得するには <span style="font-weight: bold;">既定値に戻す</span> ボタンを押します。<br>
+コマンドは次のいずれかです：<br>
+<ul>
+
+  
+  <li><span style="font-weight: bold;">空白のまま</span> - この場合、link 属性が使用されていれば、それがコマンドとして機能します</li>
+<li><span style="font-weight: bold;">定義済みコマンドのいずれか</span> - ドロップダウンから選択</li>
+  <li><span style="font-weight: bold;">open &lt;some folder&gt;</span> - 現在のブラウザーでフォルダーを開きます</li>
+  <li><span style="font-weight: bold;">sortby &lt;property&gt;</span> - 指定したプロパティでフォルダーを並べ替えます - <span style="font-weight: bold;">name、type、size</span> または <span style="font-weight: bold;">date</span>。降順で並べ替えるにはプロパティの前に '-' を付けます：<span style="font-weight: bold;">"sortby -name"</span>。コードを知っていれば他のプロパティも使用できます。たとえば <span style="font-weight: bold;">"sortby {B725F130-47EF-101A-A5F1-02608C9EEBAC}, 10"</span> は <span style="font-weight: bold;">"sortby name"</span> と同じです。その他のプロパティコードについては、Windows SDK の <span style="font-weight: bold;">propkey.h</span> ファイルを参照してください（<a href="http://msdn.microsoft.com/en-us/library/cc251929%28v=prot.10%29.aspx">こちら</a>にもあります - 「Full property table」までスクロールしてください）。すべてのプロパティコードが有効またはサポートされているわけではありません（たとえば <span style="font-weight: bold;">アルバム年</span> プロパティ <span style="font-weight: bold;">{56A3372E-CE9C-11D2-9F0E-006097C686F6}, 5</span> は音楽アルバムを表示するときのみ機能します）</li>
+  <li><span style="font-weight: bold;">groupby &lt;property&gt;</span> - <span style="font-weight: bold;">sortby</span> に似ていますが、指定したプロパティでファイルをグループ化します。グループ化を無効にするには、プロパティなしで <span style="font-weight: bold;">groupby</span> コマンドを使用します<br>
+  </li>
+
+
+  
+  <li><span style="font-weight: bold;">カスタム実行可能文字列</span>
+- プログラム名とその引数、あるいは URL
+（http://www.google.com など）でもかまいません。<span style="font-weight: bold;">%SystemRoot%</span> のような環境変数を使用できます。また、
+プレースホルダー <span style="font-weight: bold;">%1</span>、<span style="font-weight: bold;">%2</span>、<span style="font-weight: bold;">%3</span>、<span style="font-weight: bold;">%4</span>、<span style="font-weight: bold;">%5</span> も使用できます：</li>
+  <ul>
+    <li><span style="font-weight: bold;">%1</span> は
+現在のフォルダーのパスです。現在のフォルダーがドライブのルートである場合、末尾にバックスラッシュが付くことに注意してください（C:\ など）<br>
+    </li>
+    <li><span style="font-weight: bold;">%2</span> は選択したファイルのパスです（単一のファイルが
+選択されている場合のみ）</li>
+    <li><span style="font-weight: bold;">%3</span>
+は、選択したすべてのファイルを含む一時テキストファイルの名前です。
+テキストファイルの各行には、完全なパスを持つ 1 つのファイルが含まれます<br>
+</li>
+    <li><span style="font-weight: bold;">%4</span>
+は %3 と同じですが、ファイルは Unicode（UTF16）形式です。ファイル
+にはバイトオーダーマークが含まれません。%3 と %4 を同じコマンドで両方使用することはできません<br>
+</li>
+    <li><span style="font-weight: bold;">開発者への注意：</span> 
+%3 または %4 を使用する場合、コマンドの終了時に
+一時ファイルを削除するのはコマンドの責任です。そうしないと、一時ファイルが残って
+ディスク容量を無駄にします。また、コマンドがコンソールアプリケーション
+またはバッチファイルの場合、コンソールウィンドウなしのサイレントモードで起動されます</li>
+
+    <li><span style="font-weight: bold;">%5</span> は
+一時テキストファイルの名前で、コマンドを Classic Explorer に返すために使用できます。ファイルの最初の 2 バイトが 255 と 254 の場合、
+ファイルは Unicode として扱われます。一度に使用できるコマンドは 1 つだけです。コマンド
+は次のいずれかです：</li>
+    <ul>
+      <li><span style="font-weight: bold;">open &lt;folder name&gt;</span> - Explorer が指定したフォルダーへ移動します</li>
+      <li><span style="font-weight: bold;">select &lt;list of file names&gt;</span>
+- 指定したファイルを選択し、それ以外の選択を解除します。ファイル名は
+タブまたは改行文字で区切る必要があります。ファイルには
+パスを含めないでください。含まれている場合、パスは無視されます<br>
+      </li>
+      <li><span style="font-weight: bold;">refresh</span> - Explorer を更新します</li>
+    </ul>
+  </ul>
+  <ul>
+    <li><span style="font-weight: bold;">開発者への注意：</span>
+%5 を使用するコマンドは（%3 や %4 を使用するコマンドと同様に）サイレントモードで実行されますが、
+さらに Explorer はプロセスの終了を待ちます。プロセスは
+できるだけ早く終了しなければなりません。そうしないと、コマンドの実行中に Explorer がフリーズします</li>
+    <li>これらのパラメーターの使用方法のいくつかの例については、次のセクションを参照してください<br>
+    </li>
+
+  </ul>
+</ul>
+リンクには、ファイルまたはフォルダーへのパスを指定できます。ファイルの場合、
+そのファイルが実行されます。フォルダーの場合、そのフォルダーが
+サブメニューとして開かれます（最上位のボタンのみ）。<br>
+<br>
+アイコンは次のいずれかです：<br style="font-weight: bold;">
+<ul>
+  <li><span style="font-weight: bold;">空白のまま</span> - この場合、link 属性がファイルまたはフォルダーを指していれば、そのファイルまたはフォルダーのアイコンが使用されます<br>
+    <span style="font-weight: bold;"></span></li>
+  <li><span style="font-weight: bold;">リソースファイル,アイコン ID</span> - たとえば <span style="font-weight: bold;">%windir%\notepad.exe,2</span>。ファイル名とコンマの間にスペースを入れないでください。<span style="font-weight: bold;">アイコンのインデックスではなく、アイコンのリソース ID を使用していることを確認してください。</span> 最良の結果を得るには、アイコンボックスの隣にある <span style="font-weight: bold;">[...]</span> ボタンを使用してください</li>
+  <li><span style="font-weight: bold;">,アイコン ID</span> - 上記と同じですが、リソースファイルは <span style="font-weight: bold;">ClassicExplorer.dll</span> 自体です。これは Classic Explorer 自身のアイコンを参照するときに便利です<br>
+  </li>
+  <li><span style="font-weight: bold;">アイコンファイル</span> -&nbsp; たとえば <span style="font-weight: bold;">C:\Program Files\Mozilla Thunderbird\Email.ico</span></li>
+  <li><span style="font-weight: bold;">none</span> - 空白のアイコンを使用します</li>
+</ul>
+label 属性または tip 属性が <span style="font-weight: bold;">$</span>（ドル記号）で始まる場合、
+システムはそれを <span style="font-weight: bold;">ExplorerL10N.ini</span>
+ファイル内の文字列名として扱います。実際のテキストは現在の言語設定に依存します。これは
+複数の言語で使用できるツールバーを作成するときに便利です。<br>
+<br>
+<span style="font-weight: bold;">開発者への注意：</span> カスタムコマンドのボタンはチェックまたは無効にできます。ツールバーはレジストリキー <span style="font-weight: bold;">HKCU\Software\OpenShell\ClassicExplorer</span>
+で、ボタン名（左側の列で使用される名前）を持つ DWORD 値を確認します。0 は通常、1 は無効、2 はチェック済みを意味します。ツールバーは
+起動時にレジストリキーを読み取ります。その後でボタンの状態を強制的に更新するには、
+すべての Explorer ウィンドウを見つけ、クラス <span style="font-weight: bold;">OpenShell.CBandWindow</span> の子ウィンドウを特定し、メッセージ <span style="font-weight: bold;">WM_CLEAR</span> を送信する必要があります。これは、ツールバーで使用するカスタム exe を開発している場合に便利です。<br>
+
+<br>
+<h1><a name="examples"></a>カスタムコマンドの例</h1>
+<h3>0) 必要に応じて引用符を使用する</h3>スペースを含むパスをサポートするために、
+パスパラメーターを引用符で囲む必要があります。以下の例 1 と 2 のように、
+引用符が常に必要なわけではありません。予期しない結果を避けるため、
+スペースを含むパスでコマンドをテストしてください。<br>
+<br>
+<h3>1) 現在のフォルダーを表示する</h3>
+
+次のコマンドを使用します：<span style="font-weight: bold;">cmd.exe /k echo %1</span>。%1 は現在のフォルダーのパスに置き換えられます。<br>
+<br>
+<h3>2) 選択したファイルをメモ帳で開く</h3>
+次のコマンドを使用します：<span style="font-weight: bold;">%SystemRoot%\notepad.exe %2</span>。
+%2 は選択したファイルの完全な名前に置き換えられます。メモ帳はコマンドライン全体を
+ファイル名として使用するため、引用符で囲む必要はありません。<br>
+<br>
+<h3>3) 選択したファイルを親フォルダーにコピーする<br>
+</h3>
+<span style="font-weight: bold;">C:\CopyParent.bat</span> という名前のバッチファイルを作成します：<br><span style="font-weight: bold; font-family: monospace;">
+set list=%1<br>
+set list=%list:"=%<br>
+for /F "delims=" %%i in (%list%) do copy /Y "%%i" ..<br>
+del %1<br style="font-family: monospace;"></span>
+<br>
+次のコマンドを使用します：<span style="font-weight: bold;">C:\</span><span style="font-weight: bold;">CopyParent</span><span style="font-weight: bold;">.bat "%3"</span>。
+%3 は、選択したすべてのファイルの完全な名前を含むテキストファイルに置き換えられます。バッチファイルはそのテキストファイルの各行を読み取り、
+選択した各ファイルを親フォルダーにコピーします。最後に
+バッチファイルは最初の
+一時ファイルを削除します。最初の 2 つの <b>set</b> コマンドは %1 パラメーターから引用符を削除します。<br>
+<br>
+<h3>4) すべてのテキストファイルを選択する</h3>
+<span style="font-weight: bold;">C:\SelectText.bat</span> という名前のバッチファイルを作成します：<br>
+<span style="font-weight: bold; font-family: monospace;">echo select &gt; %1</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">dir *.txt /b &gt;&gt; %1</span><br style="font-weight: bold; font-family: monospace;">
+<br>
+次のコマンドを使用します：<span style="font-weight: bold;">C:\SelectText.bat "%5"。</span>
+%5 は空白のテキストファイルに置き換えられ、コマンドはそこに
+「select」という単語と、選択したいファイルの一覧を出力する必要があります。「dir
+*.txt /b」コマンドがその一覧を提供します。<br>
+<br>
+<br>
+
+<h1><a name="admin"></a>管理者設定</h1>設定は
+ユーザーごとで、レジストリに保存されます。既定ではすべてのユーザーが
+自分のすべての設定を編集できます。管理者は特定の設定をロックして、
+どのユーザーも編集できないようにできます：<br>
+<img style="width: 512px;" alt="" src="images/up_locked.png"><br>
+この例では、「上へ移動ボタンを表示する」設定が常に
+「戻る/進むの前」になるようにロックされており、どのユーザーも変更できません。これは
+設定を <span style="font-weight: bold;">HKEY_LOCAL_MACHINE\SOFTWARE\OpenShell\ClassicExplorer</span> レジストリキーに追加することで実現されます。「ShowUpButton」という名前の文字列値を作成し、「BeforeBack」に設定します。<br>
+<br>場合によっては、すべてのユーザーに対して値をロックするのではなく、
+設定の初期値を変更したいだけのこともあります。そのような場合は、値の名前に
+「_Default」を追加します。たとえば、上へ移動ボタンを既定で戻るの前にしつつ、ユーザーが望めば変更できるようにしたい場合は、「ShowUpButton_Default」という名前の文字列値を作成し、
+「BeforeBack」に設定します。<br>
+<br>
+設定のレジストリ名とその値を知る最も簡単な方法は、それを変更してから
+<span style="font-weight: bold;">HKEY_CURRENT_USER\Software\OpenShell\ClassicExplorer\Settings</span> で調べることです。<br>
+設定を既定値にロックしたいが、
+既定値が何か分からない場合があります。その場合は DWORD 値を作成し、
+0xDEFA に設定します。<br>
+<br>
+グローバル設定 <span style="font-weight: bold;">EnableSettings</span> もあります。レジストリで 0 に設定すると、
+ユーザーが設定ダイアログを開くことさえできなくなります：<br>
+<img style="width: 452px;" alt="Disable all settings" title="Disable all settings" src="images/settings_disable_ex.png"><br>
+<br>
+2 つのレジストリ設定「ProcessWhiteList」と
+「ProcessBlackList」を使用して、個々のプロセスに対して Classic Explorer を有効または無効にできます。<span style="font-weight: bold;">ProcessWhiteList </span>は、
+Classic Explorer が読み込まれるプロセスの一覧です。プロセスのファイル名のみを使用し（「notepad.exe」など）、複数の名前は
+コンマまたはセミコロンで区切ります。<span style="font-weight: bold;">ProcessBlackList</span>
+は、Classic Explorer が読み込まれないプロセスの一覧です。
+2 つの一覧のうち 1 つだけを使用する必要があります。両方の一覧が指定されている場合、
+黒名单は無視されます。これらの一覧は、Explorer 以外のプロセスでサポートされる
+機能を有効にした場合にのみ使用されます。現時点でこれらの機能は、共有オーバーレイアイコンとコピーダイアログの
+置き換えです。<br>
+<br>
+グループポリシーによる設定の編集もサポートされています。インストールフォルダーにある <b>PolicyDefinitions.zip</b> ファイルを展開し、詳細についてはドキュメント <b>PolicyDefinitions.rtf</b> を読んでください。<br>
+<br>
+
+<br>
+
+<h1><a name="dependencies"></a>Windows 設定への依存関係<br>
+</h1>
+一部の Classic Explorer 設定では、特定の Windows 設定が有効になっている必要があります：<br>
+<ul>
+  <li><span style="font-weight: bold;">Windows Vista ナビゲーションウィンドウのスタイル</span> - Windows が Aero または Basic テーマを使用している必要があります</li>
+  <li><span style="font-weight: bold;">選択したフォルダーへ自動移動</span>
+- この設定は、Explorer が
+「現在のフォルダーに自動的に展開する」に設定されている場合のみ「常に」に設定できます。<span style="font-weight: bold;">ツール -&gt; フォルダーオプション</span> の <span style="font-weight: bold;">全般</span> タブで探してください</li>
+  <li><span style="font-weight: bold;">タイトルバーにキャプションを表示する</span>
+- キャプションには、完全なパス名または現在のフォルダー名のみが表示されます。完全なパスを表示するには、
+<span style="font-weight: bold;">ツール -&gt; フォルダーオプション</span> の <span style="font-weight: bold;">表示</span> タブで「タイトルバーに完全なパスを表示する（クラシックテーマのみ）」を有効にする必要があります</li>
+  <li><span style="font-weight: bold;">すべてのステータスバー設定</span> - ステータスバーが表示されている必要があります（詳細ウィンドウと混同しないでください）。<span style="font-weight: bold;">表示 -&gt; ステータスバー</span> をチェックします</li>
+</ul>
+
+<br>
+
+<h1><a name="localization"></a>ローカライズ</h1>
+
+
+
+
+ユーザー
+インターフェイス（設定ダイアログボックスを除く）は 35 の
+言語にローカライズされています。<br>
+設定ダイアログボックスは、より少ない数の言語に翻訳されています。
+既定のインストールには英語のみが含まれます。より多くの言語は <a href="http://www.classicshell.net/translations/">翻訳ページ</a> からダウンロードできます。Open-Shell の正確なバージョン用の翻訳パッケージをダウンロードするようにしてください。<br>
+
+<span style="font-weight: bold;"></span><br>
+
+</body></html>
