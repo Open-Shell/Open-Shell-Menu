@@ -218,6 +218,8 @@ public:
 		if (!ppv)
 			return E_POINTER;
 		*ppv = NULL;
+
+		std::lock_guard lock(m_LifecycleMutex);
 		if (!m_Site)
 			return E_FAIL;
 		return m_Site->QueryInterface(riid, ppv);
@@ -375,11 +377,17 @@ private:
 			return hr;
 		}
 
+		m_AllowEnable = true;
 		return RequestApply(false, g_StartButtonActive && g_StartButtonEnabled);
 	}
 
 	HRESULT DeactivateLocked( void )
 	{
+		// Reject any already-queued enable work before restoring state. This is
+		// independent of the global active flag so SetSite replacement is safe
+		// even while Open-Shell itself remains active.
+		m_AllowEnable = false;
+
 		// Restore our XAML overrides before removing the callback. If the UI
 		// thread is unavailable, keep the subscription alive rather than leave
 		// the native Start button hidden with no path left to restore it.
@@ -503,8 +511,10 @@ private:
 		}
 		if (msg == WM_OS_STARTBUTTON_APPLY && tap)
 		{
-			// A queued enable request must never re-apply overrides after Stop.
-			bool enabled = wParam != 0 && g_StartButtonActive && g_StartButtonEnabled;
+			// A queued enable request must never re-apply overrides once teardown
+			// has started, even if Open-Shell is replacing the diagnostics site.
+			bool enabled = wParam != 0 && tap->m_AllowEnable &&
+				g_StartButtonActive && g_StartButtonEnabled;
 			tap->ApplyState(enabled);
 			return 0;
 		}
@@ -824,6 +834,7 @@ private:
 
 	std::atomic<ULONG> m_Refs{ 1 };
 	std::atomic_bool m_Advised{ false };
+	std::atomic_bool m_AllowEnable{ false };
 	std::atomic<HWND> m_Dispatch{ NULL };
 	std::mutex m_LifecycleMutex;
 	std::mutex m_Mutex;
