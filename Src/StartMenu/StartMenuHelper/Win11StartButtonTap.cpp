@@ -323,7 +323,7 @@ private:
 		LRESULT sent = SendMessageTimeout(dispatch, WM_OS_STARTBUTTON_APPLY, enabled ? 1 : 0, 0,
 			SMTO_ABORTIFHUNG | SMTO_BLOCK, 2000, &result);
 		if (sent)
-			return S_OK;
+			return static_cast<HRESULT>(result);
 
 		DWORD error = GetLastError();
 		if (!error)
@@ -513,8 +513,7 @@ private:
 			// has started, even if Open-Shell is replacing the diagnostics site.
 			bool enabled = wParam != 0 && tap->m_AllowEnable &&
 				g_StartButtonActive && g_StartButtonEnabled;
-			tap->ApplyState(enabled);
-			return 0;
+			return static_cast<LRESULT>(tap->ApplyState(enabled));
 		}
 		return DefWindowProc(hwnd, msg, wParam, lParam);
 	}
@@ -727,11 +726,12 @@ private:
 		}
 	}
 
-	void ApplyState( bool enabled )
+	HRESULT ApplyState( bool enabled )
 	{
 		if (!m_Visual)
-			return;
+			return E_UNEXPECTED;
 
+		HRESULT firstError = S_OK;
 		std::vector<std::pair<InstanceHandle, StartElement>> elements;
 		{
 			std::lock_guard lock(m_Mutex);
@@ -740,21 +740,29 @@ private:
 				elements.push_back(element);
 		}
 
-		// Start and Task View share ExperienceToggleButton#LaunchListButton on
-		// current Windows 11 builds. Resolve the attached AutomationId on the XAML
-		// UI thread before changing any control or descendant.
-		for (size_t i = 0; i < elements.size(); i++)
+		// Classification is only needed when applying overrides. During teardown,
+		// use the classifications that produced the existing overrides; querying
+		// new candidates adds risk and work without helping restoration.
+		if (enabled)
 		{
-			StartElement &record = elements[i].second;
-			if (!IsStartControlCandidate(record) || record.startControlResolved)
-				continue;
-
-			bool isStartControl = false;
-			if (SUCCEEDED(ResolveStartControl(elements[i].first, record, &isStartControl)))
+			for (size_t i = 0; i < elements.size(); i++)
 			{
-				record.startControlResolved = true;
-				record.isStartControl = isStartControl;
-				SetControlClassification(elements[i].first, isStartControl);
+				StartElement &record = elements[i].second;
+				if (!IsStartControlCandidate(record) || record.startControlResolved)
+					continue;
+
+				bool isStartControl = false;
+				HRESULT hr = ResolveStartControl(elements[i].first, record, &isStartControl);
+				if (SUCCEEDED(hr))
+				{
+					record.startControlResolved = true;
+					record.isStartControl = isStartControl;
+					SetControlClassification(elements[i].first, isStartControl);
+				}
+				else if (SUCCEEDED(firstError))
+				{
+					firstError = hr;
+				}
 			}
 		}
 
@@ -784,6 +792,10 @@ private:
 							bool value = true;
 							SetOverrideFlags(handle, NULL, &value);
 						}
+						else if (SUCCEEDED(firstError))
+						{
+							firstError = hr;
+						}
 					}
 				}
 				else if (record.hitTestOverride)
@@ -793,6 +805,10 @@ private:
 					{
 						bool value = false;
 						SetOverrideFlags(handle, NULL, &value);
+					}
+					else if (SUCCEEDED(firstError))
+					{
+						firstError = hr;
 					}
 				}
 				continue;
@@ -816,6 +832,10 @@ private:
 						bool value = true;
 						SetOverrideFlags(handle, &value, NULL);
 					}
+					else if (SUCCEEDED(firstError))
+					{
+						firstError = hr;
+					}
 				}
 			}
 			else if (record.visibilityOverride)
@@ -826,8 +846,14 @@ private:
 					bool value = false;
 					SetOverrideFlags(handle, &value, NULL);
 				}
+				else if (SUCCEEDED(firstError))
+				{
+					firstError = hr;
+				}
 			}
 		}
+
+		return firstError;
 	}
 
 	std::atomic<ULONG> m_Refs{ 1 };
