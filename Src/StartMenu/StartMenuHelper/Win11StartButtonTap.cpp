@@ -179,12 +179,16 @@ public:
 		hr = ActivateLocked();
 		if (FAILED(hr))
 		{
-			// The diagnostics runtime may release this TAP after SetSite fails.
-			// Do not leave a non-owning global pointer to that object.
-			std::unique_lock lock(g_TapMutex);
-			if (g_Tap == this)
-				g_Tap = NULL;
-			g_ConnectStarted = false;
+			// A failed activation without a subscription cannot retain a
+			// non-owning global TAP pointer. A failed unadvise, however, must
+			// retain the subscribed callback so activation can be retried.
+			if (!m_Advised)
+			{
+				std::unique_lock lock(g_TapMutex);
+				if (g_Tap == this)
+					g_Tap = NULL;
+				g_ConnectStarted = false;
+			}
 			LogToFile(STARTUP_LOG, L"Win11StartButtonTap: activation failed 0x%08X", hr);
 		}
 		return hr;
