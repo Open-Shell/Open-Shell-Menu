@@ -81,18 +81,28 @@ static bool LoadStartButtonTap( void )
 
 void StartWin11StartButtonMonitor( void )
 {
-	if (!IsWin11() || !LoadStartButtonTap())
+	if (!IsWin11() || !GetSettingBool(L"EnableStartButton") || !LoadStartButtonTap())
 		return;
 
-	g_StartButtonTapStart(GetSettingBool(L"EnableStartButton"), GetSettingBool(L"AllTaskbars"));
+	g_StartButtonTapStart(TRUE, GetSettingBool(L"AllTaskbars"));
 }
 
 void UpdateWin11StartButtonMonitor( void )
 {
-	if (!IsWin11() || !g_StartButtonTapModule)
+	if (!IsWin11())
 		return;
 
-	g_StartButtonTapUpdate(GetSettingBool(L"EnableStartButton"), GetSettingBool(L"AllTaskbars"));
+	BOOL enabled = GetSettingBool(L"EnableStartButton");
+	BOOL allTaskbars = GetSettingBool(L"AllTaskbars");
+	if (!g_StartButtonTapModule)
+	{
+		// Start on first enable if the helper was not needed at startup.
+		if (enabled && LoadStartButtonTap())
+			g_StartButtonTapStart(enabled, allTaskbars);
+		return;
+	}
+
+	g_StartButtonTapUpdate(enabled, allTaskbars);
 }
 
 void StopWin11StartButtonMonitor( void )
