@@ -58,7 +58,7 @@ struct StartElement
 };
 
 class CWin11StartButtonTap;
-static CWin11StartButtonTap *g_Tap = NULL;
+static CComPtr<CWin11StartButtonTap> &PublishedTap( void );
 static std::shared_mutex g_TapMutex;
 
 static bool ContainsText( const CString &text, const wchar_t *part )
@@ -141,15 +141,15 @@ public:
 		if (FAILED(hr))
 			return hr;
 
+		CComPtr<CWin11StartButtonTap> oldTap;
 		{
 			std::unique_lock lock(g_TapMutex);
-			if (g_Tap == this)
-				g_Tap = NULL;
+			if (PublishedTap().p == this)
+				oldTap.Attach(PublishedTap().Detach());
 		}
 
 		m_Visual.Release();
 		m_Site.Release();
-		ResetElements();
 
 		if (!site)
 		{
@@ -167,13 +167,17 @@ public:
 		m_Site = site;
 		m_Visual = newVisual;
 
-		// A late connection must not retain a diagnostics site after Stop.
+		// A published TAP owns a COM reference until it is deactivated.
+		CComPtr<CWin11StartButtonTap> replacedTap;
 		bool active;
 		{
 			std::unique_lock lock(g_TapMutex);
 			active = g_StartButtonActive;
 			if (active)
-				g_Tap = this;
+			{
+				replacedTap.Attach(PublishedTap().Detach());
+				PublishedTap() = this;
+			}
 			else
 				g_ConnectStarted = false;
 		}
@@ -192,10 +196,13 @@ public:
 			// retain the subscribed callback so activation can be retried.
 			if (!m_Advised)
 			{
-				std::unique_lock lock(g_TapMutex);
-				if (g_Tap == this)
-					g_Tap = NULL;
-				g_ConnectStarted = false;
+				CComPtr<CWin11StartButtonTap> releasedTap;
+				{
+					std::unique_lock lock(g_TapMutex);
+					if (PublishedTap().p == this)
+						releasedTap.Attach(PublishedTap().Detach());
+					g_ConnectStarted = false;
+				}
 			}
 			LogToFile(STARTUP_LOG, L"Win11StartButtonTap: activation failed 0x%08X", hr);
 		}
@@ -281,15 +288,19 @@ public:
 
 	HRESULT Deactivate( void )
 	{
-		std::lock_guard lock(m_LifecycleMutex);
-		HRESULT hr = DeactivateLocked();
-		if (SUCCEEDED(hr) && !g_StartButtonActive)
+		CComPtr<CWin11StartButtonTap> releasedTap;
+		HRESULT hr;
 		{
-			std::unique_lock tapLock(g_TapMutex);
-			if (g_Tap == this)
+			std::lock_guard lock(m_LifecycleMutex);
+			hr = DeactivateLocked();
+			if (SUCCEEDED(hr))
 			{
-				g_Tap = NULL;
-				g_ConnectStarted = false;
+				std::unique_lock tapLock(g_TapMutex);
+				if (!g_StartButtonActive && PublishedTap().p == this)
+				{
+					releasedTap.Attach(PublishedTap().Detach());
+					g_ConnectStarted = false;
+				}
 			}
 		}
 		return hr;
@@ -907,10 +918,16 @@ private:
 	std::unordered_map<InstanceHandle, StartElement> m_Elements;
 };
 
+static CComPtr<CWin11StartButtonTap> &PublishedTap( void )
+{
+	static CComPtr<CWin11StartButtonTap> tap;
+	return tap;
+}
+
 static CComPtr<CWin11StartButtonTap> GetTapRef( void )
 {
 	std::shared_lock lock(g_TapMutex);
-	return CComPtr<CWin11StartButtonTap>(g_Tap);
+	return PublishedTap();
 }
 
 class CStartButtonTapFactory: public IClassFactory
@@ -1091,7 +1108,7 @@ extern "C" void StopWin11StartButtonTap( void )
 		// Serialize stop with SetSite publishing the global TAP pointer.
 		std::unique_lock lock(g_TapMutex);
 		g_StartButtonActive = false;
-		tap = g_Tap;
+		tap = PublishedTap();
 	}
 	if (tap)
 	{
