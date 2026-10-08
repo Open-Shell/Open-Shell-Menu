@@ -1035,12 +1035,14 @@ static void EnsureConnection( void )
 	g_ConnectStarted = false;
 }
 
-static void ActivateCurrentTap( void )
+static void ActivateCurrentTap( bool enabled )
 {
 	auto tap = GetTapRef();
 	if (!tap)
 	{
-		EnsureConnection();
+		// A disabled replacement needs no injected XAML diagnostics session.
+		if (enabled)
+			EnsureConnection();
 		return;
 	}
 	HRESULT hr = tap->Activate();
@@ -1053,7 +1055,7 @@ extern "C" void StartWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
 	g_StartButtonEnabled = enabled != FALSE;
 	g_AllTaskbars = allTaskbars != FALSE;
 	g_StartButtonActive = true;
-	ActivateCurrentTap();
+	ActivateCurrentTap(enabled != FALSE);
 }
 
 extern "C" void UpdateWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
@@ -1061,7 +1063,7 @@ extern "C" void UpdateWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
 	g_StartButtonEnabled = enabled != FALSE;
 	g_AllTaskbars = allTaskbars != FALSE;
 	if (g_StartButtonActive)
-		ActivateCurrentTap();
+		ActivateCurrentTap(enabled != FALSE);
 }
 
 extern "C" void StopWin11StartButtonTap( void )
