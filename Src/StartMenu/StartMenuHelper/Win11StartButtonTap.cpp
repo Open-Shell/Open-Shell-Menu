@@ -94,39 +94,7 @@ public:
 
 	~CWin11StartButtonTap( void )
 	{
-		{
-			std::unique_lock lock(g_TapMutex);
-			if (g_Tap == this)
-				g_Tap = NULL;
-		}
-
-		{
-			std::lock_guard lock(m_LifecycleMutex);
-			if (m_Visual && m_Advised)
-			{
-				HRESULT hr = m_Visual->UnadviseVisualTreeChange(static_cast<IVisualTreeServiceCallback*>(this));
-				if (FAILED(hr))
-					LogToFile(STARTUP_LOG, L"Win11StartButtonTap: final visual tree unadvise failed 0x%08X", hr);
-				else
-					m_Advised = false;
-			}
-
-			ResetElements();
-			HRESULT hr = DestroyDispatchWindow();
-			if (FAILED(hr))
-			{
-				// Never leave a window pointing at an object that is being destroyed.
-				HWND dispatch = m_Dispatch;
-				if (dispatch)
-					SetWindowLongPtr(dispatch, GWLP_USERDATA, 0);
-				m_Dispatch = NULL;
-			}
-
-			m_Visual.Release();
-			m_Site.Release();
-		}
-
-		g_ConnectStarted = false;
+		DestroyDispatchWindow();
 		_AtlModule.Unlock();
 	}
 
@@ -197,15 +165,16 @@ public:
 		m_Site = site;
 		m_Visual = newVisual;
 
+		// A late connection must not publish a TAP after Stop has completed.
 		{
 			std::unique_lock lock(g_TapMutex);
+			if (!g_StartButtonActive)
+			{
+				g_ConnectStarted = false;
+				return S_OK;
+			}
 			g_Tap = this;
 		}
-
-		// Stop can race with the asynchronous diagnostics connection. In that
-		// case retain the site for a later restart but do not subscribe yet.
-		if (!g_StartButtonActive)
-			return S_OK;
 
 		hr = ActivateLocked();
 		if (FAILED(hr))
@@ -293,7 +262,17 @@ public:
 	HRESULT Deactivate( void )
 	{
 		std::lock_guard lock(m_LifecycleMutex);
-		return DeactivateLocked();
+		HRESULT hr = DeactivateLocked();
+		if (SUCCEEDED(hr) && !g_StartButtonActive)
+		{
+			std::unique_lock tapLock(g_TapMutex);
+			if (g_Tap == this)
+			{
+				g_Tap = NULL;
+				g_ConnectStarted = false;
+			}
+		}
+		return hr;
 	}
 
 private:
@@ -322,24 +301,17 @@ private:
 		if (!dispatch || !IsWindow(dispatch))
 			return HRESULT_FROM_WIN32(ERROR_INVALID_WINDOW_HANDLE);
 
-		if (!synchronous)
+		if (synchronous)
 		{
-			if (!PostMessage(dispatch, WM_OS_STARTBUTTON_APPLY, enabled ? 1 : 0, 0))
-				return HRESULT_FROM_WIN32(GetLastError());
-			return S_OK;
+			DWORD_PTR result = 0;
+			if (!SendMessageTimeout(dispatch, WM_OS_STARTBUTTON_APPLY, enabled ? 1 : 0, 0,
+				SMTO_ABORTIFHUNG | SMTO_BLOCK, 2000, &result))
+				return HRESULT_FROM_WIN32(ERROR_TIMEOUT);
+			return static_cast<HRESULT>(result);
 		}
 
-		DWORD_PTR result = 0;
-		SetLastError(ERROR_SUCCESS);
-		LRESULT sent = SendMessageTimeout(dispatch, WM_OS_STARTBUTTON_APPLY, enabled ? 1 : 0, 0,
-			SMTO_ABORTIFHUNG | SMTO_BLOCK, 2000, &result);
-		if (sent)
-			return static_cast<HRESULT>(result);
-
-		DWORD error = GetLastError();
-		if (!error)
-			error = ERROR_TIMEOUT;
-		return HRESULT_FROM_WIN32(error);
+		return PostMessage(dispatch, WM_OS_STARTBUTTON_APPLY, enabled ? 1 : 0, 0)
+			? S_OK : HRESULT_FROM_WIN32(GetLastError());
 	}
 
 	HRESULT ActivateLocked( void )
@@ -482,10 +454,11 @@ private:
 			return S_OK;
 		}
 
+		// Detach the window from the TAP before teardown on either thread.
+		SetWindowLongPtr(dispatch, GWLP_USERDATA, 0);
 		if (GetWindowThreadProcessId(dispatch, NULL) == GetCurrentThreadId())
 		{
 			DrainApplyMessages(dispatch);
-			SetWindowLongPtr(dispatch, GWLP_USERDATA, 0);
 			if (!DestroyWindow(dispatch))
 				return HRESULT_FROM_WIN32(GetLastError());
 			m_Dispatch = NULL;
@@ -531,7 +504,6 @@ private:
 		if (msg == WM_OS_STARTBUTTON_DESTROY)
 		{
 			DrainApplyMessages(hwnd);
-			SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);
 			DestroyWindow(hwnd);
 			return 0;
 		}
