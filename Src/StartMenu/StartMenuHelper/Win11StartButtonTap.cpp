@@ -148,9 +148,6 @@ public:
 				oldTap.Attach(PublishedTap().Detach());
 		}
 
-		m_Visual.Release();
-		m_Site.Release();
-
 		if (!site)
 		{
 			g_ConnectStarted = false;
@@ -442,6 +439,8 @@ private:
 		}
 
 		ResetElements();
+		m_Visual.Release();
+		m_Site.Release();
 		return S_OK;
 	}
 
@@ -845,6 +844,17 @@ private:
 		{
 			InstanceHandle handle = elements[i].first;
 			StartElement record = elements[i].second;
+
+			// Restoration depends on what we changed, not on whether a
+			// dynamically rebuilt XAML tree still has the same ancestry.
+			if (!enabled)
+			{
+				if (record.hitTestOverride)
+					applyOverride(handle, L"IsHitTestVisible", L"False", false, true, false);
+				if (record.visibilityOverride)
+					applyOverride(handle, L"Visibility", L"Collapsed", false, true, true);
+				continue;
+			}
 			if (record.isStartControl)
 			{
 				bool target = allTaskbars || !primaryStart || handle == primaryStart;
