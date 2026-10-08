@@ -29,6 +29,8 @@ static const GUID CLSID_OpenShellStartButtonTap =
 
 static const UINT WM_OS_STARTBUTTON_APPLY = WM_APP + 0x35B;
 static const UINT WM_OS_STARTBUTTON_DESTROY = WM_APP + 0x35C;
+static const wchar_t DISPATCH_WINDOW_CLASS[] = L"OpenShell.Win11StartButtonTap";
+static std::mutex g_DispatchClassMutex;
 
 static std::atomic_bool g_StartButtonActive{ false };
 static std::atomic_bool g_StartButtonEnabled{ false };
@@ -165,15 +167,21 @@ public:
 		m_Site = site;
 		m_Visual = newVisual;
 
-		// A late connection must not publish a TAP after Stop has completed.
+		// A late connection must not retain a diagnostics site after Stop.
+		bool active;
 		{
 			std::unique_lock lock(g_TapMutex);
-			if (!g_StartButtonActive)
-			{
+			active = g_StartButtonActive;
+			if (active)
+				g_Tap = this;
+			else
 				g_ConnectStarted = false;
-				return S_OK;
-			}
-			g_Tap = this;
+		}
+		if (!active)
+		{
+			m_Visual.Release();
+			m_Site.Release();
+			return S_OK;
 		}
 
 		hr = ActivateLocked();
@@ -430,15 +438,17 @@ private:
 			m_Dispatch = NULL;
 		}
 
-		static const wchar_t CLASS_NAME[] = L"OpenShell.Win11StartButtonTap";
 		WNDCLASS wc = {};
 		HMODULE module = GetThisModule();
 		if (!module)
 			return E_FAIL;
 
+		// Window classes registered by DLLs survive FreeLibrary. Register
+		// and create together, and unregister after the last window closes.
+		std::lock_guard classLock(g_DispatchClassMutex);
 		wc.lpfnWndProc = DispatchProc;
 		wc.hInstance = module;
-		wc.lpszClassName = CLASS_NAME;
+		wc.lpszClassName = DISPATCH_WINDOW_CLASS;
 		if (!RegisterClass(&wc))
 		{
 			DWORD error = GetLastError();
@@ -446,10 +456,14 @@ private:
 				return HRESULT_FROM_WIN32(error);
 		}
 
-		dispatch = CreateWindowEx(0, CLASS_NAME, L"", 0, 0, 0, 0, 0,
+		dispatch = CreateWindowEx(0, DISPATCH_WINDOW_CLASS, L"", 0, 0, 0, 0, 0,
 			HWND_MESSAGE, NULL, module, this);
 		if (!dispatch)
-			return HRESULT_FROM_WIN32(GetLastError());
+		{
+			DWORD error = GetLastError();
+			UnregisterClass(DISPATCH_WINDOW_CLASS, module);
+			return HRESULT_FROM_WIN32(error);
+		}
 
 		m_Dispatch = dispatch;
 		return S_OK;
@@ -463,6 +477,8 @@ private:
 		if (!IsWindow(dispatch))
 		{
 			m_Dispatch = NULL;
+			std::lock_guard classLock(g_DispatchClassMutex);
+			UnregisterClass(DISPATCH_WINDOW_CLASS, GetThisModule());
 			return S_OK;
 		}
 
@@ -471,8 +487,15 @@ private:
 			DrainApplyMessages(dispatch);
 			SetWindowLongPtr(dispatch, GWLP_USERDATA, 0);
 			if (!DestroyWindow(dispatch))
-				return HRESULT_FROM_WIN32(GetLastError());
+			{
+				DWORD error = GetLastError();
+				if (IsWindow(dispatch))
+					SetWindowLongPtr(dispatch, GWLP_USERDATA, (LONG_PTR)this);
+				return HRESULT_FROM_WIN32(error);
+			}
 			m_Dispatch = NULL;
+			std::lock_guard classLock(g_DispatchClassMutex);
+			UnregisterClass(DISPATCH_WINDOW_CLASS, GetThisModule());
 			return S_OK;
 		}
 
