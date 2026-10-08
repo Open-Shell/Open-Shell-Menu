@@ -411,9 +411,15 @@ private:
 			return HRESULT_FROM_WIN32(ERROR_INVALID_WINDOW_HANDLE);
 		}
 
+		// Unadvise may release the final XAML callback reference.
+		// The dispatch window must be gone before that can happen.
+		HRESULT hr = DestroyDispatchWindow();
+		if (FAILED(hr))
+			return hr;
+
 		if (m_Visual && m_Advised)
 		{
-			HRESULT hr = m_Visual->UnadviseVisualTreeChange(
+			hr = m_Visual->UnadviseVisualTreeChange(
 				static_cast<IVisualTreeServiceCallback*>(this));
 			if (FAILED(hr))
 			{
@@ -425,7 +431,7 @@ private:
 		}
 
 		ResetElements();
-		return DestroyDispatchWindow();
+		return S_OK;
 	}
 
 	HRESULT CreateDispatchWindow( void )
