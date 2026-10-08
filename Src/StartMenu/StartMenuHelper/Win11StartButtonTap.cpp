@@ -178,7 +178,15 @@ public:
 
 		hr = ActivateLocked();
 		if (FAILED(hr))
+		{
+			// The diagnostics runtime may release this TAP after SetSite fails.
+			// Do not leave a non-owning global pointer to that object.
+			std::unique_lock lock(g_TapMutex);
+			if (g_Tap == this)
+				g_Tap = NULL;
+			g_ConnectStarted = false;
 			LogToFile(STARTUP_LOG, L"Win11StartButtonTap: activation failed 0x%08X", hr);
+		}
 		return hr;
 	}
 
@@ -454,11 +462,10 @@ private:
 			return S_OK;
 		}
 
-		// Detach the window from the TAP before teardown on either thread.
-		SetWindowLongPtr(dispatch, GWLP_USERDATA, 0);
 		if (GetWindowThreadProcessId(dispatch, NULL) == GetCurrentThreadId())
 		{
 			DrainApplyMessages(dispatch);
+			SetWindowLongPtr(dispatch, GWLP_USERDATA, 0);
 			if (!DestroyWindow(dispatch))
 				return HRESULT_FROM_WIN32(GetLastError());
 			m_Dispatch = NULL;
@@ -501,12 +508,8 @@ private:
 			tap = (CWin11StartButtonTap*)create->lpCreateParams;
 			SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)tap);
 		}
-		if (msg == WM_OS_STARTBUTTON_DESTROY)
-		{
-			DrainApplyMessages(hwnd);
-			DestroyWindow(hwnd);
-			return 0;
-		}
+		if (msg == WM_OS_STARTBUTTON_DESTROY && tap)
+			return static_cast<LRESULT>(tap->DestroyDispatchWindow());
 		if (msg == WM_OS_STARTBUTTON_APPLY && tap)
 		{
 			// A queued enable request must never re-apply overrides once teardown
@@ -1050,9 +1053,13 @@ extern "C" void UpdateWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
 
 extern "C" void StopWin11StartButtonTap( void )
 {
-	g_StartButtonActive = false;
-
-	auto tap = GetTapRef();
+	CComPtr<CWin11StartButtonTap> tap;
+	{
+		// Serialize stop with SetSite publishing the global TAP pointer.
+		std::unique_lock lock(g_TapMutex);
+		g_StartButtonActive = false;
+		tap = g_Tap;
+	}
 	if (tap)
 	{
 		HRESULT hr = tap->Deactivate();
