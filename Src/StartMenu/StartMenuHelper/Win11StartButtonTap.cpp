@@ -821,83 +821,46 @@ private:
 
 		const bool allTaskbars = g_AllTaskbars;
 
+		// Both properties share the same set/restore behavior.
+		auto applyOverride = [&](InstanceHandle handle, const wchar_t *property, const wchar_t *value,
+			bool shouldOverride, bool hasOverride, bool visibility)
+		{
+			if (shouldOverride == hasOverride)
+				return;
+			HRESULT hr = shouldOverride ? SetPropertyText(handle, property, value) :
+				ClearPropertyByName(handle, property);
+			if (SUCCEEDED(hr))
+			{
+				bool updated = shouldOverride;
+				if (visibility)
+					SetOverrideFlags(handle, &updated, NULL);
+				else
+					SetOverrideFlags(handle, NULL, &updated);
+			}
+			else if (SUCCEEDED(firstError))
+				firstError = hr;
+		};
+
 		for (size_t i = 0; i < elements.size(); i++)
 		{
 			InstanceHandle handle = elements[i].first;
 			StartElement record = elements[i].second;
-
 			if (record.isStartControl)
 			{
 				bool target = allTaskbars || !primaryStart || handle == primaryStart;
-				if (enabled && target)
-				{
-					if (!record.hitTestOverride)
-					{
-						HRESULT hr = SetPropertyText(handle, L"IsHitTestVisible", L"False");
-						if (SUCCEEDED(hr))
-						{
-							bool value = true;
-							SetOverrideFlags(handle, NULL, &value);
-						}
-						else if (SUCCEEDED(firstError))
-						{
-							firstError = hr;
-						}
-					}
-				}
-				else if (record.hitTestOverride)
-				{
-					HRESULT hr = ClearPropertyByName(handle, L"IsHitTestVisible");
-					if (SUCCEEDED(hr))
-					{
-						bool value = false;
-						SetOverrideFlags(handle, NULL, &value);
-					}
-					else if (SUCCEEDED(firstError))
-					{
-						firstError = hr;
-					}
-				}
+				applyOverride(handle, L"IsHitTestVisible", L"False",
+					enabled && target, record.hitTestOverride, false);
 				continue;
 			}
 
 			if (!IsStartGlyph(record))
 				continue;
-
 			InstanceHandle startAncestor = GetStartAncestor(handle);
 			if (!startAncestor)
 				continue;
 			bool target = allTaskbars || !primaryStart || startAncestor == primaryStart;
-
-			if (enabled && target)
-			{
-				if (!record.visibilityOverride)
-				{
-					HRESULT hr = SetPropertyText(handle, L"Visibility", L"Collapsed");
-					if (SUCCEEDED(hr))
-					{
-						bool value = true;
-						SetOverrideFlags(handle, &value, NULL);
-					}
-					else if (SUCCEEDED(firstError))
-					{
-						firstError = hr;
-					}
-				}
-			}
-			else if (record.visibilityOverride)
-			{
-				HRESULT hr = ClearPropertyByName(handle, L"Visibility");
-				if (SUCCEEDED(hr))
-				{
-					bool value = false;
-					SetOverrideFlags(handle, &value, NULL);
-				}
-				else if (SUCCEEDED(firstError))
-				{
-					firstError = hr;
-				}
-			}
+			applyOverride(handle, L"Visibility", L"Collapsed",
+				enabled && target, record.visibilityOverride, true);
 		}
 
 		return firstError;
@@ -1062,43 +1025,33 @@ static void EnsureConnection( void )
 	g_ConnectStarted = false;
 }
 
+static void ActivateCurrentTap( void )
+{
+	auto tap = GetTapRef();
+	if (!tap)
+	{
+		EnsureConnection();
+		return;
+	}
+	HRESULT hr = tap->Activate();
+	if (FAILED(hr))
+		LogToFile(STARTUP_LOG, L"Win11StartButtonTap: activation failed 0x%08X", hr);
+}
+
 extern "C" void StartWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
 {
 	g_StartButtonEnabled = enabled != FALSE;
 	g_AllTaskbars = allTaskbars != FALSE;
 	g_StartButtonActive = true;
-
-	auto tap = GetTapRef();
-	if (tap)
-	{
-		HRESULT hr = tap->Activate();
-		if (FAILED(hr))
-			LogToFile(STARTUP_LOG, L"Win11StartButtonTap: start activation failed 0x%08X", hr);
-		return;
-	}
-
-	EnsureConnection();
+	ActivateCurrentTap();
 }
 
 extern "C" void UpdateWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
 {
 	g_StartButtonEnabled = enabled != FALSE;
 	g_AllTaskbars = allTaskbars != FALSE;
-
-	if (!g_StartButtonActive)
-		return;
-
-	auto tap = GetTapRef();
-	if (tap)
-	{
-		HRESULT hr = tap->Activate();
-		if (FAILED(hr))
-			LogToFile(STARTUP_LOG, L"Win11StartButtonTap: update activation failed 0x%08X", hr);
-	}
-	else
-	{
-		EnsureConnection();
-	}
+	if (g_StartButtonActive)
+		ActivateCurrentTap();
 }
 
 extern "C" void StopWin11StartButtonTap( void )
