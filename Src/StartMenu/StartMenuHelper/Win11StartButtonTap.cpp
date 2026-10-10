@@ -146,7 +146,8 @@ public:
 				std::unique_lock lock(g_TapMutex);
 				if (g_Tap.p == this)
 					releasedTap.Attach(g_Tap.Detach());
-				g_ConnectStarted = false;
+				if (!g_Tap)
+					g_ConnectStarted = false;
 			}
 			return S_OK;
 		}
@@ -213,7 +214,11 @@ public:
 		}
 		else
 		{
-			g_ConnectStarted = false;
+			{
+				std::unique_lock lock(g_TapMutex);
+				if (!g_Tap)
+					g_ConnectStarted = false;
+			}
 			LogToFile(STARTUP_LOG, L"Win11StartButtonTap: activation failed 0x%08X", hr);
 		}
 		return hr;
