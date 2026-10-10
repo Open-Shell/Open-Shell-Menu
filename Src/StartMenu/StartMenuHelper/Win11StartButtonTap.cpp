@@ -35,7 +35,7 @@ static std::mutex g_DispatchClassMutex;
 static std::atomic_bool g_StartButtonActive{ false };
 static std::atomic_bool g_StartButtonEnabled{ false };
 static std::atomic_bool g_AllTaskbars{ false };
-static std::atomic_bool g_ConnectStarted{ false };
+
 
 static HMODULE GetThisModule( void )
 {
@@ -60,6 +60,9 @@ struct StartElement
 class CWin11StartButtonTap;
 extern CComPtr<CWin11StartButtonTap> g_Tap;
 static std::shared_mutex g_TapMutex;
+// All connection-state changes are serialized with TAP ownership.
+enum class ConnectionState { Idle, Connecting, Connected };
+static ConnectionState g_ConnectionState = ConnectionState::Idle;
 
 static bool ContainsText( const CString &text, const wchar_t *part )
 {
@@ -146,8 +149,8 @@ public:
 				std::unique_lock lock(g_TapMutex);
 				if (g_Tap.p == this)
 					releasedTap.Attach(g_Tap.Detach());
-				if (!g_Tap)
-					g_ConnectStarted = false;
+				if (!g_Tap && g_ConnectionState == ConnectionState::Connected)
+					g_ConnectionState = ConnectionState::Idle;
 			}
 			return S_OK;
 		}
@@ -172,10 +175,7 @@ public:
 		{
 			std::unique_lock lock(g_TapMutex);
 			if (!g_StartButtonActive)
-			{
-				g_ConnectStarted = false;
 				return S_OK;
-			}
 			if (g_Tap && g_Tap.p != this)
 				return HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
 			g_Tap = this;
@@ -201,8 +201,8 @@ public:
 					std::unique_lock lock(g_TapMutex);
 					if (g_Tap.p == this)
 						releasedTap.Attach(g_Tap.Detach());
-					if (!g_Tap)
-						g_ConnectStarted = false;
+					if (!g_Tap && g_ConnectionState == ConnectionState::Connected)
+						g_ConnectionState = ConnectionState::Idle;
 				}
 				m_Visual.Release();
 				CComPtr<IUnknown> releasedSite;
@@ -311,7 +311,8 @@ public:
 				if (g_Tap.p == this)
 				{
 					releasedTap.Attach(g_Tap.Detach());
-					g_ConnectStarted = false;
+					if (g_ConnectionState == ConnectionState::Connected)
+						g_ConnectionState = ConnectionState::Idle;
 				}
 			}
 		}
@@ -1008,11 +1009,15 @@ static DWORD WINAPI ConnectThread( LPVOID param )
 		FreeLibrary(runtime);
 	}
 
-	if (FAILED(last))
 	{
-		g_ConnectStarted = false;
-		LogToFile(STARTUP_LOG, L"Win11StartButton: connection failed 0x%08X", last);
+		std::unique_lock lock(g_TapMutex);
+		// Only the worker that owns Connecting may complete this attempt.
+		if (g_ConnectionState == ConnectionState::Connecting)
+			g_ConnectionState = SUCCEEDED(last) && g_StartButtonActive
+				? ConnectionState::Connected : ConnectionState::Idle;
 	}
+	if (FAILED(last))
+		LogToFile(STARTUP_LOG, L"Win11StartButton: connection failed 0x%08X", last);
 
 	// Release the worker's module reference atomically with thread termination.
 	FreeLibraryAndExitThread(moduleReference, 0);
@@ -1023,9 +1028,13 @@ static void EnsureConnection( void )
 {
 	// Connection probing retries endpoints and may sleep, so keep it off the
 	// Explorer taskbar thread. ConnectThread is the only worker we need here.
-	bool expected = false;
-	if (!g_ConnectStarted.compare_exchange_strong(expected, true))
-		return;
+	{
+		std::unique_lock lock(g_TapMutex);
+		if (!g_StartButtonActive || !g_StartButtonEnabled ||
+			g_Tap || g_ConnectionState != ConnectionState::Idle)
+			return;
+		g_ConnectionState = ConnectionState::Connecting;
+	}
 
 	HMODULE moduleReference = NULL;
 	if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)&ConnectThread, &moduleReference))
@@ -1039,8 +1048,10 @@ static void EnsureConnection( void )
 		FreeLibrary(moduleReference);
 	}
 
-	// A worker was not started, so connection can be attempted again later.
-	g_ConnectStarted = false;
+	// No worker owns this reservation if thread creation failed.
+	std::unique_lock lock(g_TapMutex);
+	if (g_ConnectionState == ConnectionState::Connecting)
+		g_ConnectionState = ConnectionState::Idle;
 }
 
 static void ActivateCurrentTap( bool enabled )
@@ -1076,17 +1087,25 @@ static void ActivateCurrentTap( bool enabled )
 
 extern "C" void StartWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
 {
-	g_StartButtonEnabled = enabled != FALSE;
-	g_AllTaskbars = allTaskbars != FALSE;
-	g_StartButtonActive = true;
+	{
+		std::unique_lock lock(g_TapMutex);
+		g_StartButtonEnabled = enabled != FALSE;
+		g_AllTaskbars = allTaskbars != FALSE;
+		g_StartButtonActive = true;
+	}
 	ActivateCurrentTap(enabled != FALSE);
 }
 
 extern "C" void UpdateWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
 {
-	g_StartButtonEnabled = enabled != FALSE;
-	g_AllTaskbars = allTaskbars != FALSE;
-	if (g_StartButtonActive)
+	bool active;
+	{
+		std::unique_lock lock(g_TapMutex);
+		g_StartButtonEnabled = enabled != FALSE;
+		g_AllTaskbars = allTaskbars != FALSE;
+		active = g_StartButtonActive;
+	}
+	if (active)
 		ActivateCurrentTap(enabled != FALSE);
 }
 
@@ -1098,6 +1117,8 @@ extern "C" void StopWin11StartButtonTap( void )
 		std::unique_lock lock(g_TapMutex);
 		g_StartButtonActive = false;
 		tap = g_Tap;
+		if (!tap && g_ConnectionState == ConnectionState::Connected)
+			g_ConnectionState = ConnectionState::Idle;
 	}
 	if (tap)
 	{
