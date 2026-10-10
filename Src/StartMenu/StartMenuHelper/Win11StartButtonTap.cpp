@@ -967,7 +967,8 @@ static DWORD WINAPI ConnectThread( LPVOID param )
 		{
 			HMODULE module = GetThisModule();
 			wchar_t dllPath[MAX_PATH];
-			if (module && GetModuleFileName(module, dllPath, _countof(dllPath)))
+			DWORD pathLength = module ? GetModuleFileName(module, dllPath, _countof(dllPath)) : 0;
+			if (pathLength > 0 && pathLength < _countof(dllPath))
 			{
 				for (int retry = 0; retry < 8 && g_StartButtonActive; retry++)
 				{
