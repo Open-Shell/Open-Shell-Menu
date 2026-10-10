@@ -154,8 +154,11 @@ public:
 
 		// A TAP has one diagnostics site. Replacing it would make callback
 		// ownership and unadvise ordering ambiguous.
-		if (m_Site)
-			return HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED);
+		{
+			std::lock_guard lock(m_Mutex);
+			if (m_Site)
+				return HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED);
+		}
 
 		CComPtr<IVisualTreeService> visual;
 		HRESULT hr = site->QueryInterface(__uuidof(IVisualTreeService), (void**)&visual);
@@ -175,13 +178,21 @@ public:
 				return HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
 		}
 
-		m_Site = site;
+		CComPtr<IUnknown> newSite(site);
+		{
+			std::lock_guard lock(m_Mutex);
+			m_Site.Attach(newSite.Detach());
+		}
 		m_Visual = visual;
 		hr = ActivateLocked();
 		if (FAILED(hr) && !m_Advised)
 		{
 			m_Visual.Release();
-			m_Site.Release();
+			CComPtr<IUnknown> releasedSite;
+			{
+				std::lock_guard lock(m_Mutex);
+				releasedSite.Attach(m_Site.Detach());
+			}
 		}
 
 		if (SUCCEEDED(hr) || m_Advised)
@@ -234,7 +245,7 @@ public:
 
 		CComPtr<IUnknown> site;
 		{
-			std::lock_guard lock(m_LifecycleMutex);
+			std::lock_guard lock(m_Mutex);
 			site = m_Site;
 		}
 		return site ? site->QueryInterface(riid, ppv) : E_FAIL;
@@ -469,7 +480,11 @@ private:
 
 		ResetElements();
 		m_Visual.Release();
-		m_Site.Release();
+		CComPtr<IUnknown> releasedSite;
+		{
+			std::lock_guard lock(m_Mutex);
+			releasedSite.Attach(m_Site.Detach());
+		}
 		return S_OK;
 	}
 
@@ -910,7 +925,7 @@ private:
 	std::atomic_bool m_AllowEnable{ false };
 	std::atomic<HWND> m_Dispatch{ NULL };
 	std::mutex m_LifecycleMutex;
-	std::mutex m_Mutex;
+	std::mutex m_Mutex; // Protects the site reference and visual-element state.
 	CComPtr<IUnknown> m_Site;
 	CComPtr<IVisualTreeService> m_Visual;
 	InstanceHandle m_PrimaryStart = 0;
