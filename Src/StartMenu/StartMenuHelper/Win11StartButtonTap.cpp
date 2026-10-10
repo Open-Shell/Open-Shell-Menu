@@ -1059,6 +1059,8 @@ static void ActivateCurrentTap( bool enabled )
 	CComPtr<CWin11StartButtonTap> tap;
 	{
 		std::shared_lock lock(g_TapMutex);
+		if (!g_StartButtonActive)
+			return;
 		tap = g_Tap;
 	}
 	if (!tap)
@@ -1126,4 +1128,8 @@ extern "C" void StopWin11StartButtonTap( void )
 		if (FAILED(hr))
 			LogToFile(STARTUP_LOG, L"Win11StartButtonTap: deactivate failed 0x%08X", hr);
 	}
+	// Start may have won the race while Stop was waiting for teardown.
+	// Reconcile with the latest requested state after releasing the TAP lock.
+	if (g_StartButtonActive)
+		ActivateCurrentTap(g_StartButtonEnabled);
 }
