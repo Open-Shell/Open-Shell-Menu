@@ -185,16 +185,17 @@ public:
 
 		if (SUCCEEDED(hr) || m_Advised)
 		{
-			bool stopped;
-			bool competingTap;
+			HRESULT publishResult = S_OK;
 			{
 				std::unique_lock lock(g_TapMutex);
-				stopped = !g_StartButtonActive;
-				competingTap = g_Tap && g_Tap.p != this;
-				if (!stopped && !competingTap)
+				if (!g_StartButtonActive)
+					publishResult = S_FALSE;
+				else if (g_Tap && g_Tap.p != this)
+					publishResult = HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
+				else
 					g_Tap = this;
 			}
-			if (stopped || competingTap)
+			if (publishResult != S_OK)
 			{
 				HRESULT shutdown = DeactivateLocked();
 				if (FAILED(shutdown))
@@ -202,12 +203,12 @@ public:
 					LogToFile(STARTUP_LOG, L"Win11StartButtonTap: rejected site cleanup failed 0x%08X", shutdown);
 					return shutdown;
 				}
-				if (stopped)
+				if (publishResult == S_FALSE)
 				{
 					g_ConnectStarted = false;
 					return S_OK;
 				}
-				return HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
+				return publishResult;
 			}
 		}
 		else
