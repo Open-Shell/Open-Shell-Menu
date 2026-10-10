@@ -419,15 +419,12 @@ private:
 			return HRESULT_FROM_WIN32(ERROR_INVALID_WINDOW_HANDLE);
 		}
 
-		// Unadvise may release the final XAML callback reference.
-		// The dispatch window must be gone before that can happen.
-		HRESULT hr = DestroyDispatchWindow();
-		if (FAILED(hr))
-			return hr;
-
+		// Keep the dispatch window available if Unadvise fails: the callback
+		// remains registered and shutdown must remain retryable. Callers hold
+		// a COM reference to this TAP while deactivation is in progress.
 		if (m_Visual && m_Advised)
 		{
-			hr = m_Visual->UnadviseVisualTreeChange(
+			HRESULT hr = m_Visual->UnadviseVisualTreeChange(
 				static_cast<IVisualTreeServiceCallback*>(this));
 			if (FAILED(hr))
 			{
@@ -437,6 +434,10 @@ private:
 			}
 			m_Advised = false;
 		}
+
+		HRESULT hr = DestroyDispatchWindow();
+		if (FAILED(hr))
+			return hr;
 
 		ResetElements();
 		m_Visual.Release();
