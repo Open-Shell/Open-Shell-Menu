@@ -196,6 +196,7 @@ public:
 			}
 			if (stopped)
 			{
+				g_ConnectStarted = false;
 				HRESULT shutdown = DeactivateLocked();
 				if (FAILED(shutdown))
 				{
