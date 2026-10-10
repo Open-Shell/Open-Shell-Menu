@@ -167,6 +167,8 @@ public:
 		if (!visual)
 			return E_NOINTERFACE;
 
+		// Reserve the only published TAP before AdviseVisualTreeChange can
+		// register a callback. A second TAP must never reach that call.
 		{
 			std::unique_lock lock(g_TapMutex);
 			if (!g_StartButtonActive)
@@ -176,6 +178,7 @@ public:
 			}
 			if (g_Tap && g_Tap.p != this)
 				return HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
+			g_Tap = this;
 		}
 
 		CComPtr<IUnknown> newSite(site);
@@ -185,54 +188,29 @@ public:
 		}
 		m_Visual = visual;
 		hr = ActivateLocked();
-		if (FAILED(hr) && !m_Advised)
+		if (FAILED(hr))
 		{
-			m_Visual.Release();
-			CComPtr<IUnknown> releasedSite;
-			{
-				std::lock_guard lock(m_Mutex);
-				releasedSite.Attach(m_Site.Detach());
-			}
-		}
+			LogToFile(STARTUP_LOG, L"Win11StartButtonTap: activation failed 0x%08X", hr);
 
-		if (SUCCEEDED(hr) || m_Advised)
-		{
-			HRESULT publishResult = S_OK;
+			// If Unadvise failed, retain the owner and its callback until a
+			// later deactivation can complete. Otherwise release the claim.
+			if (!m_Advised)
 			{
-				std::unique_lock lock(g_TapMutex);
-				if (!g_StartButtonActive)
-					publishResult = S_FALSE;
-				else if (g_Tap && g_Tap.p != this)
-					publishResult = HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
-				else
-					g_Tap = this;
-			}
-			if (publishResult != S_OK)
-			{
-				HRESULT shutdown = DeactivateLocked();
-				if (FAILED(shutdown))
-				{
-					LogToFile(STARTUP_LOG, L"Win11StartButtonTap: rejected site cleanup failed 0x%08X", shutdown);
-					return shutdown;
-				}
-				if (publishResult == S_FALSE)
+				CComPtr<CWin11StartButtonTap> releasedTap;
 				{
 					std::unique_lock lock(g_TapMutex);
-					if (!g_StartButtonActive && !g_Tap)
+					if (g_Tap.p == this)
+						releasedTap.Attach(g_Tap.Detach());
+					if (!g_Tap)
 						g_ConnectStarted = false;
-					return S_OK;
 				}
-				return publishResult;
+				m_Visual.Release();
+				CComPtr<IUnknown> releasedSite;
+				{
+					std::lock_guard lock(m_Mutex);
+					releasedSite.Attach(m_Site.Detach());
+				}
 			}
-		}
-		else
-		{
-			{
-				std::unique_lock lock(g_TapMutex);
-				if (!g_Tap)
-					g_ConnectStarted = false;
-			}
-			LogToFile(STARTUP_LOG, L"Win11StartButtonTap: activation failed 0x%08X", hr);
 		}
 		return hr;
 	}
