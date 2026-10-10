@@ -306,7 +306,9 @@ public:
 			if (SUCCEEDED(hr))
 			{
 				std::unique_lock tapLock(g_TapMutex);
-				if (!g_StartButtonActive && g_Tap.p == this)
+				// A successful teardown must release its owner even if Start
+				// became active while Unadvise was running.
+				if (g_Tap.p == this)
 				{
 					releasedTap.Attach(g_Tap.Detach());
 					g_ConnectStarted = false;
@@ -1057,7 +1059,19 @@ static void ActivateCurrentTap( bool enabled )
 	}
 	HRESULT hr = tap->Activate();
 	if (FAILED(hr))
+	{
 		LogToFile(STARTUP_LOG, L"Win11StartButtonTap: activation failed 0x%08X", hr);
+
+		// Stop may have released the owner while this call was waiting for
+		// its lifecycle lock. Reconnect only if there is still no owner.
+		bool needsConnection;
+		{
+			std::shared_lock lock(g_TapMutex);
+			needsConnection = !g_Tap;
+		}
+		if (enabled && g_StartButtonActive && needsConnection)
+			EnsureConnection();
+	}
 }
 
 extern "C" void StartWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
