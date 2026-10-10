@@ -267,7 +267,7 @@ public:
 		// AdviseVisualTreeChange replays the existing tree synchronously. Do not
 		// queue partial-state work during that replay; ActivateLocked performs one
 		// complete apply after Advise has returned and the dispatch window exists.
-		if (interesting && m_Advised)
+		if (interesting && m_Advised && m_AllowEnable)
 			RequestApply(false, g_StartButtonActive && g_StartButtonEnabled);
 		return S_OK;
 	}
