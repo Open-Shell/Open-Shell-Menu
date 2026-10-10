@@ -332,9 +332,13 @@ private:
 		if (synchronous)
 		{
 			DWORD_PTR result = 0;
+			SetLastError(ERROR_SUCCESS);
 			if (!SendMessageTimeout(dispatch, WM_OS_STARTBUTTON_APPLY, enabled ? 1 : 0, 0,
 				SMTO_ABORTIFHUNG | SMTO_BLOCK, 2000, &result))
-				return HRESULT_FROM_WIN32(ERROR_TIMEOUT);
+			{
+				DWORD error = GetLastError();
+				return HRESULT_FROM_WIN32(error ? error : ERROR_TIMEOUT);
+			}
 			return static_cast<HRESULT>(result);
 		}
 
