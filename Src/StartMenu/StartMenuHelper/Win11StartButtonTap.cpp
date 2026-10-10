@@ -184,10 +184,24 @@ public:
 		if (SUCCEEDED(hr) || m_Advised)
 		{
 			CComPtr<CWin11StartButtonTap> replacedTap;
+			bool stopped;
 			{
 				std::unique_lock lock(g_TapMutex);
-				replacedTap.Attach(g_Tap.Detach());
-				g_Tap = this;
+				stopped = !g_StartButtonActive;
+				if (!stopped)
+				{
+					replacedTap.Attach(g_Tap.Detach());
+					g_Tap = this;
+				}
+			}
+			if (stopped)
+			{
+				HRESULT shutdown = DeactivateLocked();
+				if (FAILED(shutdown))
+				{
+					LogToFile(STARTUP_LOG, L"Win11StartButtonTap: late shutdown failed 0x%08X", shutdown);
+					return shutdown;
+				}
 			}
 		}
 		else
