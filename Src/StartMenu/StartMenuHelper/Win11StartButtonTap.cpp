@@ -170,6 +170,8 @@ public:
 				g_ConnectStarted = false;
 				return S_OK;
 			}
+			if (g_Tap && g_Tap.p != this)
+				return HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
 		}
 
 		m_Site = site;
@@ -183,26 +185,29 @@ public:
 
 		if (SUCCEEDED(hr) || m_Advised)
 		{
-			CComPtr<CWin11StartButtonTap> replacedTap;
 			bool stopped;
+			bool competingTap;
 			{
 				std::unique_lock lock(g_TapMutex);
 				stopped = !g_StartButtonActive;
-				if (!stopped)
-				{
-					replacedTap.Attach(g_Tap.Detach());
+				competingTap = g_Tap && g_Tap.p != this;
+				if (!stopped && !competingTap)
 					g_Tap = this;
-				}
 			}
-			if (stopped)
+			if (stopped || competingTap)
 			{
-				g_ConnectStarted = false;
 				HRESULT shutdown = DeactivateLocked();
 				if (FAILED(shutdown))
 				{
-					LogToFile(STARTUP_LOG, L"Win11StartButtonTap: late shutdown failed 0x%08X", shutdown);
+					LogToFile(STARTUP_LOG, L"Win11StartButtonTap: rejected site cleanup failed 0x%08X", shutdown);
 					return shutdown;
 				}
+				if (stopped)
+				{
+					g_ConnectStarted = false;
+					return S_OK;
+				}
+				return HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
 			}
 		}
 		else
