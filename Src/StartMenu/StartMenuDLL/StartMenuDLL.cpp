@@ -14,6 +14,7 @@
 #include "ResourceHelper.h"
 #include "LogManager.h"
 #include "TouchHelper.h"
+#include "Win11StartButton.h"
 #include "IatHookHelper.h"
 #include "dllmain.h"
 #include <uxtheme.h>
@@ -2643,6 +2644,7 @@ void UpdateTaskBars( TUpdateTaskbar update )
 		InvalidateRect(taskBar.taskBar,NULL,TRUE);
 		PostMessage(taskBar.taskBar,WM_THEMECHANGED,0,0);
 	}
+	UpdateWin11StartButtonMonitor();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3227,6 +3229,7 @@ if (!g_bTrimHooks)
 
 	UpdateTaskBars(TASKBAR_RECREATE_BUTTONS);
 	UpdateTaskBars(TASKBAR_UPDATE_TEXTURE);
+	StartWin11StartButtonMonitor();
 }
 
 static void RecreateStartButton( size_t taskbarId )
@@ -3288,6 +3291,7 @@ static DWORD WINAPI ExitThreadProc( void *param )
 
 static void CleanStartMenuDLL( void )
 {
+
 	ClearIatHook(g_DwmpBTRHook);
 	g_DwmpBTRHook=NULL;
 	ClearIatHook(g_DwmpTWWRHook);
@@ -3340,6 +3344,7 @@ static void CleanStartMenuDLL( void )
 	}
 	ResetHotCorners();
 	UpdateTaskBars(TASKBAR_CLEAR);
+	StopWin11StartButtonMonitor();
 	g_WinStartButton=NULL;
 	for (id_taskbar_map::const_iterator it=g_TaskbarInfos.begin();it!=g_TaskbarInfos.end();++it)
 	{

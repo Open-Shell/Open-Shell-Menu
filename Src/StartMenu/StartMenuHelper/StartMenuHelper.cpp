@@ -5,6 +5,7 @@
 #include "resource.h"
 #include "StartMenuHelper_h.h"
 #include "dllmain.h"
+#include "Win11StartButtonTap.h"
 #include "ResourceHelper.h"
 #include "Settings.h"
 #include "StringUtils.h"
@@ -206,6 +207,11 @@ static void StartStartMenu( void )
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 {
 	WaitDllInitThread();
+
+	HRESULT tapResult = GetWin11StartButtonTapClassObject(rclsid, riid, ppv);
+	if (tapResult != CLASS_E_CLASSNOTAVAILABLE)
+		return tapResult;
+
 	if (rclsid==g_EmulationClsid)
 	{
 		LogToFile(STARTUP_LOG,L"StartMenuHelper: DllGetClassObject1");
