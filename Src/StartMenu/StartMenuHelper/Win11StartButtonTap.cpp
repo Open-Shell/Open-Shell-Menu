@@ -134,73 +134,65 @@ public:
 	{
 		std::lock_guard lifecycleLock(m_LifecycleMutex);
 
-		// A diagnostics endpoint can call SetSite again on the same TAP object.
-		// Tear down the previous subscription first so callbacks never outlive
-		// the site/service state they were registered against.
-		HRESULT hr = DeactivateLocked();
-		if (FAILED(hr))
-			return hr;
-
-		CComPtr<CWin11StartButtonTap> oldTap;
-		{
-			std::unique_lock lock(g_TapMutex);
-			if (g_Tap.p == this)
-				oldTap.Attach(g_Tap.Detach());
-		}
-
 		if (!site)
 		{
-			g_ConnectStarted = false;
+			HRESULT hr = DeactivateLocked();
+			if (FAILED(hr))
+				return hr;
+
+			// Keep a local reference while releasing the published one.
+			CComPtr<CWin11StartButtonTap> releasedTap;
+			{
+				std::unique_lock lock(g_TapMutex);
+				if (g_Tap.p == this)
+					releasedTap.Attach(g_Tap.Detach());
+				g_ConnectStarted = false;
+			}
 			return S_OK;
 		}
 
-		CComPtr<IVisualTreeService> newVisual;
-		hr = site->QueryInterface(__uuidof(IVisualTreeService), (void**)&newVisual);
+		// A TAP has one diagnostics site. Replacing it would make callback
+		// ownership and unadvise ordering ambiguous.
+		if (m_Site)
+			return HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED);
+
+		CComPtr<IVisualTreeService> visual;
+		HRESULT hr = site->QueryInterface(__uuidof(IVisualTreeService), (void**)&visual);
 		if (FAILED(hr))
 			return hr;
-		if (!newVisual)
+		if (!visual)
 			return E_NOINTERFACE;
 
-		m_Site = site;
-		m_Visual = newVisual;
-
-		// A published TAP owns a COM reference until it is deactivated.
-		CComPtr<CWin11StartButtonTap> replacedTap;
-		bool active;
 		{
 			std::unique_lock lock(g_TapMutex);
-			active = g_StartButtonActive;
-			if (active)
+			if (!g_StartButtonActive)
 			{
-				replacedTap.Attach(g_Tap.Detach());
-				g_Tap = this;
-			}
-			else
 				g_ConnectStarted = false;
+				return S_OK;
+			}
 		}
-		if (!active)
+
+		m_Site = site;
+		m_Visual = visual;
+		hr = ActivateLocked();
+		if (FAILED(hr) && !m_Advised)
 		{
 			m_Visual.Release();
 			m_Site.Release();
-			return S_OK;
 		}
 
-		hr = ActivateLocked();
-		if (FAILED(hr))
+		if (SUCCEEDED(hr) || m_Advised)
 		{
-			// A failed activation without a subscription cannot retain a
-			// non-owning global TAP pointer. A failed unadvise, however, must
-			// retain the subscribed callback so activation can be retried.
-			if (!m_Advised)
+			CComPtr<CWin11StartButtonTap> replacedTap;
 			{
-				CComPtr<CWin11StartButtonTap> releasedTap;
-				{
-					std::unique_lock lock(g_TapMutex);
-					if (g_Tap.p == this)
-						releasedTap.Attach(g_Tap.Detach());
-					g_ConnectStarted = false;
-				}
+				std::unique_lock lock(g_TapMutex);
+				replacedTap.Attach(g_Tap.Detach());
+				g_Tap = this;
 			}
+		}
+		else
+		{
+			g_ConnectStarted = false;
 			LogToFile(STARTUP_LOG, L"Win11StartButtonTap: activation failed 0x%08X", hr);
 		}
 		return hr;
