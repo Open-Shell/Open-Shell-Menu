@@ -206,7 +206,9 @@ public:
 				}
 				if (publishResult == S_FALSE)
 				{
-					g_ConnectStarted = false;
+					std::unique_lock lock(g_TapMutex);
+					if (!g_StartButtonActive && !g_Tap)
+						g_ConnectStarted = false;
 					return S_OK;
 				}
 				return publishResult;
