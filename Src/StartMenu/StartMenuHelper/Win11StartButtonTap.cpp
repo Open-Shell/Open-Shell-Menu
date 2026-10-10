@@ -960,55 +960,52 @@ HRESULT GetWin11StartButtonTapClassObject( REFCLSID clsid, REFIID riid, LPVOID *
 
 typedef HRESULT (WINAPI *InitXamlDiagnosticsEx_t)( LPCWSTR, DWORD, LPCWSTR, LPCWSTR, CLSID, LPCWSTR );
 
-static DWORD FinishConnectThread( HMODULE moduleReference, HMODULE runtime, bool connected )
-{
-	if (runtime)
-		FreeLibrary(runtime);
-	if (!connected)
-		g_ConnectStarted = false;
-
-	// Keep a private StartMenuHelper reference while this worker is running.
-	// Release it atomically with thread termination so a failed diagnostics
-	// connection cannot unload the helper underneath the worker's return path.
-	FreeLibraryAndExitThread(moduleReference, 0);
-	return 0;
-}
-
 static DWORD WINAPI ConnectThread( LPVOID param )
 {
 	HMODULE moduleReference = (HMODULE)param;
-	HMODULE runtime = LoadLibraryEx(L"Windows.UI.Xaml.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
-	if (!runtime)
-		return FinishConnectThread(moduleReference, NULL, false);
-
-	InitXamlDiagnosticsEx_t init = (InitXamlDiagnosticsEx_t)GetProcAddress(runtime, "InitializeXamlDiagnosticsEx");
-	if (!init)
-		return FinishConnectThread(moduleReference, runtime, false);
-
-	HMODULE module = GetThisModule();
-	wchar_t dllPath[MAX_PATH];
-	if (!module || !GetModuleFileName(module, dllPath, _countof(dllPath)))
-		return FinishConnectThread(moduleReference, runtime, false);
-
-	const wchar_t *endpoints[] = { L"VisualDiagConnection1", L"VisualDiagConnection2" };
 	HRESULT last = E_FAIL;
-	for (int retry = 0; retry < 8 && g_StartButtonActive; retry++)
+	HMODULE runtime = LoadLibraryEx(L"Windows.UI.Xaml.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
+	if (runtime)
 	{
-		for (int i = 0; i < _countof(endpoints); i++)
+		InitXamlDiagnosticsEx_t init = (InitXamlDiagnosticsEx_t)GetProcAddress(runtime, "InitializeXamlDiagnosticsEx");
+		if (init)
 		{
-			last = init(endpoints[i], GetCurrentProcessId(), NULL,
-				dllPath, CLSID_OpenShellStartButtonTap, NULL);
-			if (SUCCEEDED(last))
+			HMODULE module = GetThisModule();
+			wchar_t dllPath[MAX_PATH];
+			if (module && GetModuleFileName(module, dllPath, _countof(dllPath)))
 			{
-				LogToFile(STARTUP_LOG, L"Win11StartButton: connected using %s", endpoints[i]);
-				return FinishConnectThread(moduleReference, runtime, true);
+				const wchar_t *endpoints[] = { L"VisualDiagConnection1", L"VisualDiagConnection2" };
+				for (int retry = 0; retry < 8 && g_StartButtonActive; retry++)
+				{
+					for (int i = 0; i < _countof(endpoints) && g_StartButtonActive; i++)
+					{
+						last = init(endpoints[i], GetCurrentProcessId(), NULL,
+							dllPath, CLSID_OpenShellStartButtonTap, NULL);
+						if (SUCCEEDED(last))
+						{
+							LogToFile(STARTUP_LOG, L"Win11StartButton: connected using %s", endpoints[i]);
+							break;
+						}
+					}
+					if (SUCCEEDED(last))
+						break;
+					if (g_StartButtonActive && retry + 1 < 8)
+						Sleep(500);
+				}
 			}
 		}
-		Sleep(500);
+		FreeLibrary(runtime);
 	}
 
-	LogToFile(STARTUP_LOG, L"Win11StartButton: connection failed 0x%08X", last);
-	return FinishConnectThread(moduleReference, runtime, false);
+	if (FAILED(last))
+	{
+		g_ConnectStarted = false;
+		LogToFile(STARTUP_LOG, L"Win11StartButton: connection failed 0x%08X", last);
+	}
+
+	// Release the worker's module reference atomically with thread termination.
+	FreeLibraryAndExitThread(moduleReference, 0);
+	return 0;
 }
 
 static void EnsureConnection( void )
