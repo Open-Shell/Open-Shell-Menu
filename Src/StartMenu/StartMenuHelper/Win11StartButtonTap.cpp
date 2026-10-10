@@ -61,9 +61,8 @@ class CWin11StartButtonTap;
 extern CComPtr<CWin11StartButtonTap> g_Tap;
 static std::shared_mutex g_TapMutex;
 // All connection-state changes are serialized with TAP ownership.
-enum class ConnectionState { Idle, Connecting, Connected };
+enum class ConnectionState { Idle, Connecting, Interrupted, Connected };
 static ConnectionState g_ConnectionState = ConnectionState::Idle;
-static bool g_RetryInterruptedConnection = false; // Guarded by g_TapMutex.
 
 static bool ContainsText( const CString &text, const wchar_t *part )
 {
@@ -1015,16 +1014,16 @@ static DWORD WINAPI ConnectThread( LPVOID param )
 	bool retry = false;
 	{
 		std::unique_lock lock(g_TapMutex);
-		// A stopped worker owns Connecting until its final result is known.
-		// Retry just once if a newer Start overlapped its failed attempt.
-		if (g_ConnectionState == ConnectionState::Connecting)
+		// Interrupted retains the worker reservation across Stop/Start.
+		// A failed interrupted attempt may retry once for the latest Start.
+		if (g_ConnectionState == ConnectionState::Connecting ||
+			g_ConnectionState == ConnectionState::Interrupted)
 		{
-			retry = FAILED(last) && g_RetryInterruptedConnection &&
+			retry = FAILED(last) && g_ConnectionState == ConnectionState::Interrupted &&
 				g_StartButtonActive && g_StartButtonEnabled && !g_Tap;
 			g_ConnectionState = SUCCEEDED(last) && g_StartButtonActive
 				? ConnectionState::Connected : ConnectionState::Idle;
 		}
-		g_RetryInterruptedConnection = false;
 	}
 	if (FAILED(last))
 		LogToFile(STARTUP_LOG, L"Win11StartButton: connection failed 0x%08X", last);
@@ -1046,7 +1045,6 @@ static void EnsureConnection( void )
 			g_Tap || g_ConnectionState != ConnectionState::Idle)
 			return;
 		g_ConnectionState = ConnectionState::Connecting;
-		g_RetryInterruptedConnection = false;
 	}
 
 	HMODULE moduleReference = NULL;
@@ -1065,12 +1063,12 @@ static void EnsureConnection( void )
 	bool retry = false;
 	{
 		std::unique_lock lock(g_TapMutex);
-		if (g_ConnectionState == ConnectionState::Connecting)
+		if (g_ConnectionState == ConnectionState::Connecting ||
+			g_ConnectionState == ConnectionState::Interrupted)
 		{
-			retry = g_RetryInterruptedConnection && g_StartButtonActive &&
-				g_StartButtonEnabled && !g_Tap;
+			retry = g_ConnectionState == ConnectionState::Interrupted &&
+				g_StartButtonActive && g_StartButtonEnabled && !g_Tap;
 			g_ConnectionState = ConnectionState::Idle;
-			g_RetryInterruptedConnection = false;
 		}
 	}
 	if (retry)
@@ -1143,7 +1141,7 @@ extern "C" void StopWin11StartButtonTap( void )
 		g_StartButtonActive = false;
 		tap = g_Tap;
 		if (g_ConnectionState == ConnectionState::Connecting)
-			g_RetryInterruptedConnection = true;
+			g_ConnectionState = ConnectionState::Interrupted;
 		if (!tap && g_ConnectionState == ConnectionState::Connected)
 			g_ConnectionState = ConnectionState::Idle;
 	}
