@@ -58,7 +58,7 @@ struct StartElement
 };
 
 class CWin11StartButtonTap;
-static CComPtr<CWin11StartButtonTap> &PublishedTap( void );
+extern CComPtr<CWin11StartButtonTap> g_Tap;
 static std::shared_mutex g_TapMutex;
 
 static bool ContainsText( const CString &text, const wchar_t *part )
@@ -144,8 +144,8 @@ public:
 		CComPtr<CWin11StartButtonTap> oldTap;
 		{
 			std::unique_lock lock(g_TapMutex);
-			if (PublishedTap().p == this)
-				oldTap.Attach(PublishedTap().Detach());
+			if (g_Tap.p == this)
+				oldTap.Attach(g_Tap.Detach());
 		}
 
 		if (!site)
@@ -172,8 +172,8 @@ public:
 			active = g_StartButtonActive;
 			if (active)
 			{
-				replacedTap.Attach(PublishedTap().Detach());
-				PublishedTap() = this;
+				replacedTap.Attach(g_Tap.Detach());
+				g_Tap = this;
 			}
 			else
 				g_ConnectStarted = false;
@@ -196,8 +196,8 @@ public:
 				CComPtr<CWin11StartButtonTap> releasedTap;
 				{
 					std::unique_lock lock(g_TapMutex);
-					if (PublishedTap().p == this)
-						releasedTap.Attach(PublishedTap().Detach());
+					if (g_Tap.p == this)
+						releasedTap.Attach(g_Tap.Detach());
 					g_ConnectStarted = false;
 				}
 			}
@@ -293,9 +293,9 @@ public:
 			if (SUCCEEDED(hr))
 			{
 				std::unique_lock tapLock(g_TapMutex);
-				if (!g_StartButtonActive && PublishedTap().p == this)
+				if (!g_StartButtonActive && g_Tap.p == this)
 				{
-					releasedTap.Attach(PublishedTap().Detach());
+					releasedTap.Attach(g_Tap.Detach());
 					g_ConnectStarted = false;
 				}
 			}
@@ -891,16 +891,12 @@ private:
 	std::unordered_map<InstanceHandle, StartElement> m_Elements;
 };
 
-static CComPtr<CWin11StartButtonTap> &PublishedTap( void )
-{
-	static CComPtr<CWin11StartButtonTap> tap;
-	return tap;
-}
+CComPtr<CWin11StartButtonTap> g_Tap;
 
 static CComPtr<CWin11StartButtonTap> GetTapRef( void )
 {
 	std::shared_lock lock(g_TapMutex);
-	return PublishedTap();
+	return g_Tap;
 }
 
 class CStartButtonTapFactory: public IClassFactory
@@ -1070,7 +1066,7 @@ extern "C" void StopWin11StartButtonTap( void )
 		// Serialize stop with SetSite publishing the global TAP pointer.
 		std::unique_lock lock(g_TapMutex);
 		g_StartButtonActive = false;
-		tap = PublishedTap();
+		tap = g_Tap;
 	}
 	if (tap)
 	{
