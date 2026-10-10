@@ -231,9 +231,13 @@ public:
 		if (!ppv)
 			return E_POINTER;
 		*ppv = NULL;
-		if (!m_Site)
-			return E_FAIL;
-		return m_Site->QueryInterface(riid, ppv);
+
+		CComPtr<IUnknown> site;
+		{
+			std::lock_guard lock(m_LifecycleMutex);
+			site = m_Site;
+		}
+		return site ? site->QueryInterface(riid, ppv) : E_FAIL;
 	}
 
 	STDMETHODIMP OnVisualTreeChange( ParentChildRelation relation, VisualElement element, VisualMutationType mutationType )
