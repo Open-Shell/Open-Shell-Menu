@@ -1062,9 +1062,19 @@ static void EnsureConnection( void )
 	}
 
 	// No worker owns this reservation if thread creation failed.
-	std::unique_lock lock(g_TapMutex);
-	if (g_ConnectionState == ConnectionState::Connecting)
-		g_ConnectionState = ConnectionState::Idle;
+	bool retry = false;
+	{
+		std::unique_lock lock(g_TapMutex);
+		if (g_ConnectionState == ConnectionState::Connecting)
+		{
+			retry = g_RetryInterruptedConnection && g_StartButtonActive &&
+				g_StartButtonEnabled && !g_Tap;
+			g_ConnectionState = ConnectionState::Idle;
+			g_RetryInterruptedConnection = false;
+		}
+	}
+	if (retry)
+		EnsureConnection();
 }
 
 static void ActivateCurrentTap( bool enabled )
