@@ -898,12 +898,6 @@ private:
 
 CComPtr<CWin11StartButtonTap> g_Tap;
 
-static CComPtr<CWin11StartButtonTap> GetTapRef( void )
-{
-	std::shared_lock lock(g_TapMutex);
-	return g_Tap;
-}
-
 class CStartButtonTapFactory: public IClassFactory
 {
 public:
@@ -1031,7 +1025,11 @@ static void EnsureConnection( void )
 
 static void ActivateCurrentTap( bool enabled )
 {
-	auto tap = GetTapRef();
+	CComPtr<CWin11StartButtonTap> tap;
+	{
+		std::shared_lock lock(g_TapMutex);
+		tap = g_Tap;
+	}
 	if (!tap)
 	{
 		// A disabled replacement needs no injected XAML diagnostics session.
