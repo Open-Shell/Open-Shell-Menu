@@ -339,13 +339,19 @@ private:
 		if (!m_Visual)
 			return E_UNEXPECTED;
 
+		// Create dispatch before subscribing. There is then no callback to
+		// unadvise if window creation fails.
+		HRESULT hr = CreateDispatchWindow();
+		if (FAILED(hr))
+			return hr;
+
 		if (!m_Advised)
 		{
 			ResetElements();
 
-			// Advise replays the existing tree. The replay only records handles;
-			// no property work is queued until m_Advised becomes true below.
-			HRESULT hr = m_Visual->AdviseVisualTreeChange(static_cast<IVisualTreeServiceCallback*>(this));
+			// Advise synchronously replays the tree; callbacks only record
+			// handles until registration has completed.
+			hr = m_Visual->AdviseVisualTreeChange(static_cast<IVisualTreeServiceCallback*>(this));
 			if (FAILED(hr))
 			{
 				ResetElements();
@@ -354,47 +360,25 @@ private:
 			m_Advised = true;
 		}
 
-		HRESULT hr = CreateDispatchWindow();
-		if (FAILED(hr))
-		{
-			// If the callback was registered by this activation, undo it. If
-			// unadvise itself fails, keep the subscription state intact so a
-			// later activation can retry only the dispatch-window creation.
-			if (m_Visual && m_Advised)
-			{
-				HRESULT unadvise = m_Visual->UnadviseVisualTreeChange(
-					static_cast<IVisualTreeServiceCallback*>(this));
-				if (SUCCEEDED(unadvise))
-				{
-					m_Advised = false;
-					ResetElements();
-				}
-				else
-				{
-					LogToFile(STARTUP_LOG,
-						L"Win11StartButtonTap: rollback unadvise failed 0x%08X", unadvise);
-				}
-			}
-			return hr;
-		}
-
 		m_AllowEnable = true;
 		return RequestApply(false, g_StartButtonActive && g_StartButtonEnabled);
 	}
 
-	HRESULT DeactivateLocked( void )
+		HRESULT DeactivateLocked( void )
 	{
 		// Reject any already-queued enable work before restoring state. This is
 		// independent of the global active flag so SetSite replacement is safe
 		// even while Open-Shell itself remains active.
 		m_AllowEnable = false;
 
-		// Restore our XAML overrides before removing the callback. If the UI
-		// thread is unavailable, keep the subscription alive rather than leave
-		// the native Start button hidden with no path left to restore it.
-		HWND dispatch = m_Dispatch;
-		if (dispatch && IsWindow(dispatch))
+		// Only live overrides need a synchronous UI-thread restore.
+		// An initial Advise failure cannot have applied any overrides.
+		if (HasOverrides())
 		{
+			HWND dispatch = m_Dispatch;
+			if (!dispatch || !IsWindow(dispatch))
+				return HRESULT_FROM_WIN32(ERROR_INVALID_WINDOW_HANDLE);
+
 			HRESULT hr = RequestApply(true, false);
 			if (FAILED(hr))
 			{
@@ -402,13 +386,6 @@ private:
 					L"Win11StartButtonTap: synchronous restore failed 0x%08X", hr);
 				return hr;
 			}
-		}
-		else if (HasOverrides())
-		{
-			// Do not discard bookkeeping for live overrides if the UI dispatch
-			// path vanished. Keeping the subscription/state is safer than
-			// leaving a native Start property overridden with no retry path.
-			return HRESULT_FROM_WIN32(ERROR_INVALID_WINDOW_HANDLE);
 		}
 
 		// Keep the dispatch window available if Unadvise fails: the callback
