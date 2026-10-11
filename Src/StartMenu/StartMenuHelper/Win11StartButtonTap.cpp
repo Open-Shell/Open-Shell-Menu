@@ -363,7 +363,7 @@ private:
 		return RequestApply(false, g_StartButtonActive && g_StartButtonEnabled);
 	}
 
-		HRESULT DeactivateLocked( void )
+	HRESULT DeactivateLocked( void )
 	{
 		// Reject any already-queued enable work before restoring state. This is
 		// independent of the global active flag so SetSite replacement is safe
