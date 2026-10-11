@@ -370,14 +370,11 @@ private:
 		// even while Open-Shell itself remains active.
 		m_AllowEnable = false;
 
-		// Only live overrides need a synchronous UI-thread restore.
-		// An initial Advise failure cannot have applied any overrides.
-		if (HasOverrides())
+		// Serialize restoration with any in-flight UI-thread SetProperty.
+		// An override may be applied before its bookkeeping flag is set.
+		HWND dispatch = m_Dispatch;
+		if (dispatch && IsWindow(dispatch))
 		{
-			HWND dispatch = m_Dispatch;
-			if (!dispatch || !IsWindow(dispatch))
-				return HRESULT_FROM_WIN32(ERROR_INVALID_WINDOW_HANDLE);
-
 			HRESULT hr = RequestApply(true, false);
 			if (FAILED(hr))
 			{
@@ -385,6 +382,11 @@ private:
 					L"Win11StartButtonTap: synchronous restore failed 0x%08X", hr);
 				return hr;
 			}
+		}
+		else if (HasOverrides())
+		{
+			// Keep ownership if restoration is required but dispatch is gone.
+			return HRESULT_FROM_WIN32(ERROR_INVALID_WINDOW_HANDLE);
 		}
 
 		// Keep the dispatch window available if Unadvise fails: the callback
