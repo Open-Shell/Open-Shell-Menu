@@ -135,28 +135,11 @@ public:
 
 	STDMETHODIMP SetSite( IUnknown *site )
 	{
-		std::lock_guard lifecycleLock(m_LifecycleMutex);
-
+		// Detaching a diagnostics site follows the same teardown as Open-Shell exit.
 		if (!site)
-		{
-			HRESULT hr = DeactivateLocked();
-			if (FAILED(hr))
-				return hr;
+			return Deactivate();
 
-			// Keep a local reference while releasing the published one.
-			CComPtr<CWin11StartButtonTap> releasedTap;
-			{
-				std::unique_lock lock(g_TapMutex);
-				if (g_Tap.p == this)
-					releasedTap.Attach(g_Tap.Detach());
-				if (!g_Tap && g_ConnectionState == ConnectionState::Connected)
-					g_ConnectionState = ConnectionState::Idle;
-			}
-			return S_OK;
-		}
-
-		// A TAP has one diagnostics site. Replacing it would make callback
-		// ownership and unadvise ordering ambiguous.
+		std::lock_guard lifecycleLock(m_LifecycleMutex);
 		{
 			std::lock_guard lock(m_Mutex);
 			if (m_Site)
@@ -170,8 +153,7 @@ public:
 		if (!visual)
 			return E_NOINTERFACE;
 
-		// Reserve the only published TAP before AdviseVisualTreeChange can
-		// register a callback. A second TAP must never reach that call.
+		// Reserve ownership before Advise: no competing TAP may subscribe.
 		{
 			std::unique_lock lock(g_TapMutex);
 			if (!g_StartButtonActive)
@@ -191,31 +173,21 @@ public:
 		if (FAILED(hr))
 		{
 			LogToFile(STARTUP_LOG, L"Win11StartButtonTap: activation failed 0x%08X", hr);
-
-			// If Unadvise failed, retain the owner and its callback until a
-			// later deactivation can complete. Otherwise release the claim.
+			// Failed Unadvise retains the subscribed object and its owner.
+			// Otherwise reuse the normal cleanup path.
 			if (!m_Advised)
 			{
+				HRESULT cleanup = DeactivateLocked();
+				if (FAILED(cleanup))
+					return cleanup;
 				CComPtr<CWin11StartButtonTap> releasedTap;
-				{
-					std::unique_lock lock(g_TapMutex);
-					if (g_Tap.p == this)
-						releasedTap.Attach(g_Tap.Detach());
-					if (!g_Tap && g_ConnectionState == ConnectionState::Connected)
-						g_ConnectionState = ConnectionState::Idle;
-				}
-				m_Visual.Release();
-				CComPtr<IUnknown> releasedSite;
-				{
-					std::lock_guard lock(m_Mutex);
-					releasedSite.Attach(m_Site.Detach());
-				}
+				ReleaseOwner(releasedTap);
 			}
 		}
 		return hr;
 	}
 
-	STDMETHODIMP GetSite( REFIID riid, void **ppv )
+		STDMETHODIMP GetSite( REFIID riid, void **ppv )
 	{
 		if (!ppv)
 			return E_POINTER;
@@ -299,27 +271,27 @@ public:
 	HRESULT Deactivate( void )
 	{
 		CComPtr<CWin11StartButtonTap> releasedTap;
-		HRESULT hr;
-		{
-			std::lock_guard lock(m_LifecycleMutex);
-			hr = DeactivateLocked();
-			if (SUCCEEDED(hr))
-			{
-				std::unique_lock tapLock(g_TapMutex);
-				// A successful teardown must release its owner even if Start
-				// became active while Unadvise was running.
-				if (g_Tap.p == this)
-				{
-					releasedTap.Attach(g_Tap.Detach());
-					if (g_ConnectionState == ConnectionState::Connected)
-						g_ConnectionState = ConnectionState::Idle;
-				}
-			}
-		}
+		std::lock_guard lock(m_LifecycleMutex);
+		HRESULT hr = DeactivateLocked();
+		if (SUCCEEDED(hr))
+			ReleaseOwner(releasedTap);
 		return hr;
 	}
 
 private:
+	// Caller holds m_LifecycleMutex. Drop the global COM reference only
+	// after a successful teardown; its destruction must occur outside g_TapMutex.
+	void ReleaseOwner( CComPtr<CWin11StartButtonTap> &releasedTap )
+	{
+		std::unique_lock lock(g_TapMutex);
+		if (g_Tap.p == this)
+		{
+			releasedTap.Attach(g_Tap.Detach());
+			if (g_ConnectionState == ConnectionState::Connected)
+				g_ConnectionState = ConnectionState::Idle;
+		}
+	}
+
 	void ResetElements( void )
 	{
 		std::lock_guard lock(m_Mutex);
