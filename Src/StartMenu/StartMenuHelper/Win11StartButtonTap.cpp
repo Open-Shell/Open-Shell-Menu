@@ -139,6 +139,7 @@ public:
 		if (!site)
 			return Deactivate();
 
+		CComPtr<CWin11StartButtonTap> releasedTap;
 		std::lock_guard lifecycleLock(m_LifecycleMutex);
 		{
 			std::lock_guard lock(m_Mutex);
@@ -180,14 +181,13 @@ public:
 				HRESULT cleanup = DeactivateLocked();
 				if (FAILED(cleanup))
 					return cleanup;
-				CComPtr<CWin11StartButtonTap> releasedTap;
 				ReleaseOwner(releasedTap);
 			}
 		}
 		return hr;
 	}
 
-		STDMETHODIMP GetSite( REFIID riid, void **ppv )
+	STDMETHODIMP GetSite( REFIID riid, void **ppv )
 	{
 		if (!ppv)
 			return E_POINTER;
