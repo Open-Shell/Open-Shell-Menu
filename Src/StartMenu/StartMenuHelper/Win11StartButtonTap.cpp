@@ -20,7 +20,6 @@
 #include <ocidl.h>
 #include <atomic>
 #include <mutex>
-#include <shared_mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -59,7 +58,7 @@ struct StartElement
 
 class CWin11StartButtonTap;
 extern CComPtr<CWin11StartButtonTap> g_Tap;
-static std::shared_mutex g_TapMutex;
+static std::mutex g_TapMutex;
 // All connection-state changes are serialized with TAP ownership.
 enum class ConnectionState { Idle, Connecting, Interrupted, Connected };
 static ConnectionState g_ConnectionState = ConnectionState::Idle;
@@ -1028,7 +1027,7 @@ static void ActivateCurrentTap( bool enabled )
 {
 	CComPtr<CWin11StartButtonTap> tap;
 	{
-		std::shared_lock lock(g_TapMutex);
+		std::lock_guard lock(g_TapMutex);
 		if (!g_StartButtonActive)
 			return;
 		tap = g_Tap;
@@ -1049,7 +1048,7 @@ static void ActivateCurrentTap( bool enabled )
 		// its lifecycle lock. Reconnect only if there is still no owner.
 		bool needsConnection;
 		{
-			std::shared_lock lock(g_TapMutex);
+			std::lock_guard lock(g_TapMutex);
 			needsConnection = !g_Tap;
 		}
 		if (enabled && g_StartButtonActive && needsConnection)
