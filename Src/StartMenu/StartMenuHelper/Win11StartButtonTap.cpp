@@ -710,12 +710,10 @@ static DWORD WINAPI ConnectThread( LPVOID param )
 			{
 				for (int retry = 0; retry < 8; retry++)
 				{
-					wchar_t endpoint[64];
-					swprintf_s(endpoint, L"VisualDiagConnection%d", retry + 1);
-					last = init(endpoint, GetCurrentProcessId(), NULL, dllPath, CLSID_OpenShellStartButtonTap, NULL);
+					last = init(L"VisualDiagConnection1", GetCurrentProcessId(), NULL, dllPath, CLSID_OpenShellStartButtonTap, NULL);
 					if (SUCCEEDED(last))
 					{
-						LogToFile(STARTUP_LOG, L"Win11StartButton: connected using %s", endpoint);
+						LogToFile(STARTUP_LOG, L"Win11StartButton: connected (%d attempts)", retry + 1);
 						break;
 					}
 
