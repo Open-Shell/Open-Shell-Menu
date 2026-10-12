@@ -767,14 +767,6 @@ static void EnsureConnection()
 	g_ConnectionInProgress = false;
 }
 
-extern "C" void StartWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
-{
-	g_StartButtonEnabled = enabled != FALSE;
-	g_AllTaskbars = allTaskbars != FALSE;
-
-	if (enabled)
-		EnsureConnection();
-}
 
 extern "C" void UpdateWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
 {
@@ -800,9 +792,6 @@ extern "C" void UpdateWin11StartButtonTap( BOOL enabled, BOOL allTaskbars )
 
 extern "C" void StopWin11StartButtonTap( void )
 {
-	// Wait for any in-progress connection attempt to complete before releasing the TAP instance. This ensures that the TAP is not destroyed while a connection is being established.
-	g_ConnectionInProgress.wait(true);
-
 	CComPtr<CWin11StartButtonTap> tap;
 	{
 		std::unique_lock lock(g_TapMutex);

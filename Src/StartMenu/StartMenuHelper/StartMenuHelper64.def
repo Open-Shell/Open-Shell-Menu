@@ -8,6 +8,5 @@ EXPORTS
 	DllRegisterServer	PRIVATE
 	DllUnregisterServer	PRIVATE
 	DllInstall		PRIVATE
-	StartWin11StartButtonTap
 	UpdateWin11StartButtonTap
 	StopWin11StartButtonTap

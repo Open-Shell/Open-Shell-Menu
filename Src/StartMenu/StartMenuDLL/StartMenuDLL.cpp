@@ -3229,7 +3229,6 @@ if (!g_bTrimHooks)
 
 	UpdateTaskBars(TASKBAR_RECREATE_BUTTONS);
 	UpdateTaskBars(TASKBAR_UPDATE_TEXTURE);
-	StartWin11StartButtonMonitor();
 }
 
 static void RecreateStartButton( size_t taskbarId )

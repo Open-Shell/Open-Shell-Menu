@@ -10,12 +10,10 @@
 #include "LogManager.h"
 #include "ResourceHelper.h"
 
-typedef void (__cdecl *StartWin11StartButtonTap_t)( BOOL enabled, BOOL allTaskbars );
 typedef void (__cdecl *UpdateWin11StartButtonTap_t)( BOOL enabled, BOOL allTaskbars );
 typedef void (__cdecl *StopWin11StartButtonTap_t)( void );
 
 static HMODULE g_StartButtonTapModule = NULL;
-static StartWin11StartButtonTap_t g_StartButtonTapStart = NULL;
 static UpdateWin11StartButtonTap_t g_StartButtonTapUpdate = NULL;
 static StopWin11StartButtonTap_t g_StartButtonTapStop = NULL;
 
@@ -59,13 +57,11 @@ static bool LoadStartButtonTap( void )
 		return false;
 	}
 
-	StartWin11StartButtonTap_t start =
-		(StartWin11StartButtonTap_t)GetProcAddress(module, "StartWin11StartButtonTap");
 	UpdateWin11StartButtonTap_t update =
 		(UpdateWin11StartButtonTap_t)GetProcAddress(module, "UpdateWin11StartButtonTap");
 	StopWin11StartButtonTap_t stop =
 		(StopWin11StartButtonTap_t)GetProcAddress(module, "StopWin11StartButtonTap");
-	if (!start || !update || !stop)
+	if (!update || !stop)
 	{
 		LogToFile(STARTUP_LOG, L"Win11StartButton: TAP helper exports are unavailable");
 		FreeLibrary(module);
@@ -73,18 +69,9 @@ static bool LoadStartButtonTap( void )
 	}
 
 	g_StartButtonTapModule = module;
-	g_StartButtonTapStart = start;
 	g_StartButtonTapUpdate = update;
 	g_StartButtonTapStop = stop;
 	return true;
-}
-
-void StartWin11StartButtonMonitor( void )
-{
-	if (!IsWin11() || !GetSettingBool(L"EnableStartButton") || !LoadStartButtonTap())
-		return;
-
-	g_StartButtonTapStart(TRUE, GetSettingBool(L"AllTaskbars"));
 }
 
 void UpdateWin11StartButtonMonitor( void )
@@ -94,15 +81,16 @@ void UpdateWin11StartButtonMonitor( void )
 
 	BOOL enabled = GetSettingBool(L"EnableStartButton");
 	BOOL allTaskbars = GetSettingBool(L"AllTaskbars");
+
 	if (!g_StartButtonTapModule)
 	{
 		// Start on first enable if the helper was not needed at startup.
-		if (enabled && LoadStartButtonTap())
-			g_StartButtonTapStart(enabled, allTaskbars);
-		return;
+		if (enabled)
+			LoadStartButtonTap();
 	}
 
-	g_StartButtonTapUpdate(enabled, allTaskbars);
+	if (g_StartButtonTapUpdate)
+		g_StartButtonTapUpdate(enabled, allTaskbars);
 }
 
 void StopWin11StartButtonMonitor( void )
@@ -116,7 +104,6 @@ void StopWin11StartButtonMonitor( void )
 	// module reference for the diagnostics session after a successful connection.
 	FreeLibrary(g_StartButtonTapModule);
 	g_StartButtonTapModule = NULL;
-	g_StartButtonTapStart = NULL;
 	g_StartButtonTapUpdate = NULL;
 	g_StartButtonTapStop = NULL;
 }
