@@ -95,12 +95,26 @@ ScopeExit<F> scope_exit(F&& f)
 	return ScopeExit<F>(std::forward<F>(f));
 }
 
-class CWin11StartButtonTap: public IObjectWithSite, public IVisualTreeServiceCallback2
+static const GUID CLSID_OpenShellStartButtonTap = { 0x7d15741f, 0x2f3b, 0x4971, { 0xb8, 0x91, 0x6a, 0x5d, 0x42, 0xd7, 0x1a, 0x34 } };
+
+class ATL_NO_VTABLE CWin11StartButtonTap :
+	public CComObjectRootEx<CComMultiThreadModel>,
+	public CComCoClass<CWin11StartButtonTap, &CLSID_OpenShellStartButtonTap>,
+	public IObjectWithSite,
+	public IVisualTreeServiceCallback2
 {
 public:
+	BEGIN_COM_MAP(CWin11StartButtonTap)
+		COM_INTERFACE_ENTRY(IObjectWithSite)
+		COM_INTERFACE_ENTRY(IVisualTreeServiceCallback)
+		COM_INTERFACE_ENTRY(IVisualTreeServiceCallback2)
+	END_COM_MAP()
+
+	DECLARE_NO_REGISTRY()
+	DECLARE_NOT_AGGREGATABLE(CWin11StartButtonTap)
+
 	CWin11StartButtonTap()
 	{
-		_AtlModule.Lock();
 		m_DispatchWindow.Create(HWND_MESSAGE, nullptr, nullptr, 0, 0, 0U, this);
 	}
 
@@ -108,37 +122,6 @@ public:
 	{
 		if (m_DispatchWindow.IsWindow())
 			m_DispatchWindow.DestroyWindow();
-		_AtlModule.Unlock();
-	}
-
-	STDMETHODIMP QueryInterface( REFIID riid, void **ppv )
-	{
-		if (!ppv)
-			return E_POINTER;
-		*ppv = NULL;
-
-		if (riid == IID_IUnknown || riid == IID_IObjectWithSite)
-			*ppv = static_cast<IObjectWithSite*>(this);
-		else if (riid == __uuidof(IVisualTreeServiceCallback) || riid == __uuidof(IVisualTreeServiceCallback2))
-			*ppv = static_cast<IVisualTreeServiceCallback2*>(this);
-		else
-			return E_NOINTERFACE;
-
-		AddRef();
-		return S_OK;
-	}
-
-	STDMETHODIMP_(ULONG) AddRef( void )
-	{
-		return ++m_Refs;
-	}
-
-	STDMETHODIMP_(ULONG) Release( void )
-	{
-		ULONG refs = --m_Refs;
-		if (!refs)
-			delete this;
-		return refs;
 	}
 
 	STDMETHODIMP SetSite( IUnknown *site )
@@ -620,8 +603,6 @@ private:
 
 	static const UINT WM_OS_STARTBUTTON_APPLY = WM_APP + 0x35B;
 
-	std::atomic<ULONG> m_Refs{ 1 };
-
 	DispatchWindow m_DispatchWindow;
 	CComPtr<IUnknown> m_Site;
 	CComPtr<IVisualTreeService> m_Visual;
@@ -635,61 +616,8 @@ private:
 	std::unordered_map<InstanceHandle, StartElement> m_Elements;
 };
 
-class CStartButtonTapFactory: public IClassFactory
-{
-public:
-	STDMETHODIMP QueryInterface( REFIID riid, void **ppv )
-	{
-		if (!ppv)
-			return E_POINTER;
-		*ppv = NULL;
-		if (riid != IID_IUnknown && riid != IID_IClassFactory)
-			return E_NOINTERFACE;
-		*ppv = static_cast<IClassFactory*>(this);
-		AddRef();
-		return S_OK;
-	}
+OBJECT_ENTRY_AUTO(CLSID_OpenShellStartButtonTap, CWin11StartButtonTap)
 
-	STDMETHODIMP_(ULONG) AddRef( void ) { return ++m_Refs; }
-	STDMETHODIMP_(ULONG) Release( void ) { return --m_Refs; }
-
-	STDMETHODIMP CreateInstance( IUnknown *outer, REFIID riid, void **ppv )
-	{
-		if (!ppv)
-			return E_POINTER;
-		*ppv = NULL;
-		if (outer)
-			return CLASS_E_NOAGGREGATION;
-
-		CComPtr<CWin11StartButtonTap> tap;
-		tap.Attach(new CWin11StartButtonTap());
-		if (!tap)
-			return E_OUTOFMEMORY;
-		return tap->QueryInterface(riid, ppv);
-	}
-
-	STDMETHODIMP LockServer( BOOL lock )
-	{
-		if (lock)
-			_AtlModule.Lock();
-		else
-			_AtlModule.Unlock();
-		return S_OK;
-	}
-
-private:
-	std::atomic<ULONG> m_Refs{ 1 };
-};
-
-static const GUID CLSID_OpenShellStartButtonTap = { 0x7d15741f, 0x2f3b, 0x4971, { 0xb8, 0x91, 0x6a, 0x5d, 0x42, 0xd7, 0x1a, 0x34 } };
-static CStartButtonTapFactory g_Factory;
-
-HRESULT GetWin11StartButtonTapClassObject( REFCLSID clsid, REFIID riid, LPVOID *ppv )
-{
-	if (!IsEqualGUID(clsid, CLSID_OpenShellStartButtonTap))
-		return CLASS_E_CLASSNOTAVAILABLE;
-	return g_Factory.QueryInterface(riid, ppv);
-}
 
 typedef HRESULT (WINAPI *InitXamlDiagnosticsEx_t)( LPCWSTR, DWORD, LPCWSTR, LPCWSTR, CLSID, LPCWSTR );
 
