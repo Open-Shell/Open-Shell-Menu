@@ -752,6 +752,43 @@ bool IsWin11(void)
 	return bIsWin11;
 }
 
+typedef bool (WINAPI *FShouldAppsUseDarkMode)( void );
+
+// UxTheme ordinal 132 is the application-theme query used by Explorer on
+// supported Windows 10/11 builds. Resolve it dynamically so older supported
+// systems simply keep the existing light rendering path.
+bool ShouldAppsUseDarkMode( void )
+{
+	// Dark application mode was introduced with Windows 10 1809. Ordinal
+	// exports are not a stable API, so never call ordinal 132 on older builds.
+	auto version=GetOSVersion();
+	if (version.dwMajorVersion<10 || version.dwBuildNumber<17763)
+		return false;
+
+	HIGHCONTRAST highContrast={sizeof(highContrast)};
+	if (SystemParametersInfo(SPI_GETHIGHCONTRAST,sizeof(highContrast),&highContrast,0) &&
+		(highContrast.dwFlags&HCF_HIGHCONTRASTON))
+	{
+		return false;
+	}
+
+	static FShouldAppsUseDarkMode pShouldAppsUseDarkMode=[]() -> FShouldAppsUseDarkMode
+	{
+		HMODULE module=GetModuleHandle(L"uxtheme.dll");
+		if (!module)
+			module=LoadLibrary(L"uxtheme.dll");
+		return module?(FShouldAppsUseDarkMode)GetProcAddress(module,MAKEINTRESOURCEA(132)):NULL;
+	}();
+
+	return pShouldAppsUseDarkMode?pShouldAppsUseDarkMode():false;
+}
+
+bool IsColorSchemeChangeMessage( LPARAM lParam )
+{
+	return GetWinVersion()>=WIN_VER_WIN10 && lParam &&
+		CompareStringOrdinal((LPCWCH)lParam,-1,L"ImmersiveColorSet",-1,TRUE)==CSTR_EQUAL;
+}
+
 // Wrapper for IShellFolder::ParseDisplayName
 HRESULT ShParseDisplayName( const wchar_t *pszName, PIDLIST_ABSOLUTE *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut )
 {

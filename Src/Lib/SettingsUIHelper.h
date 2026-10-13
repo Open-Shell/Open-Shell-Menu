@@ -19,6 +19,7 @@ struct CSetting;
 // by Open-Shell's existing image list.
 void EnableSettingsTreeAccessibility( HWND tree );
 void ClearSettingsTreeItemAccessibility( HWND tree );
+void ClearSettingsTreeAccessibility( HWND tree );
 void SetControlAccessibleName( HWND control, const wchar_t *name );
 void SetSettingsTreeAccessibleName( HWND tree, const wchar_t *name );
 void SetSettingsTreeItemAccessibleName( HWND tree, HTREEITEM item, const wchar_t *name );

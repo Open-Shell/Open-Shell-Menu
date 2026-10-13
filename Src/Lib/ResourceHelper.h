@@ -70,6 +70,15 @@ bool IsWin10RS4( void );
 // Returns true if the version is Windows11 or later
 bool IsWin11();
 
+// Returns true if Windows is currently using the dark application theme.
+// The underlying uxtheme entry point is resolved dynamically because older
+// supported Windows versions don't expose it.
+bool ShouldAppsUseDarkMode( void );
+
+// Returns true for the WM_SETTINGCHANGE notification Windows sends when the
+// immersive application color scheme changes.
+bool IsColorSchemeChangeMessage( LPARAM lParam );
+
 // Wrapper for IShellFolder::ParseDisplayName
 HRESULT ShParseDisplayName( const wchar_t *pszName, PIDLIST_ABSOLUTE *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut );
 

@@ -97,6 +97,9 @@ public:
 	bool HasPanes( void ) const;
 	bool HasFolderSettings( void ) const;
 
+	HBRUSH GetDarkBackgroundBrush( void ) const { return m_DarkBackgroundBrush; }
+	HBRUSH GetDarkBorderBrush( void ) const { return m_DarkBorderBrush; }
+
 protected:
 	// Handler prototypes:
 	//  LRESULT MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -121,6 +124,8 @@ private:
 	CComPtr<IPropertyBag> m_pBrowserBag;
 	HIMAGELIST m_ImgEnabled;
 	HIMAGELIST m_ImgDisabled;
+	HBRUSH m_DarkBackgroundBrush=NULL;
+	HBRUSH m_DarkBorderBrush=NULL;
 	int m_MenuIconSize;
 
 	struct StdToolbarItem
@@ -162,6 +167,7 @@ private:
 	void UpdateFolderSettings( void );
 
 	static LRESULT CALLBACK ToolbarSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData );
+	static LRESULT CALLBACK BandSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData );
 	static HRESULT __stdcall BagWriteHook( IPropertyBag *pThis, LPCOLESTR pszPropName, VARIANT *pVar );
 };
 

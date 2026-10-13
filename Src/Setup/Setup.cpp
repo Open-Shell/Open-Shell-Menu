@@ -47,6 +47,69 @@ struct Chunk
 	int start1, start2, len;
 };
 
+static bool IsExplorerShellRunning( void )
+{
+	HWND shellWindow=GetShellWindow();
+	if (!shellWindow)
+		return false;
+
+	DWORD shellProcessId=0;
+	GetWindowThreadProcessId(shellWindow,&shellProcessId);
+	if (!shellProcessId)
+		return false;
+
+	DWORD currentSession=0;
+	DWORD shellSession=0;
+	if (!ProcessIdToSessionId(GetCurrentProcessId(),&currentSession) ||
+		!ProcessIdToSessionId(shellProcessId,&shellSession) ||
+		currentSession!=shellSession)
+	{
+		return false;
+	}
+
+	HANDLE process=OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,FALSE,shellProcessId);
+	if (!process)
+		return false;
+
+	wchar_t path[_MAX_PATH];
+	DWORD pathSize=_countof(path);
+	bool isExplorer=false;
+	if (QueryFullProcessImageName(process,0,path,&pathSize))
+		isExplorer=_wcsicmp(PathFindFileName(path),L"explorer.exe")==0;
+
+	CloseHandle(process);
+	return isExplorer;
+}
+
+static void RestoreExplorerShellIfNeeded( bool wasRunning )
+{
+	if (!wasRunning)
+		return;
+
+	// Restart Manager normally brings Explorer back before msiexec exits.
+	// Give it a short grace period before applying our fallback so we don't
+	// race a normal restart or create an extra Explorer process.
+	for (int i=0;i<50;i++)
+	{
+		if (IsExplorerShellRunning())
+			return;
+		Sleep(100);
+	}
+
+	wchar_t explorerPath[_MAX_PATH];
+	UINT len=GetWindowsDirectory(explorerPath,_countof(explorerPath));
+	if (!len || len>=_countof(explorerPath) || !PathAppend(explorerPath,L"explorer.exe"))
+		return;
+
+	STARTUPINFO startupInfo={sizeof(startupInfo)};
+	PROCESS_INFORMATION processInfo={};
+	if (CreateProcess(explorerPath,NULL,NULL,NULL,FALSE,0,NULL,NULL,&startupInfo,&processInfo))
+	{
+		CloseHandle(processInfo.hThread);
+		CloseHandle(processInfo.hProcess);
+	}
+}
+
 static void WriteFileXOR( HANDLE hFile, const unsigned char *buf, int size )
 {
 	if (size>0)
@@ -409,6 +472,11 @@ int APIENTRY wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	if (extractType == ARM64)
 		Wow64DisableWow64FsRedirection(&wow64FsRedirVal);
 
+	// Remember whether this interactive session had the Explorer desktop shell.
+	// If Restart Manager closes it during MSI processing but fails to bring it
+	// back, restore only the shell that was present before setup started.
+	const bool explorerWasRunning=IsExplorerShellRunning();
+
 	// start the installer
 	STARTUPINFO startupInfo={sizeof(startupInfo)};
 	PROCESS_INFORMATION processInfo;
@@ -438,6 +506,12 @@ int APIENTRY wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 		GetExitCodeProcess(processInfo.hProcess,&code);
 		CloseHandle(processInfo.hProcess);
 		DeleteFile(msiName);
+
+		// Only repair the shell after a successful transaction. Reboot-required
+		// outcomes deliberately keep Windows Installer in control of recovery.
+		if (code==ERROR_SUCCESS)
+			RestoreExplorerShellIfNeeded(explorerWasRunning);
+
 		return code;
 	}
 }

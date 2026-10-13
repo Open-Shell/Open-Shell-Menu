@@ -3337,19 +3337,19 @@ void CItemManager::LoadCacheFile( void )
 				info.iconColor=data.iconColor;
 				info.iconIndex=data.iconIndex;
 
-				info.smallIcon=data.smallIcon<(int)remapIcons.size()?remapIcons[data.smallIcon]:NULL;
+				info.smallIcon=data.smallIcon>=0 && (size_t)data.smallIcon<remapIcons.size()?remapIcons[data.smallIcon]:NULL;
 				if (!info.smallIcon)
 				{
 					info.validFlags&=~INFO_SMALL_ICON;
 					info.smallIcon=m_DefaultSmallIcon;
 				}
-				info.largeIcon=data.largeIcon<(int)remapIcons.size()?remapIcons[data.largeIcon]:NULL;
+				info.largeIcon=data.largeIcon>=0 && (size_t)data.largeIcon<remapIcons.size()?remapIcons[data.largeIcon]:NULL;
 				if (!info.largeIcon)
 				{
 					info.validFlags&=~INFO_LARGE_ICON;
 					info.largeIcon=m_DefaultLargeIcon;
 				}
-				info.extraLargeIcon=data.extraLargeIcon<(int)remapIcons.size()?remapIcons[data.extraLargeIcon]:NULL;
+				info.extraLargeIcon=data.extraLargeIcon>=0 && (size_t)data.extraLargeIcon<remapIcons.size()?remapIcons[data.extraLargeIcon]:NULL;
 				if (!info.extraLargeIcon)
 				{
 					info.validFlags&=~INFO_EXTRA_LARGE_ICON;
@@ -3422,7 +3422,7 @@ DWORD CALLBACK CItemManager::SaveCacheFileThread( void *param )
 		RWLock lock(pThis,false,RWLOCK_ICONS);
 		for (std::multimap<unsigned int,IconInfo>::const_iterator it=pThis->m_IconInfos.begin();it!=pThis->m_IconInfos.end();++it)
 		{
-			if (!it->second.PATH.IsEmpty() && it->second.PATH[1]!='#' && it->first!=0)
+			if (!it->second.bTemp && !it->second.bMetro && !it->second.PATH.IsEmpty() && it->second.PATH[1]!='#' && it->first!=0)
 				iconInfos.push_back(&*it);
 		}
 	}
@@ -3433,7 +3433,7 @@ DWORD CALLBACK CItemManager::SaveCacheFileThread( void *param )
 		RWLock lock(pThis,false,RWLOCK_ITEMS);
 		for (std::multimap<unsigned int,ItemInfo>::const_iterator it=pThis->m_ItemInfos.begin();it!=pThis->m_ItemInfos.end();++it)
 		{
-			if (it->first!=0)
+			if (!it->second.bTemp && it->first!=0)
 				itemInfos.push_back(&*it);
 		}
 		for (std::set<unsigned int>::const_iterator it=pThis->m_BlackListInfos10.begin();it!=pThis->m_BlackListInfos10.end();++it)
@@ -3566,6 +3566,15 @@ void CItemManager::SaveCacheFile( void )
 
 void CItemManager::ClearCache( void )
 {
+	// The save thread keeps pointers to persistent cache entries while serializing them.
+	// Let it finish before clearing the containers those pointers refer to.
+	if (m_SaveCacheThread)
+	{
+		WaitForSingleObject(m_SaveCacheThread,INFINITE);
+		CloseHandle(m_SaveCacheThread);
+		m_SaveCacheThread=NULL;
+	}
+
 	Lock cleanupLock(this,LOCK_CLEANUP);
 	RWLock itemLock(this,true,RWLOCK_ITEMS);
 	RWLock iconLock(this,true,RWLOCK_ICONS);

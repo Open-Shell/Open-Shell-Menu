@@ -1185,13 +1185,23 @@ void CMenuContainer::CreateBackground( int width1, int width2, int height1, int 
 
 			if (opacity!=MenuSkin::OPACITY_SOLID && !bMask)
 			{
-				// set to opaque
+				// set the visible part to opaque. BitBlt/AlphaBlend above clip to
+				// the destination bitmap automatically, but this direct pixel pass
+				// must do the same before forming a pointer into the DIB.
 				SelectObject(hdc,bmp0); // deselect m_Bitmap so all the GDI operations get flushed
-				unsigned int *bits2=bits+pos.y*totalWidth+pos.x;
-				alpha<<=24;
-				for (int y=0;y<s_Skin.User_image_size;y++,bits2+=totalWidth)
-					for (int x=0;x<s_Skin.User_image_size;x++)
-						bits2[x]=alpha|(bits2[x]&0xFFFFFF);
+				RECT imageRect={pos.x,pos.y,pos.x+s_Skin.User_image_size,pos.y+s_Skin.User_image_size};
+				RECT bitmapRect={0,0,totalWidth,totalHeight};
+				RECT clippedRect;
+				if (IntersectRect(&clippedRect,&imageRect,&bitmapRect))
+				{
+					unsigned int opaqueAlpha=alpha<<24;
+					for (int y=clippedRect.top;y<clippedRect.bottom;y++)
+					{
+						unsigned int *row=bits+y*totalWidth+clippedRect.left;
+						for (int x=clippedRect.left;x<clippedRect.right;x++,row++)
+							*row=opaqueAlpha|(*row&0xFFFFFF);
+					}
+				}
 				SelectObject(hdc,m_Bitmap);
 			}
 
