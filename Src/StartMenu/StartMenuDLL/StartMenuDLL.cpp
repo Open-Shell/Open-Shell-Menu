@@ -14,6 +14,7 @@
 #include "ResourceHelper.h"
 #include "LogManager.h"
 #include "TouchHelper.h"
+#include "TapControl.h"
 #include "IatHookHelper.h"
 #include "dllmain.h"
 #include <uxtheme.h>
@@ -2643,6 +2644,7 @@ void UpdateTaskBars( TUpdateTaskbar update )
 		InvalidateRect(taskBar.taskBar,NULL,TRUE);
 		PostMessage(taskBar.taskBar,WM_THEMECHANGED,0,0);
 	}
+	UpdateTap();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3340,6 +3342,7 @@ static void CleanStartMenuDLL( void )
 	}
 	ResetHotCorners();
 	UpdateTaskBars(TASKBAR_CLEAR);
+	StopTap();
 	g_WinStartButton=NULL;
 	for (id_taskbar_map::const_iterator it=g_TaskbarInfos.begin();it!=g_TaskbarInfos.end();++it)
 	{
