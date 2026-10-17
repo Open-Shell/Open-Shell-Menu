@@ -172,6 +172,7 @@ public:
 					if (it != m_elements.end())
 					{
 						it->glyph = element.Handle;
+						it->visibilityOverride = false; // A newly added glyph has no override yet.
 						interesting = true;
 					}
 				}
