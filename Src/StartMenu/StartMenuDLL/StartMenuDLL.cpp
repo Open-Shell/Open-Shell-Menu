@@ -387,10 +387,17 @@ TaskbarInfo *GetTaskbarInfo( size_t taskbarId )
 	return (it==g_TaskbarInfos.end())?NULL:&it->second;
 }
 
+// Keep the native Windows 11 button independent of our optional left button.
+// ExplorerPatcher uses the legacy taskbar layout and keeps its existing behavior.
+static bool IsStartButtonLeft( void )
+{
+	return IsWin11() && !g_epTaskbar && GetSettingBool(L"StartButtonLeft");
+}
+
 static TaskbarInfo *FindTaskBarInfoButton( HWND button )
 {
 	for (id_taskbar_map::iterator it=g_TaskbarInfos.begin();it!=g_TaskbarInfos.end();++it)
-		if (it->second.startButton==button || it->second.oldButton==button)
+		if (it->second.startButton==button || (!IsStartButtonLeft() && it->second.oldButton==button))
 			return &it->second;
 	return NULL;
 }
@@ -686,6 +693,16 @@ bool PointAroundStartButton( size_t taskbarId, const CPoint &pt )
 	if (!PtInRect(&rc,pt))
 		return false;
 
+	// Never include the native button (or the gap leading to it) in our hit area.
+	if (IsStartButtonLeft())
+	{
+		if (!taskBar->bReplaceButton || !taskBar->startButton)
+			return false;
+		CRect rcButton;
+		GetWindowRect(taskBar->startButton,&rcButton);
+		return PtInRect(&rcButton,pt)!=FALSE;
+	}
+
 	bool rtl=GetWindowLongPtr(taskBar->taskBar,GWL_EXSTYLE)&WS_EX_LAYOUTRTL;
 
 	CRect rcStart;
@@ -851,7 +868,7 @@ public:
 				if (g_CurrentWSMTaskbar!=-1 && g_CurrentWSMTaskbar!=g_CurrentCSMTaskbar)
 					PressStartButton(g_CurrentWSMTaskbar,false);
 				g_CurrentWSMTaskbar=taskbarId;
-				if (g_CurrentWSMTaskbar!=-1)
+				if (g_CurrentWSMTaskbar!=-1 && !IsStartButtonLeft())
 					PressStartButton(g_CurrentWSMTaskbar,true);
 			}
 		}
@@ -1315,6 +1332,7 @@ static void UpdateStartButtonPosition(const TaskbarInfo* taskBar, const WINDOWPO
 		}
 	}
 
+	const bool bLeft=IsStartButtonLeft();
 	RECT rcOldButton;
 	if (taskBar->oldButton)
 		GetWindowRect(taskBar->oldButton, &rcOldButton);
@@ -1328,11 +1346,13 @@ static void UpdateStartButtonPosition(const TaskbarInfo* taskBar, const WINDOWPO
 			x = rcTask.left;
 		else
 			x = rcTask.right - taskBar->startButtonSize.cx;
-		y = taskBar->oldButton ? rcOldButton.top : rcTask.top;
+		y = (taskBar->oldButton && !bLeft) ? rcOldButton.top : rcTask.top;
 	}
 	else
 	{
-		if (GetWindowLongPtr(taskBar->rebar, GWL_EXSTYLE) & WS_EX_LAYOUTRTL)
+		if (bLeft)
+			x = rcTask.left;
+		else if (GetWindowLongPtr(taskBar->rebar, GWL_EXSTYLE) & WS_EX_LAYOUTRTL)
 			x = (taskBar->oldButton ? rcOldButton.right : rcTask.right) - taskBar->startButtonSize.cx;
 		else
 			x = taskBar->oldButton ? rcOldButton.left : rcTask.left;
@@ -1345,7 +1365,7 @@ static void UpdateStartButtonPosition(const TaskbarInfo* taskBar, const WINDOWPO
 
 		// Start button on Win11 is a bit shifted to the right
 		// We will shift our Aero button to cover original button
-		if (IsWin11() && (x == info.rcMonitor.left) && (GetStartButtonType() == START_BUTTON_AERO) && !g_epTaskbar)
+		if (!bLeft && IsWin11() && (x == info.rcMonitor.left) && (GetStartButtonType() == START_BUTTON_AERO) && !g_epTaskbar)
 			x += ScaleForDpi(taskBar->taskBar, 6);
 
 		if (GetStartButtonType() == START_BUTTON_CUSTOM)
@@ -1402,10 +1422,10 @@ static LRESULT CALLBACK SubclassWin81StartButton( HWND hWnd, UINT uMsg, WPARAM w
 			PostMessage(taskBar->taskBar,WM_SIZE,SIZE_RESTORED,MAKELONG(rcTask.right-rcTask.left,rcTask.bottom-rcTask.top));
 		}
 	}
-	if (uMsg==WM_POINTERACTIVATE && CMenuContainer::IsMenuOpened())
+	if (!IsStartButtonLeft() && uMsg==WM_POINTERACTIVATE && CMenuContainer::IsMenuOpened())
 		return MA_NOACTIVATE;
 #ifdef START_TOUCH
-	if (uMsg==WM_POINTERUP || uMsg==WM_POINTERUPDATE || uMsg==WM_POINTERUP)
+	if (!IsStartButtonLeft() && (uMsg==WM_POINTERUP || uMsg==WM_POINTERUPDATE || uMsg==WM_POINTERUP))
 	{
 		POINTER_INPUT_TYPE type;
 		GetPointerType2(GET_POINTERID_WPARAM(wParam),&type);
@@ -1697,7 +1717,7 @@ static LRESULT CALLBACK SubclassTrayButtonProc( HWND hWnd, UINT uMsg, WPARAM wPa
 	if (uMsg==WM_WINDOWPOSCHANGING)
 	{
 		const TaskbarInfo *taskBar=GetTaskbarInfo((int)dwRefData);
-		if (taskBar && (taskBar->bReplaceButton || taskBar->bHideButton))
+		if (taskBar && !IsStartButtonLeft() && (taskBar->bReplaceButton || taskBar->bHideButton))
 		{
 			WINDOWPOS *pPos=(WINDOWPOS*)lParam;
 			if (!(pPos->flags&SWP_NOMOVE) || !(pPos->flags&SWP_NOSIZE))
@@ -2126,7 +2146,7 @@ static LRESULT CALLBACK SubclassRebarProc( HWND hWnd, UINT uMsg, WPARAM wParam, 
 	if (uMsg==WM_WINDOWPOSCHANGING)
 	{
 		const TaskbarInfo *taskBar=GetTaskbarInfo((int)dwRefData);
-		if (taskBar && (taskBar->bReplaceButton || taskBar->bHideButton))
+		if (taskBar && !IsStartButtonLeft() && (taskBar->bReplaceButton || taskBar->bHideButton))
 		{
 			WINDOWPOS *pPos=(WINDOWPOS*)lParam;
 			if (!(pPos->flags&SWP_NOMOVE) || !(pPos->flags&SWP_NOSIZE))
@@ -2496,7 +2516,28 @@ void UpdateTaskBars( TUpdateTaskbar update )
 	{
 		TaskbarInfo &taskBar=it->second;
 		bool bButton2=bButton && (bAll || taskBar.taskBar==g_TaskBar);
-		bool bHideButton2=bButton;
+		bool bHideButton2=bButton && !IsStartButtonLeft();
+		if (taskBar.bSeparateButton!=IsStartButtonLeft())
+		{
+			// Restore the native button's drag target when the two buttons are separate.
+			// The custom button always keeps its own target in RecreateStartButton.
+			taskBar.bSeparateButton=IsStartButtonLeft();
+			if (taskBar.oldButton)
+			{
+				RevokeDragDrop(taskBar.oldButton);
+				if (taskBar.bSeparateButton)
+				{
+					if (taskBar.pOriginalTarget)
+						RegisterDragDrop(taskBar.oldButton,taskBar.pOriginalTarget);
+				}
+				else
+				{
+					CStartMenuTarget *pNewTarget=new CStartMenuTarget(taskBar.taskbarId);
+					RegisterDragDrop(taskBar.oldButton,pNewTarget);
+					pNewTarget->Release();
+				}
+			}
+		}
 		if (taskBar.oldButton)
 		{
 			if (bHideButton2 && !bButton2)
@@ -3629,14 +3670,15 @@ static LRESULT CALLBACK HookDesktopThreadMouse(int code, WPARAM wParam, LPARAM l
 			if (!taskBar)
 			{
 				taskBar = FindTaskBarInfoBar(GetAncestor(info->hwnd, GA_ROOT)); // click on taskbar
-				if (taskBar && !PointAroundStartButton(taskBar->taskbarId))
+				if (taskBar && !PointAroundStartButton(taskBar->taskbarId,info->pt))
 					taskBar = NULL;
 			}
 
 			if (taskBar && (info->hwnd != taskBar->startButton) && taskBar->oldButton)
 			{
 				// steal messages from other than our custom button window
-				PostMessage(taskBar->oldButton, (UINT)wParam, 0, MAKELPARAM(info->pt.x, info->pt.y));
+				HWND target=IsStartButtonLeft()?taskBar->startButton:taskBar->oldButton;
+				PostMessage(target, (UINT)wParam, 0, MAKELPARAM(info->pt.x, info->pt.y));
 				return 1;
 			}
 		}
