@@ -77,6 +77,9 @@ struct TaskbarInfo
 TaskbarInfo *GetTaskbarInfo( size_t taskbarId );
 UINT GetTaskbarPosition( HWND taskBar, MONITORINFO *pInfo, HMONITOR *pMonitor, RECT *pRc );
 
+// Native shell transfer UI in this process; does not activate or signal it.
+bool IsShellOperationWindow( HWND window );
+
 extern HWND STARTMENUAPI g_TaskBar, g_OwnerWindow;
 extern HWND g_TopWin7Menu, g_AllPrograms, g_ProgramsButton, g_UserPic; // from the Windows menu
 extern HWND g_ProgWin;

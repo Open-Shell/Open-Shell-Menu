@@ -285,6 +285,31 @@ static bool CreateImmersiveShell( CComPtr<IUnknown> &ptr )
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// Shell transfer dialogs may live on a different UI thread and have no owner.
+// Other dialog classes are accepted only through our own owner chain.
+bool IsShellOperationWindow( HWND window )
+{
+	if (!window) window=GetForegroundWindow();
+	DWORD process=0;
+	if (!GetWindowThreadProcessId(window,&process) || process!=GetCurrentProcessId())
+		return false;
+	wchar_t name[64];
+	if (!GetClassName(window,name,_countof(name)))
+		return false;
+	if (wcscmp(name,L"OperationStatusWindow")==0)
+		return true;
+	if (wcscmp(name,L"#32770")!=0)
+		return false;
+	for (int depth=0;window && depth<32;depth++,window=GetWindow(window,GW_OWNER))
+	{
+		if (window==g_OwnerWindow && g_OwnerWindow)
+			return true;
+		if (!GetWindowThreadProcessId(window,&process) || process!=GetCurrentProcessId())
+			break;
+	}
+	return false;
+}
+
 // COwnerWindow - a special window used as owner for some UI elements, like the ones created by IContextMenu::InvokeCommand.
 // A menu window cannot be used because it may disappear immediately after InvokeCommand. Some UI elements, like the UAC-related
 // stuff can be created long after InvokeCommand returns and the menu may be deleted by then.
@@ -308,6 +333,8 @@ protected:
 			return 0;
 
 		if (CMenuContainer::s_bPreventClosing)
+			return 0;
+		if (CMenuContainer::s_bKeepAfterAsyncDrop && IsShellOperationWindow((HWND)lParam))
 			return 0;
 
 		// check if another menu window is being activated

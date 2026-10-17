@@ -101,6 +101,7 @@
     <ClInclude Include="JumpLists.h" />
     <ClInclude Include="LogManager.h" />
     <ClInclude Include="MenuContainer.h" />
+    <ClInclude Include="MenuFolderWatch.h" />
     <ClInclude Include="MetroLinkManager.h" />
     <ClInclude Include="ProgramsTree.h" />
     <ClInclude Include="resource.h" />
