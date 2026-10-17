@@ -47,7 +47,7 @@ void EnableStartTooltip( bool bEnable );
 
 struct TaskbarInfo
 {
-	TaskbarInfo( void ) { taskbarId=pointerId=0; taskBar=startButton=oldButton=rebar=taskList=chevron=news=desktop=NULL; startButtonSize.cx=startButtonSize.cy=0; oldButtonSize.cx=oldButtonSize.cy=0; bTimer=bCustomLook=bReplaceButton=bHideButton=bRecreatingButton=bThemeChanging=false; }
+	TaskbarInfo( void ) { taskbarId=pointerId=0; taskBar=startButton=oldButton=rebar=taskList=chevron=news=desktop=NULL; startButtonSize.cx=startButtonSize.cy=0; oldButtonSize.cx=oldButtonSize.cy=0; bTimer=bCustomLook=bReplaceButton=bHideButton=bRecreatingButton=bThemeChanging=bSeparateButton=false; }
 	int taskbarId;
 	HWND taskBar;
 	HWND startButton; // either own start button or the win7 start button (depending on bReplaceButton)
@@ -66,6 +66,7 @@ struct TaskbarInfo
 	bool bHideButton; // hide old start button (if we have own button)
 	bool bRecreatingButton;
 	bool bThemeChanging;
+	bool bSeparateButton; // native button drag target restored for the separate left button
 	std::vector<HWND> trayButtons; // ordered by Z order (for win10)
 	std::vector<HWND> taskbarParts;
 	CComPtr<IDropTarget> pOriginalTarget;
@@ -75,6 +76,9 @@ struct TaskbarInfo
 
 TaskbarInfo *GetTaskbarInfo( size_t taskbarId );
 UINT GetTaskbarPosition( HWND taskBar, MONITORINFO *pInfo, HMONITOR *pMonitor, RECT *pRc );
+
+// Native shell transfer UI in this process; does not activate or signal it.
+bool IsShellOperationWindow( HWND window );
 
 extern HWND STARTMENUAPI g_TaskBar, g_OwnerWindow;
 extern HWND g_TopWin7Menu, g_AllPrograms, g_ProgramsButton, g_UserPic; // from the Windows menu

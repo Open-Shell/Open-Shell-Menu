@@ -1339,7 +1339,23 @@ BEGIN
     IDS_PINNED_PATH_TIP     "The path to use as the Pinned folder. If the path does not exist, it will be created (if possible) after opening the start menu. Close this window after updating this setting to update your context menu.\n\nNote: If you do not have permissions for the selected path, you will not be able to pin items until you take ownership of the new folder"
 END
 
+STRINGTABLE
+BEGIN
+    IDS_BUTTON_LEFT         "Keep Open-Shell start button at left edge (Windows 11)"
+    IDS_BUTTON_LEFT_TIP     "Places the Open-Shell start button at the left edge of each enabled taskbar and keeps the Windows start button available at its normal position. Requires the Windows 11 taskbar. This option does not apply to ExplorerPatcher's legacy taskbar."
+END
+
 #endif    // English (U.S.) resources
+
+// These new IDs have their own string-table block, so existing localized
+// resources continue to fall back to the external language DLL as before.
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+STRINGTABLE
+BEGIN
+    IDS_BUTTON_LEFT         "Open-Shell-Startknopf links anordnen (Windows 11)"
+    IDS_BUTTON_LEFT_TIP     "Ordnet den Open-Shell-Startknopf am linken Rand jeder aktivierten Taskleiste an. Der Windows-Startknopf bleibt an seiner normalen Position erreichbar. Erfordert die Windows-11-Taskleiste. Gilt nicht fuer die klassische Taskleiste von ExplorerPatcher."
+END
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 /////////////////////////////////////////////////////////////////////////////
 
 

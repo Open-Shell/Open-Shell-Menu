@@ -16,6 +16,86 @@
 #include "FileHelper.h"
 #include <algorithm>
 
+// Let the native shell target negotiate its own asynchronous transfer. A
+// synchronous file-conflict dialog can deadlock inside the OLE drag loop while
+// its UI thread releases a COM reference back to this STA.
+static HRESULT EnableShellAsyncDrop( IDataObject *pDataObj )
+{
+	CComQIPtr<IDataObjectAsyncCapability> pAsync(pDataObj);
+	return pAsync?pAsync->SetAsyncMode(VARIANT_TRUE):E_NOINTERFACE;
+}
+
+static bool WasShellDropAsync( IDataObject *pDataObj )
+{
+	CComQIPtr<IDataObjectAsyncCapability> pAsync(pDataObj);
+	BOOL asynchronous=FALSE;
+	// InOperation tells the source that StartOperation was used; it is not
+	// a completion event and must never be polled to wait for completion.
+	return pAsync && SUCCEEDED(pAsync->InOperation(&asynchronous)) && asynchronous;
+}
+
+// Our icon cache contains premultiplied 32-bit DIBs. The Shell drag-image
+// helper expects straight alpha and takes ownership of its bitmap on success.
+static HRESULT InitializeMenuDragImage( IDragSourceHelper2 *helper, IDataObject *data, HBITMAP icon )
+{
+	if (!helper || !data || !icon) return E_INVALIDARG;
+	HBITMAP copy=(HBITMAP)CopyImage(icon,IMAGE_BITMAP,0,0,LR_CREATEDIBSECTION);
+	if (!copy) return E_OUTOFMEMORY;
+	BITMAP bitmap={};
+	if (!GetObject(copy,sizeof(bitmap),&bitmap) || !bitmap.bmBits || bitmap.bmBitsPixel!=32)
+	{
+		DeleteObject(copy);
+		return E_FAIL;
+	}
+	for (int y=0;y<bitmap.bmHeight;y++)
+	{
+		DWORD *pixels=(DWORD*)((BYTE*)bitmap.bmBits+y*bitmap.bmWidthBytes);
+		for (int x=0;x<bitmap.bmWidth;x++)
+		{
+			DWORD pixel=pixels[x],alpha=pixel>>24;
+			if (alpha && alpha<255)
+			{
+				DWORD red=(std::min)(255UL,(((pixel>>16)&255)*255+alpha/2)/alpha);
+				DWORD green=(std::min)(255UL,(((pixel>>8)&255)*255+alpha/2)/alpha);
+				DWORD blue=(std::min)(255UL,((pixel&255)*255+alpha/2)/alpha);
+				pixels[x]=(alpha<<24)|(red<<16)|(green<<8)|blue;
+			}
+			else if (!alpha)
+				pixels[x]=0;
+		}
+	}
+	SHDRAGIMAGE image={{bitmap.bmWidth,bitmap.bmHeight},{bitmap.bmWidth/2,bitmap.bmHeight},copy,CLR_NONE};
+	helper->SetFlags(DSH_ALLOWDROPDESCRIPTIONTEXT);
+	HRESULT result=helper->InitializeFromBitmap(&image,data);
+	if (FAILED(result)) DeleteObject(copy);
+	return result;
+}
+
+// A newly raised topmost submenu can cover the existing Shell drag window.
+// Show(TRUE) and DragOver do not repair its Z order. Restart only the visual
+// helper, preserving the actual OLE target and the source data object identity.
+static HRESULT RestoreShellDragImage( IDropTargetHelper *helper, HWND target, IDataObject *data, const POINT &point, DWORD effect )
+{
+	if (!helper || !target || !data) return E_INVALIDARG;
+	POINT position=point;
+	helper->DragLeave();
+	HRESULT result=helper->DragEnter(target,data,&position,effect);
+	if (SUCCEEDED(result)) result=helper->DragOver(&position,effect);
+	return result;
+}
+
+void CMenuContainer::RestoreActiveDragImage( void )
+{
+	for (auto menu : s_Menus)
+		if (!menu->m_bDestroyed && menu->m_pDragObject && menu->m_pDropTargetHelper && menu->m_DragImageWindow)
+		{
+			CComPtr<IDataObject> data=menu->m_pDragObject;
+			CComPtr<IDropTargetHelper> helper=menu->m_pDropTargetHelper;
+			RestoreShellDragImage(helper,menu->m_DragImageWindow,data,menu->m_DragImagePoint,menu->m_DragImageEffect);
+			break;
+		}
+}
+
 class CMetroDataObject: public IDataObject
 {
 public:
@@ -211,12 +291,8 @@ CComPtr<IDataObject> CMenuContainer::CreateMetroDataObject( const CItemManager::
 		if (m_pDragSourceHelper)
 		{
 			g_ItemManager.UpdateItemInfo(pInfo,CItemManager::INFO_EXTRA_LARGE_ICON|CItemManager::INFO_REFRESH_NOW,false);
-			int iconSize=CItemManager::EXTRA_LARGE_ICON_SIZE;
-			SHDRAGIMAGE di={{iconSize,iconSize},{iconSize/2,iconSize},NULL,CLR_NONE};
-			di.hbmpDragImage=(HBITMAP)CopyImage(pInfo->extraLargeIcon->bitmap,IMAGE_BITMAP,0,0,0);
-			m_pDragSourceHelper->SetFlags(DSH_ALLOWDROPDESCRIPTIONTEXT);
-			if (di.hbmpDragImage)
-				m_pDragSourceHelper->InitializeFromBitmap(&di,pDataObject);
+			if (pInfo->extraLargeIcon)
+				InitializeMenuDragImage(m_pDragSourceHelper,pDataObject,pInfo->extraLargeIcon->bitmap);
 		}
 	}
 	else
@@ -279,7 +355,6 @@ bool CMenuContainer::DragOut( int index, bool bApp )
 		pDataObj=CreateMetroDataObject(item.pItemInfo);
 	else
 	{
-		bool bMetroLink=false;
 		if (FAILED(SHBindToParent(item.pItem1,IID_IShellFolder,(void**)&pFolder,&child)))
 			return true;
 		if (FAILED(pFolder->GetUIObjectOf(NULL,1,&child,IID_IDataObject,NULL,(void**)&pDataObj)))
@@ -288,17 +363,15 @@ bool CMenuContainer::DragOut( int index, bool bApp )
 		{
 			CItemManager::RWLock lock(&g_ItemManager,false,CItemManager::RWLOCK_ITEMS);
 			bProtectedLink=!m_bSubMenu || item.pItemInfo->IsProtectedLink();
-			bMetroLink=item.pItemInfo->IsMetroLink();
 		}
-		if (m_pDragSourceHelper && bMetroLink)
+		if (m_pDragSourceHelper && item.pItemInfo)
 		{
-			g_ItemManager.UpdateItemInfo(item.pItemInfo,CItemManager::INFO_EXTRA_LARGE_ICON|CItemManager::INFO_REFRESH_NOW,false);
-			int iconSize=CItemManager::EXTRA_LARGE_ICON_SIZE;
-			SHDRAGIMAGE di={{iconSize,iconSize},{iconSize/2,iconSize},NULL,CLR_NONE};
-			di.hbmpDragImage=(HBITMAP)CopyImage(item.pItemInfo->extraLargeIcon->bitmap,IMAGE_BITMAP,0,0,0);
-			m_pDragSourceHelper->SetFlags(DSH_ALLOWDROPDESCRIPTIONTEXT);
-			if (di.hbmpDragImage)
-				m_pDragSourceHelper->InitializeFromBitmap(&di,pDataObj);
+			// Reuse the icon already displayed by the menu. Do not extract a new
+			// icon through Shell extensions or pump COM messages before the drag.
+			MenuSkin::TItemDrawType drawType=index==m_ProgramTreeIndex?MenuSkin::PROGRAMS_TREE_ITEM:item.drawType;
+			const CItemManager::IconInfo *icon=s_Skin.ItemSettings[drawType].iconSize==MenuSkin::ICON_SIZE_LARGE?
+				item.pItemInfo->largeIcon:item.pItemInfo->smallIcon;
+			if (icon) InitializeMenuDragImage(m_pDragSourceHelper,pDataObj,icon->bitmap);
 		}
 	}
 	if (bProtectedLink)
@@ -317,12 +390,8 @@ bool CMenuContainer::DragOut( int index, bool bApp )
 		}
 	}
 
-	// force synchronous operation
-	{
-		CComQIPtr<IDataObjectAsyncCapability> pAsync(pDataObj);
-		if (pAsync)
-			pAsync->SetAsyncMode(FALSE);
-	}
+	// This shell-created data object owns its asynchronous lifetime.
+	EnableShellAsyncDrop(pDataObj);
 
 	// do drag drop
 	s_pDragSource=this;
@@ -336,6 +405,7 @@ bool CMenuContainer::DragOut( int index, bool bApp )
 	SetTimer(TIMER_DRAG,100);
 	DWORD dwEffect=DROPEFFECT_COPY|DROPEFFECT_MOVE|DROPEFFECT_LINK;
 	HRESULT res=SHDoDragDrop(NULL,pDataObj,NULL,dwEffect,&dwEffect);
+	bool bAsyncDrop=WasShellDropAsync(pDataObj);
 
 	s_pDragSource=NULL;
 	s_bDragFromTree=false;
@@ -349,6 +419,15 @@ bool CMenuContainer::DragOut( int index, bool bApp )
 		for (std::vector<CMenuContainer*>::iterator it=s_Menus.begin();it!=s_Menus.end();++it)
 			if (!(*it)->m_bDestroyed)
 				(*it)->PostMessage(WM_CLOSE);
+		return true;
+	}
+
+	if (bAsyncDrop)
+	{
+		// Leave the menu usable while the native shell owns the transfer.
+		// Do not validate files early or take focus back from its dialog.
+		KeepAfterAsyncDrop();
+		QueueFolderRefresh();
 		return true;
 	}
 
@@ -465,6 +544,9 @@ HRESULT STDMETHODCALLTYPE CMenuContainer::DragEnter( IDataObject *pDataObj, DWOR
 {
 	s_bRightDrag=(grfKeyState&MK_RBUTTON)!=0;
 	m_pDragObject=pDataObj;
+	m_DragImageWindow=m_hWnd;
+	m_DragImagePoint={pt.x,pt.y};
+	m_DragImageEffect=*pdwEffect;
 	if (m_pDropTargetHelper)
 	{
 		POINT p={pt.x,pt.y};
@@ -487,12 +569,17 @@ HRESULT STDMETHODCALLTYPE CMenuContainer::DragEnter( IDataObject *pDataObj, DWOR
 	}
 	m_DragHoverTime=GetMessageTime()-10000;
 	m_DragHoverItem=-1;
+	// Also cover entry into an already raised topmost menu.
+	if (m_pDropTargetHelper)
+		RestoreShellDragImage(m_pDropTargetHelper,m_hWnd,m_pDragObject,m_DragImagePoint,*pdwEffect);
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuContainer::DragOver( DWORD grfKeyState, POINTL pt, DWORD *pdwEffect )
 {
 	POINT p0={pt.x,pt.y};
+	m_DragImagePoint=p0;
+	m_DragImageEffect=*pdwEffect;
 	if (m_pDropTargetHelper)
 		m_pDropTargetHelper->DragOver(&p0,*pdwEffect);
 
@@ -557,7 +644,9 @@ HRESULT STDMETHODCALLTYPE CMenuContainer::DragOver( DWORD grfKeyState, POINTL pt
 	{
 		SetDropTip(m_pDragObject,false);
 		SetInsertMark(-1,false);
-		return m_pDropTarget->DragOver(grfKeyState,pt,pdwEffect);
+		HRESULT result=m_pDropTarget->DragOver(grfKeyState,pt,pdwEffect);
+		m_DragImageEffect=*pdwEffect;
+		return result;
 	}
 
 	s_bRightDrag=(grfKeyState&MK_RBUTTON)!=0;
@@ -667,11 +756,13 @@ HRESULT STDMETHODCALLTYPE CMenuContainer::DragOver( DWORD grfKeyState, POINTL pt
 	}
 	else
 		SetDropTip(m_pDragObject,false);
+	m_DragImageEffect=*pdwEffect;
 	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuContainer::DragLeave( void )
 {
+	m_DragImageWindow=NULL;
 	if (m_pDropTarget)
 	{
 		m_pDropTarget->DragLeave();
@@ -691,6 +782,7 @@ HRESULT STDMETHODCALLTYPE CMenuContainer::DragLeave( void )
 
 HRESULT STDMETHODCALLTYPE CMenuContainer::Drop( IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect )
 {
+	m_DragImageWindow=NULL;
 	if (s_pDragSource)
 	{
 		if (!s_pDragSource->m_bDestroyed)
@@ -705,6 +797,11 @@ HRESULT STDMETHODCALLTYPE CMenuContainer::Drop( IDataObject *pDataObj, DWORD grf
 	{
 		m_pDragObject=NULL;
 		HRESULT res=m_pDropTarget->Drop(pDataObj,grfKeyState,pt,pdwEffect);
+		if (WasShellDropAsync(pDataObj))
+		{
+			KeepAfterAsyncDrop();
+			QueueFolderRefresh();
+		}
 		m_pDropTarget=NULL;
 		return res;
 	}
@@ -783,6 +880,7 @@ HRESULT STDMETHODCALLTYPE CMenuContainer::Drop( IDataObject *pDataObj, DWORD grf
 			*pdwEffect=DROPEFFECT_LINK;
 
 		bool bDropped=false;
+		bool bAsyncDrop=false;
 		if (!m_bSubMenu && (*pdwEffect&DROPEFFECT_LINK) && !s_bRightDrag)
 		{
 			// if dropping a single folder onto the main menu, create a fake folder
@@ -849,9 +947,7 @@ HRESULT STDMETHODCALLTYPE CMenuContainer::Drop( IDataObject *pDataObj, DWORD grf
 				dwEffect=*pdwEffect;
 				pTarget->DragOver(MK_LBUTTON|grfKeyState,pt,pdwEffect);
 			}
-			CComQIPtr<IDataObjectAsyncCapability> pAsync=pDataObj;
-			if (pAsync)
-				pAsync->SetAsyncMode(FALSE);
+			// Preserve the async mode negotiated by the data source.
 			for (auto& it : s_Menus)
 			{
 				if (!it->m_bDestroyed)
@@ -866,6 +962,8 @@ HRESULT STDMETHODCALLTYPE CMenuContainer::Drop( IDataObject *pDataObj, DWORD grf
 			s_bPreventClosing=true;
 			AddRef();
 			pTarget->Drop(pDataObj,grfKeyState,pt,pdwEffect);
+			bAsyncDrop=WasShellDropAsync(pDataObj);
+			if (bAsyncDrop) KeepAfterAsyncDrop();
 			s_bPreventClosing=bOld;
 			for (auto& it : s_Menus)
 			{
@@ -882,7 +980,7 @@ HRESULT STDMETHODCALLTYPE CMenuContainer::Drop( IDataObject *pDataObj, DWORD grf
 			AddRef();
 		}
 
-		if (!m_bDestroyed)
+		if (!m_bDestroyed && !bAsyncDrop)
 		{
 			SetForegroundWindow(m_hWnd);
 			SetActiveWindow();
@@ -909,7 +1007,8 @@ HRESULT STDMETHODCALLTYPE CMenuContainer::Drop( IDataObject *pDataObj, DWORD grf
 		}
 		if (m_bTwoColumns && s_MenuMode==MODE_JUMPLIST)
 			SetMenuMode(MODE_NORMAL);
-		PostRefreshMessage();
+		if (bAsyncDrop) QueueFolderRefresh();
+		else PostRefreshMessage();
 		Release();
 	}
 	return S_OK;

@@ -325,6 +325,8 @@ bool CMenuContainer::s_bNoClose=false;
 bool CMenuContainer::s_bHasTouch=false;
 char CMenuContainer::s_bActiveDirectory=-1;
 bool CMenuContainer::s_bPreventClosing=false;
+bool CMenuContainer::s_bKeepAfterAsyncDrop=false;
+HHOOK CMenuContainer::s_AsyncDropMouseHook=NULL;
 bool CMenuContainer::s_bDragClosed=false;
 bool CMenuContainer::s_bTempHidden=false;
 bool CMenuContainer::s_bDisableHover=false;
@@ -695,11 +697,13 @@ CMenuContainer::CMenuContainer( CMenuContainer *pParent, int index, int options,
 	InitializeSpecialFolders();
 
 	m_bDestroyed=false;
+	if (s_Menus.empty()) s_bKeepAfterAsyncDrop=false;
 	s_Menus.push_back(this);
 	m_Submenu=-1;
 	m_SubJumpItem=-1;
 	m_bTrackMouse=false;
 	m_RefreshPosted=0;
+	m_bFolderDirty=m_bTreeDirty=m_bFolderRefreshing=m_bFolderWatchStopped=false;
 
 	m_SubShowTime=0;
 	m_bInsertAfter=false;
@@ -743,6 +747,9 @@ CMenuContainer::CMenuContainer( CMenuContainer *pParent, int index, int options,
 	m_SearchHash=0;
 	m_pDropTargetInfo=NULL;
 	m_DropTargetIndex=-1;
+	m_DragImageWindow=NULL;
+	m_DragImagePoint.x=m_DragImagePoint.y=0;
+	m_DragImageEffect=DROPEFFECT_NONE;
 	m_PanPosY=m_Overpan=m_PointerId=0;
 	m_InputCookie=0;
 	m_ScrollTheme=NULL;
@@ -4483,6 +4490,7 @@ LRESULT CMenuContainer::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	}
 	m_pDropTargetProxy=new CDropTargetProxy(this);
 	RegisterDragDrop(m_hWnd,m_pDropTargetProxy);
+	StartFolderWatch();
 	if (!m_bSubMenu && s_pFrameworkInputPane)
 		s_pFrameworkInputPane->AdviseWithHWND(m_hWnd,this,&m_InputCookie);
 	PlayMenuSound(m_bSubMenu?SOUND_POPUP:SOUND_MAIN);
@@ -5135,6 +5143,163 @@ void CMenuContainer::SetActiveWindow( void )
 		SetWindowPos(s_TaskBar,0,0,0,0,SWP_NOSIZE|SWP_NOMOVE); // make sure the top menu stays behind the taskbar
 }
 
+bool CMenuContainer::CanRefreshFolders( void ) const
+{
+	if ((m_Options&(CONTAINER_SEARCH|CONTAINER_JUMPLIST)) ||
+		s_bPreventClosing || s_pDragSource || m_pDragObject || m_pDropTarget ||
+		m_ContextItem>=0 || m_bFolderRefreshing)
+		return false;
+	HWND capture=GetCapture();
+	if (capture && (capture==m_hWnd || ::IsChild(m_hWnd,capture)))
+		return false;
+	if (m_pProgramsTree && m_pProgramsTree->m_hWnd && TreeView_GetEditControl(m_pProgramsTree->m_hWnd))
+		return false;
+	return !s_bWin7Style || s_MenuMode==MODE_NORMAL || s_MenuMode==MODE_PROGRAMS;
+}
+
+void CMenuContainer::QueueFolderRefresh( void )
+{
+	if (!m_bDestroyed && !m_bFolderWatchStopped)
+	{
+		m_bFolderDirty=true;
+		SetTimer(TIMER_FOLDER_REFRESH,250);
+	}
+}
+
+void CMenuContainer::StartFolderWatch( void )
+{
+	if (m_Options&(CONTAINER_SEARCH|CONTAINER_JUMPLIST)) return;
+	for (int i=0;i<2;i++)
+	{
+		m_FolderWatch.Add(m_hWnd,MCM_FOLDERCHANGED,m_Path1[i]);
+		m_FolderWatch.Add(m_hWnd,MCM_FOLDERCHANGED,m_Path2[i]);
+	}
+	if (!m_bSubMenu)
+	{
+		ShGetKnownFolderIDList(FOLDERID_Programs,&m_ProgramWatchRoots[0]);
+		if (!s_bNoCommonFolders)
+			ShGetKnownFolderIDList(FOLDERID_CommonPrograms,&m_ProgramWatchRoots[1]);
+		for (int i=0;i<2;i++)
+			m_FolderWatch.Add(m_hWnd,MCM_FOLDERCHANGED,m_ProgramWatchRoots[i],true);
+	}
+}
+
+LRESULT CMenuContainer::OnFolderChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	PIDLIST_ABSOLUTE *changed=NULL;
+	LONG event=0;
+	HANDLE notification=SHChangeNotification_Lock((HANDLE)wParam,(DWORD)lParam,&changed,&event);
+	if (!notification) return 0;
+	for (int side=0;side<2;side++)
+	{
+		if (!changed || !changed[side]) continue;
+		for (int i=0;i<2;i++)
+		{
+			if (CMenuFolderWatch::Contains(m_Path1[i],changed[side]) ||
+				CMenuFolderWatch::Contains(m_Path2[i],changed[side]))
+				m_bFolderDirty=true;
+			if (CMenuFolderWatch::Contains(m_ProgramWatchRoots[i],changed[side],true))
+				m_bTreeDirty=true;
+		}
+	}
+	SHChangeNotification_Unlock(notification);
+	// Coalesce a batch of shell notifications; never rebuild under its lock.
+	if (!m_bFolderWatchStopped && (m_bFolderDirty || m_bTreeDirty))
+		SetTimer(TIMER_FOLDER_REFRESH,250);
+	return 0;
+}
+
+int CMenuContainer::FindRefreshItem( PCIDLIST_ABSOLUTE pidl, TMenuID id, unsigned int nameHash ) const
+{
+	for (int i=0;i<(int)m_Items.size();i++)
+	{
+		const MenuItem &item=m_Items[i];
+		if (pidl)
+		{
+			if ((item.pItem1 && ILIsEqual(pidl,item.pItem1)) || (item.pItem2 && ILIsEqual(pidl,item.pItem2)))
+				return i;
+		}
+		else if (item.id==id && item.nameHash==nameHash)
+			return i;
+	}
+	return -1;
+}
+
+void CMenuContainer::RefreshFolderContents( void )
+{
+	// Keep the child window and its item identity while the parent list changes.
+	// The normal MCM_REFRESH handler intentionally closes children and takes focus.
+	CMenuContainer *child=NULL;
+	for (auto menu : s_Menus)
+		if (!menu->m_bDestroyed && menu->m_pParent==this) { child=menu; break; }
+	CComPtr<IDropTarget> childLifetime=child?static_cast<IDropTarget*>(child):NULL;
+	CAbsolutePidl childPidl,hotPidl;
+	TMenuID childId=MENU_NO,hotId=MENU_NO;
+	unsigned int childHash=0,hotHash=0;
+	RECT oldAnchor={};
+	bool hadHot=m_HotItem>=0 && m_HotItem<(int)m_Items.size();
+	bool hotArrow=m_bHotArrow;
+	if (hadHot)
+	{
+		const MenuItem &item=m_Items[m_HotItem];
+		hotPidl.Clone(item.pItem1?item.pItem1:item.pItem2);
+		hotId=item.id; hotHash=item.nameHash;
+	}
+	if (child && child->m_ParentIndex>=0 && child->m_ParentIndex<(int)m_Items.size())
+	{
+		const MenuItem &item=m_Items[child->m_ParentIndex];
+		childPidl.Clone(item.pItem1?item.pItem1:item.pItem2);
+		childId=item.id; childHash=item.nameHash;
+		GetItemRect(child->m_ParentIndex,oldAnchor);
+		MapWindowPoints(NULL,&oldAnchor);
+	}
+	else child=NULL;
+	if (m_ScrollHeight>0 && m_FolderHash[0]) s_MenuScrolls[m_FolderHash[0]]=m_ScrollOffset;
+	else s_MenuScrolls.erase(m_FolderHash[0]);
+	KillTimer(TIMER_HOVER);
+	m_HoverItem=-1;
+	SetHotItem(-1);
+	InitItems();
+	if (m_bDestroyed) return;
+	int childIndex=child?FindRefreshItem(childPidl,childId,childHash):-1;
+	if (child && !child->m_bDestroyed)
+	{
+		child->m_ParentIndex=childIndex;
+		if (childIndex>=0) SetSubmenu(childIndex);
+		else
+		{
+			// An actually deleted/moved folder cannot retain a valid submenu.
+			for (auto menu : s_Menus)
+				for (auto parent=menu;parent;parent=parent->m_pParent)
+					if (parent==child) { if (!menu->m_bDestroyed) menu->PostMessage(WM_CLOSE); break; }
+		}
+	}
+	InitWindow();
+	SetHotItem(hadHot?FindRefreshItem(hotPidl,hotId,hotHash):-1,hotArrow,false);
+	if (childIndex>=0 && child && !child->m_bDestroyed)
+	{
+		RECT anchor,before,after;
+		GetItemRect(childIndex,anchor); MapWindowPoints(NULL,&anchor);
+		child->GetWindowRect(&before);
+		int dx=before.left>=oldAnchor.left?anchor.right-oldAnchor.right:anchor.left-oldAnchor.left;
+		child->SetWindowPos(NULL,before.left+dx,before.top+anchor.top-oldAnchor.top,0,0,
+			SWP_NOZORDER|SWP_NOACTIVATE|SWP_NOSIZE);
+		child->InitWindow(); // constrain the updated placement to the work area
+		child->GetWindowRect(&after);
+		for (auto menu : s_Menus)
+			if (menu!=child && !menu->m_bDestroyed)
+				for (auto parent=menu->m_pParent;parent;parent=parent->m_pParent)
+					if (parent==child)
+					{
+						RECT rect; menu->GetWindowRect(&rect);
+						menu->SetWindowPos(NULL,rect.left+after.left-before.left,rect.top+after.top-before.top,
+							0,0,SWP_NOZORDER|SWP_NOACTIVATE|SWP_NOSIZE);
+						break;
+					}
+	}
+	Invalidate();
+}
+
 void CMenuContainer::PostRefreshMessage( void )
 {
 	if (!m_bDestroyed)
@@ -5240,6 +5405,26 @@ LRESULT CMenuContainer::OnWorkAreaChanged( UINT uMsg, WPARAM wParam, LPARAM lPar
 
 LRESULT CMenuContainer::OnTimer( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
+	if (wParam==TIMER_FOLDER_REFRESH)
+	{
+		if (m_bFolderWatchStopped || m_bDestroyed) { KillTimer(TIMER_FOLDER_REFRESH); return 0; }
+		if (!CanRefreshFolders())
+			return 0; // retry after the current drag, popup menu, or search
+		KillTimer(TIMER_FOLDER_REFRESH);
+		CComPtr<IDropTarget> keepAlive=static_cast<IDropTarget*>(this);
+		bool treeDirty=m_bTreeDirty;
+		m_bTreeDirty=false;
+		if (m_bFolderDirty && !m_bDestroyed)
+		{
+			m_bFolderDirty=false;
+			m_bFolderRefreshing=true;
+			RefreshFolderContents();
+			m_bFolderRefreshing=false;
+		}
+		if (treeDirty && !m_bDestroyed && m_pProgramsTree && m_pProgramsTree->m_hWnd)
+			m_pProgramsTree->PostMessage(CProgramsTree::TVM_REFRESH);
+		return 0;
+	}
 	if (wParam==TIMER_HOVER)
 	{
 		LOG_MENU(LOG_MOUSE,L"End Hover, hover=%d%s, hot=%d, submenu=%d",m_HoverItem,m_bHoverArrow?L"(arrow)":L"",m_HotItem,m_Submenu);
@@ -6185,6 +6370,9 @@ LRESULT CMenuContainer::OnChar( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 LRESULT CMenuContainer::OnDestroy( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	LOG_MENU(LOG_OPEN,L"Close Menu, ptr=%p",this);
+	m_bFolderWatchStopped=true;
+	m_FolderWatch.Clear();
+	KillTimer(TIMER_FOLDER_REFRESH);
 	if (m_pAccessible)
 	{
 		NotifyWinEvent(EVENT_SYSTEM_MENUPOPUPEND,m_hWnd,OBJID_CLIENT,CHILDID_SELF);
@@ -6226,6 +6414,9 @@ LRESULT CMenuContainer::OnDestroy( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	m_bDestroyed=true;
 	if (this==s_Menus[0])
 	{
+		if (s_AsyncDropMouseHook) UnhookWindowsHookEx(s_AsyncDropMouseHook);
+		s_AsyncDropMouseHook=NULL;
+		s_bKeepAfterAsyncDrop=false;
 		// cleanup when the last menu is closed
 		if (s_Theme)
 			CloseThemeData(s_Theme);
@@ -6423,6 +6614,8 @@ LRESULT CMenuContainer::OnActivate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 #ifndef PREVENT_CLOSING
 	if (s_bPreventClosing)
 		return 0;
+	if (s_bKeepAfterAsyncDrop && IsShellOperationWindow((HWND)lParam))
+		return 0;
 
 	if (lParam)
 	{
@@ -6445,6 +6638,53 @@ LRESULT CMenuContainer::OnActivate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 	if (g_TopWin7Menu && s_bAllPrograms) ::PostMessage(g_TopWin7Menu,WM_CLOSE,0,0);
 #endif
 
+	return 0;
+}
+
+// The menu may already be inactive after a native transfer dialog took focus.
+// Observe subsequent button presses independently of WM_ACTIVATE. The hook runs
+// on this UI thread, never consumes input, and only posts work to the root menu.
+void CMenuContainer::KeepAfterAsyncDrop( void )
+{
+	s_bKeepAfterAsyncDrop=true;
+	if (!s_AsyncDropMouseHook && s_FirstMenu)
+		s_AsyncDropMouseHook=SetWindowsHookEx(WH_MOUSE_LL,AsyncDropMouseHook,g_Instance,0);
+}
+
+LRESULT CALLBACK CMenuContainer::AsyncDropMouseHook( int code, WPARAM wParam, LPARAM lParam )
+{
+	if (code==HC_ACTION && s_bKeepAfterAsyncDrop && !s_bPreventClosing && !s_pDragSource && s_FirstMenu &&
+		(wParam==WM_LBUTTONDOWN || wParam==WM_RBUTTONDOWN || wParam==WM_MBUTTONDOWN || wParam==WM_XBUTTONDOWN))
+	{
+		const MSLLHOOKSTRUCT *mouse=(const MSLLHOOKSTRUCT*)lParam;
+		// Resolve before the click can dismiss its dialog or popup.
+		HWND target=WindowFromPoint(mouse->pt);
+		bool operation=target && IsShellOperationWindow(GetAncestor(target,GA_ROOT));
+		::PostMessage(s_FirstMenu,MCM_OUTSIDECLICK,(WPARAM)target,operation);
+	}
+	return CallNextHookEx(s_AsyncDropMouseHook,code,wParam,lParam);
+}
+
+LRESULT CMenuContainer::OnOutsideClick( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	if (!s_bKeepAfterAsyncDrop || s_bPreventClosing || s_pDragSource || m_bDestroyed)
+		return 0;
+	for (std::vector<CMenuContainer*>::const_iterator it=s_Menus.begin();it!=s_Menus.end();++it)
+		if (!(*it)->m_bDestroyed && ((*it)->m_pDragObject || (*it)->m_pDropTarget || (*it)->m_ContextItem>=0))
+			return 0;
+
+	HWND target=(HWND)wParam;
+	if (IsMenuWindow(target) || target==s_StartButton || (s_StartButton && ::IsChild(s_StartButton,target)))
+		return 0;
+	if (lParam || (target && IsShellOperationWindow(GetAncestor(target,GA_ROOT))))
+		return 0;
+	// Use the existing close path without activating the taskbar or a previous app.
+	for (std::vector<CMenuContainer*>::reverse_iterator it=s_Menus.rbegin();it!=s_Menus.rend();++it)
+		if (!(*it)->m_bDestroyed && !(*it)->m_bClosing)
+		{
+			(*it)->m_bClosing=true;
+			(*it)->PostMessage(WM_CLOSE);
+		}
 	return 0;
 }
 

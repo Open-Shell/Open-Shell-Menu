@@ -1203,6 +1203,9 @@ void CProgramsTree::SelectLast( void )
 HRESULT CProgramsTree::DragEnter( IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect )
 {
 	CMenuContainer::s_bRightDrag=(grfKeyState&MK_RBUTTON)!=0;
+	m_pOwner->m_DragImageWindow=m_hWnd;
+	m_pOwner->m_DragImagePoint={pt.x,pt.y};
+	m_pOwner->m_DragImageEffect=*pdwEffect;
 	if (m_pOwner->m_pDropTargetHelper)
 	{
 		POINT p={pt.x,pt.y};
@@ -1211,6 +1214,7 @@ HRESULT CProgramsTree::DragEnter( IDataObject *pDataObj, DWORD grfKeyState, POIN
 	m_pOwner->m_DragHoverTime=GetMessageTime()-10000;
 	m_HoverItem=NULL;
 	m_pOwner->m_pDragObject=pDataObj;
+	CMenuContainer::RestoreActiveDragImage();
 	return S_OK;
 }
 
@@ -1286,6 +1290,8 @@ HRESULT CProgramsTree::DragOver( DWORD grfKeyState, POINTL pt, DWORD *pdwEffect 
 {
 	CMenuContainer::s_bRightDrag=(grfKeyState&MK_RBUTTON)!=0;
 	POINT p={pt.x,pt.y};
+	m_pOwner->m_DragImagePoint=p;
+	m_pOwner->m_DragImageEffect=*pdwEffect;
 	if (m_pOwner->m_pDropTargetHelper)
 	{
 		m_pOwner->m_pDropTargetHelper->DragOver(&p,*pdwEffect);
@@ -1439,6 +1445,7 @@ HRESULT CProgramsTree::DragOver( DWORD grfKeyState, POINTL pt, DWORD *pdwEffect 
 
 HRESULT CProgramsTree::DragLeave( void )
 {
+	m_pOwner->m_DragImageWindow=NULL;
 	if (m_pOwner->m_pDropTargetHelper)
 		m_pOwner->m_pDropTargetHelper->DragLeave();
 	m_pOwner->m_pDragObject.Release();
@@ -1450,6 +1457,7 @@ HRESULT CProgramsTree::DragLeave( void )
 
 HRESULT CProgramsTree::Drop( IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect )
 {
+	m_pOwner->m_DragImageWindow=NULL;
 	if (CMenuContainer::s_pDragSource)
 	{
 		if (!CMenuContainer::s_pDragSource->m_bDestroyed)
@@ -1591,9 +1599,7 @@ HRESULT CProgramsTree::Drop( IDataObject *pDataObj, DWORD grfKeyState, POINTL pt
 		dwEffect=*pdwEffect;
 		pTarget->DragOver(MK_LBUTTON|grfKeyState,pt,pdwEffect);
 	}
-	CComQIPtr<IDataObjectAsyncCapability> pAsync=pDataObj;
-	if (pAsync)
-		pAsync->SetAsyncMode(FALSE);
+	// Preserve the async mode negotiated by the data source.
 	for (std::vector<CMenuContainer*>::iterator it=CMenuContainer::s_Menus.begin();it!=CMenuContainer::s_Menus.end();++it)
 		if (!(*it)->m_bDestroyed)
 			(*it)->EnableWindow(FALSE); // disable all menus
@@ -1601,11 +1607,15 @@ HRESULT CProgramsTree::Drop( IDataObject *pDataObj, DWORD grfKeyState, POINTL pt
 	CMenuContainer::s_bPreventClosing=true;
 	m_pOwner->AddRef();
 	pTarget->Drop(pDataObj,grfKeyState,pt,pdwEffect);
+	CComQIPtr<IDataObjectAsyncCapability> async(pDataObj);
+	BOOL asynchronous=FALSE;
+	bool bAsyncDrop=async && SUCCEEDED(async->InOperation(&asynchronous)) && asynchronous;
+	if (bAsyncDrop) CMenuContainer::KeepAfterAsyncDrop();
 	CMenuContainer::s_bPreventClosing=bOld;
 	for (std::vector<CMenuContainer*>::iterator it=CMenuContainer::s_Menus.begin();it!=CMenuContainer::s_Menus.end();++it)
 		if (!(*it)->m_bDestroyed)
 			(*it)->EnableWindow(TRUE); // enable all menus
-	if (!m_pOwner->m_bDestroyed)
+	if (!m_pOwner->m_bDestroyed && !bAsyncDrop)
 	{
 		SetForegroundWindow(m_pOwner->m_hWnd);
 		m_pOwner->SetActiveWindow();
