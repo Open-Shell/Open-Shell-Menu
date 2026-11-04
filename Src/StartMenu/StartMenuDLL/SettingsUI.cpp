@@ -5148,7 +5148,9 @@ void MenuCustomSettings::ExecuteBackupMenu( int id )
 {
 	if (id==m_FirstId)
 	{
-		g_ItemManager.ClearCache();
+		bool cleared=g_ItemManager.ClearCache();
+		MessageBox(GetActiveWindow(),LoadStringEx(cleared?IDS_CLEAR_CACHE_RESTART:IDS_CLEAR_CACHE_FAILED),
+			LoadStringEx(IDS_APP_TITLE),MB_OK|(cleared?MB_ICONINFORMATION:MB_ICONERROR));
 	}
 }
 

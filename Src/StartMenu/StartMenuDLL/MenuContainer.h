@@ -763,6 +763,7 @@ private:
 		TIMER_BALLOON_HIDE=6,
 		TIMER_SEARCH=7,
 		TIMER_DRAG=8,
+		TIMER_NEW_PROGRAMS=9,
 
 		MCM_REFRESH=WM_USER+10, // posted to force the container to refresh its contents
 		MCM_SETCONTEXTITEM=WM_USER+11, // sets the item for the context menu. wParam is the nameHash of the item
@@ -801,6 +802,8 @@ private:
 	void InitItems( void );
 	bool InitSearchItems( void );
 	void InitWindow( bool bDontShrink=false );
+	bool IsNewMenuItem( const MenuItem &item ) const;
+	void RefreshNewPrograms( void );
 	void InitWindowInternal( bool bDontShrink, const POINT &corner, RECT &menuRect );
 	void InitWindowFinalize( const RECT &menuRect );
 

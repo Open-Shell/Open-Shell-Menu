@@ -93,6 +93,7 @@ public:
 		Assert(m_RefCount==0);
 	}
 	void Create( CMenuContainer *pOwner );
+	void RefreshNewPrograms( void );
 
 	virtual WNDPROC GetWindowProc( void ) { return CustomWindowProc; }
 	static LRESULT CALLBACK CustomWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

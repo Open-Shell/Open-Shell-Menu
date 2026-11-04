@@ -22,6 +22,32 @@ bool CProgramsTree::s_bFoldersFirst;
 
 const wchar_t *ORDER_PREFIX=L"#";
 
+void CProgramsTree::RefreshNewPrograms( void )
+{
+	for (HTREEITEM node=TreeView_GetRoot(m_hWnd);node;)
+	{
+		TVITEM item={TVIF_PARAM};
+		item.hItem=node;
+		if (TreeView_GetItem(m_hWnd,&item) && item.lParam)
+		{
+			CTreeItem *data=reinterpret_cast<CTreeItem*>(item.lParam);
+			data->bNew=data->bApps?g_ItemManager.HasNewApps(false):
+				(data->pItemInfo1 && g_ItemManager.IsNewProgram(data->pItemInfo1->GetPidl(),data->bFolder,data->bApp)) ||
+				(data->pItemInfo2 && g_ItemManager.IsNewProgram(data->pItemInfo2->GetPidl(),data->bFolder,false));
+		}
+		HTREEITEM child=TreeView_GetChild(m_hWnd,node);
+		if (child)
+			node=child;
+		else
+		{
+			while (node && !TreeView_GetNextSibling(m_hWnd,node))
+				node=TreeView_GetParent(m_hWnd,node);
+			if (node) node=TreeView_GetNextSibling(m_hWnd,node);
+		}
+	}
+	Invalidate(FALSE);
+}
+
 CProgramsTree::CProgramsTree( void )
 {
 	m_RefCount=1;

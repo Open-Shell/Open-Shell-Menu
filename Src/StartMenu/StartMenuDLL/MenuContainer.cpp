@@ -2015,8 +2015,6 @@ void CMenuContainer::GetRecentPrograms( std::vector<MenuItem> &items, int maxCou
 		// sort by rank
 		std::sort(uaItems.begin(),uaItems.end());
 
-		g_ItemManager.WaitForShortcuts(CPoint((s_StartRect.left+s_StartRect.right)/2,(s_StartRect.top+s_StartRect.bottom)/2));
-
 		// create a menu item for each program
 		for (int i=0;i<(int)uaItems.size();i++)
 		{
@@ -3284,22 +3282,8 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 				if (column==1 && columnWidths.size()==1)
 					columnWidths.push_back(0);
 			}
-			if (item.id!=MENU_RECENT && !(m_Options&CONTAINER_SEARCH) && s_Skin.bHasNewItem && i<m_OriginalCount)
-			{
-				if (item.id==MENU_PROGRAMS)
-				{
-					if (s_bWin7Style && GetWinVersion()>=WIN_VER_WIN8 && GetSettingBool(L"AllProgramsMetro"))
-						item.bNew=g_ItemManager.HasNewPrograms(false) || g_ItemManager.HasNewApps(false);
-					else
-						item.bNew=g_ItemManager.HasNewPrograms(false);
-				}
-				else if (item.id==MENU_APPS)
-					item.bNew=g_ItemManager.HasNewApps(false);
-				else if (item.bFolder)
-					item.bNew=(item.pItem1 && g_ItemManager.IsNewProgram(item.pItem1,true,false)) || (item.pItem2 && g_ItemManager.IsNewProgram(item.pItem2,true,false));
-				else if (item.pItemInfo)
-					item.bNew=(item.pItem1 && g_ItemManager.IsNewProgram(item.pItem1,false,item.bMetroApp));
-			}
+			if (i<m_OriginalCount)
+				item.bNew=IsNewMenuItem(item);
 			if (item.id==MENU_SHUTDOWN_BUTTON)
 			{
 				if (s_MenuMode==MODE_SEARCH)
@@ -5238,8 +5222,58 @@ LRESULT CMenuContainer::OnWorkAreaChanged( UINT uMsg, WPARAM wParam, LPARAM lPar
 	return 0;
 }
 
+bool CMenuContainer::IsNewMenuItem( const MenuItem &item ) const
+{
+	if (item.id==MENU_RECENT || (m_Options&CONTAINER_SEARCH) || !s_Skin.bHasNewItem)
+		return false;
+	if (item.id==MENU_PROGRAMS)
+		return g_ItemManager.HasNewPrograms(false) ||
+			(s_bWin7Style && GetWinVersion()>=WIN_VER_WIN8 && GetSettingBool(L"AllProgramsMetro") && g_ItemManager.HasNewApps(false));
+	if (item.id==MENU_APPS)
+		return g_ItemManager.HasNewApps(false);
+	if (item.bFolder)
+		return (item.pItem1 && g_ItemManager.IsNewProgram(item.pItem1,true,false)) ||
+			(item.pItem2 && g_ItemManager.IsNewProgram(item.pItem2,true,false));
+	return item.pItemInfo && item.pItem1 && g_ItemManager.IsNewProgram(item.pItem1,false,item.bMetroApp);
+}
+
+void CMenuContainer::RefreshNewPrograms( void )
+{
+	for (int i=0;i<m_OriginalCount && i<(int)m_Items.size();i++)
+	{
+		MenuItem &item=m_Items[i];
+		item.bNew=IsNewMenuItem(item);
+		// Update the drawing style without rebuilding or reselecting menu items.
+		switch (item.drawType)
+		{
+			case MenuSkin::PROGRAMS_BUTTON: item.drawType=item.bNew?MenuSkin::PROGRAMS_BUTTON_NEW:item.drawType; break;
+			case MenuSkin::PROGRAMS_CASCADING: item.drawType=item.bNew?MenuSkin::PROGRAMS_CASCADING_NEW:item.drawType; break;
+			case MenuSkin::COLUMN1_ITEM: item.drawType=item.bNew?MenuSkin::COLUMN1_NEW:item.drawType; break;
+			case MenuSkin::COLUMN2_ITEM: item.drawType=item.bNew?MenuSkin::COLUMN2_NEW:item.drawType; break;
+			case MenuSkin::SUBMENU_ITEM: item.drawType=item.bNew?MenuSkin::SUBMENU_NEW:item.drawType; break;
+		}
+	}
+	if (m_pProgramsTree && m_pProgramsTree->IsWindow())
+		m_pProgramsTree->RefreshNewPrograms();
+	Invalidate(FALSE);
+}
+
 LRESULT CMenuContainer::OnTimer( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
+	if (wParam==TIMER_NEW_PROGRAMS)
+	{
+		if (!g_ItemManager.AreShortcutsReady()) return 0;
+		KillTimer(TIMER_NEW_PROGRAMS);
+		CComPtr<IDropTarget> keepAlive(static_cast<IDropTarget*>(this));
+		g_ItemManager.UpdateNewPrograms();
+		if (!m_bDestroyed)
+		{
+			for (CMenuContainer *menu : s_Menus)
+				if (!menu->m_bDestroyed) menu->RefreshNewPrograms();
+		}
+		return 0;
+	}
+
 	if (wParam==TIMER_HOVER)
 	{
 		LOG_MENU(LOG_MOUSE,L"End Hover, hover=%d%s, hot=%d, submenu=%d",m_HoverItem,m_bHoverArrow?L"(arrow)":L"",m_HotItem,m_Submenu);
@@ -8559,7 +8593,7 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 
 	pStartMenu->InitItems();
 	pStartMenu->m_MaxWidth=s_MainMenuLimits.right-s_MainMenuLimits.left;
-	g_ItemManager.UpdateNewPrograms(CPoint((s_StartRect.left+s_StartRect.right)/2,(s_StartRect.top+s_StartRect.bottom)/2));
+	g_ItemManager.ResetNewPrograms();
 
 	pStartMenu->InitWindow();
 	pStartMenu->SetHotItem((bKeyboard && bAllPrograms)?0:-1);
@@ -8615,6 +8649,8 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 		if (!bAllPrograms)
 			pStartMenu->SetHotItem(-1);
 	}
+	if (GetSettingBool(L"HighlightNew"))
+		pStartMenu->SetTimer(TIMER_NEW_PROGRAMS,100);
 	SetForegroundWindow(pStartMenu->m_hWnd);
 	SwitchToThisWindow(pStartMenu->m_hWnd,FALSE); // just in case
 	if (s_TaskBar && s_bBehindTaskbar)

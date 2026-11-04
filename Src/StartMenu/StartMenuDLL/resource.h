@@ -845,6 +845,8 @@
 #define IDS_STRING7109                  7109
 #define IDS_STRING7110                  7110
 #define IDS_STRING7111                  7111
+#define IDS_CLEAR_CACHE_RESTART         7112
+#define IDS_CLEAR_CACHE_FAILED          7113
 
 // Next default values for new objects
 // 
