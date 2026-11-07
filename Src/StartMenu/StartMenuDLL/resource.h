@@ -788,6 +788,14 @@
 #define IDS_ALT_ACCELERATORS_TIP        3689
 #define IDS_BUTTON_OFFSET				3690
 #define IDS_BUTTON_OFFSET_TIP			3691
+#define IDS_SECOND_PANE                 3692
+#define IDS_SECOND_PANE_TIP             3693
+#define IDS_SECOND_PANE_LAST            3694
+#define IDS_SECOND_PANE_LAST_TIP        3695
+#define IDS_SECOND_PANE_NONE            3696
+#define IDS_SECOND_PANE_NONE_TIP        3697
+#define IDS_SECOND_PANE_FIRST           3698
+#define IDS_SECOND_PANE_FIRST_TIP       3699
 #define IDS_STRING7001                  7001
 #define IDS_STRING7002                  7002
 #define IDS_STRING7003                  7003
