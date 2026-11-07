@@ -4934,7 +4934,7 @@ LRESULT CMenuContainer::OnGesture( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 						scroll=0;
 						bOverpan=true;
 					}
-					int total=m_Items[m_ScrollCount-1].itemRect.bottom-m_rContent.top-m_ScrollHeight;
+					int total=m_Items[m_ScrollCount-1].itemRect.bottom-GetScrollRect().top-m_ScrollHeight;
 					if (scroll>total)
 					{
 						scroll=total;
@@ -5406,7 +5406,7 @@ LRESULT CMenuContainer::OnTimer( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 		else if (m_bScrollDown && m_bScrollDownHot)
 		{
 			scroll+=s_Skin.ItemSettings[m_bSubMenu?MenuSkin::SUBMENU_ITEM:MenuSkin::COLUMN1_ITEM].itemHeight*speed/6;
-			int total=m_Items[m_ScrollCount-1].itemRect.bottom-m_rContent.top-m_ScrollHeight;
+			int total=m_Items[m_ScrollCount-1].itemRect.bottom-GetScrollRect().top-m_ScrollHeight;
 			if (scroll>total) scroll=total;
 		}
 		if (m_ScrollOffset!=scroll)
@@ -5903,7 +5903,7 @@ LRESULT CMenuContainer::OnKeyDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 			int y0=m_Items[index].itemRect.top;
 			int scrollOffset=0;
 			if (m_ScrollCount>0)
-				scrollOffset=m_Items[m_ScrollCount-1].itemRect.bottom-m_rContent.top-m_ScrollHeight;
+				scrollOffset=m_Items[m_ScrollCount-1].itemRect.bottom-GetScrollRect().top-m_ScrollHeight;
 			if (index<m_ScrollCount)
 				y0-=scrollOffset;
 			int dist=0x7FFFFFFF;
@@ -5995,7 +5995,7 @@ LRESULT CMenuContainer::OnKeyDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 			int y0=m_Items[index].itemRect.bottom;
 			int scrollOffset=0;
 			if (m_ScrollCount>0)
-				scrollOffset=m_Items[m_ScrollCount-1].itemRect.bottom-m_rContent.top-m_ScrollHeight;
+				scrollOffset=m_Items[m_ScrollCount-1].itemRect.bottom-GetScrollRect().top-m_ScrollHeight;
 			if (index<m_ScrollCount)
 				y0-=scrollOffset;
 			int dist=0x7FFFFFFF;
@@ -6716,7 +6716,7 @@ LRESULT CMenuContainer::OnMouseWheel( UINT uMsg, WPARAM wParam, LPARAM lParam, B
 		int scroll=m_ScrollOffset;
 		scroll-=n*s_Skin.ItemSettings[m_bSubMenu?MenuSkin::SUBMENU_ITEM:MenuSkin::COLUMN1_ITEM].itemHeight;
 		if (scroll<0) scroll=0;
-		int total=m_Items[m_ScrollCount-1].itemRect.bottom-m_rContent.top-m_ScrollHeight;
+		int total=m_Items[m_ScrollCount-1].itemRect.bottom-GetScrollRect().top-m_ScrollHeight;
 		if (scroll>total) scroll=total;
 		if (m_ScrollOffset!=scroll)
 		{
