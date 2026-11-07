@@ -1654,6 +1654,17 @@ static void ComputeTaskbarColors( int *data )
 	data[3]=0;
 }
 
+// Exits the menu and starts it again: StartMenu.exe -reload, from this DLL's folder, makes the running menu exit,
+// waits for it, and carries on as the menu
+static void ReloadStartMenu( void )
+{
+	wchar_t exe[_MAX_PATH];
+	GetModuleFileName(g_Instance,exe,_countof(exe));
+	PathRemoveFileSpec(exe);
+	PathAppend(exe,L"StartMenu.exe");
+	ShellExecute(NULL,NULL,exe,L"-reload",NULL,SW_SHOWNORMAL);
+}
+
 static void ShowWinX( void )
 {
 	if (IsWin11())
@@ -4122,6 +4133,7 @@ if (!g_bTrimHooks)
 						CMD_OPEN_ALL,
 						CMD_EXPLORER,
 						CMD_OPEN_PINNED,
+						CMD_RELOAD,
 					};
 
 					// right-click on the start button - open the context menu (Settings, Help, Exit)
@@ -4156,9 +4168,14 @@ if (!g_bTrimHooks)
 						AppendMenu(menu,MF_STRING,CMD_HELP,FindTranslation(L"Menu.MenuHelp",L"Help"));
 					if (GetSettingBool(L"EnableExit"))
 					{
+						// Reload exits and starts the menu again, so it goes with Exit
+						AppendMenu(menu,MF_STRING,CMD_RELOAD,FindTranslation(L"Menu.MenuReload",L"Reload"));
 						AppendMenu(menu,MF_STRING,CMD_EXIT,FindTranslation(L"Menu.MenuExit",L"Exit"));
 						if (!CMenuContainer::CanShowMenu())
+						{
+							EnableMenuItem(menu,CMD_RELOAD,MF_BYCOMMAND|MF_DISABLED);
 							EnableMenuItem(menu,CMD_EXIT,MF_BYCOMMAND|MF_DISABLED);
+						}
 					}
 					if (GetMenuItemCount(menu)>count0)
 					{
@@ -4180,6 +4197,11 @@ if (!g_bTrimHooks)
 						if (res==CMD_HELP)
 						{
 							ShowHelp();
+							return TRUE;
+						}
+						if (res==CMD_RELOAD)
+						{
+							ReloadStartMenu();
 							return TRUE;
 						}
 						if (res==CMD_EXIT)

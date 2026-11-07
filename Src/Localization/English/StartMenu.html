@@ -120,7 +120,7 @@ move it to another folder.
 Right-click on an item to rename it, delete it, or perform other tasks.</p>
 <p>
 Right-click on the orb to edit the settings for the Start menu, to view this help file, or to
-stop the Start menu process.<br>
+reload or stop the Start menu process.<br>
 </p>
 <p><br>
 
@@ -149,7 +149,8 @@ also reset all settings to their default value.<br>
 Most settings will be changed immediately as you edit them. For example
 you can edit the Start menu, then while the Settings dialog is open,
 access the Start menu to see the changes. Small number of settings will
-require you to exit the Start menu before you can see the change.<br>
+require you to reload the Start menu before you can see the change (right-click on the orb and
+select Reload).<br>
 
 <br>
 
@@ -330,7 +331,7 @@ downloaded from the <a href="http://www.classicshell.net/translations/">translat
 
 <br>
 <br><h1><a name="command_line"></a>Command Line</h1>
-<span style="font-weight: bold; color: #2b88d8;">StartMenu.exe</span> supports 5 command line parameters: <span style="font-weight: bold; color: #2b88d8;">-open</span>, <span style="font-weight: bold; color: #2b88d8;">-toggle</span>, <span style="font-weight: bold; color: #2b88d8;">-togglenew</span>, <span style="font-weight: bold; color: #2b88d8;">-exit </span>and <span style="font-weight: bold; color: #2b88d8;">-settings</span>.<br>
+<span style="font-weight: bold; color: #2b88d8;">StartMenu.exe</span> supports these command line parameters: <span style="font-weight: bold; color: #2b88d8;">-open</span>, <span style="font-weight: bold; color: #2b88d8;">-toggle</span>, <span style="font-weight: bold; color: #2b88d8;">-togglenew</span>, <span style="font-weight: bold; color: #2b88d8;">-exit</span>, <span style="font-weight: bold; color: #2b88d8;">-reload </span>and <span style="font-weight: bold; color: #2b88d8;">-settings</span>.<br>
 <br>
 The first two do what the name suggests. One opens the classic Start menu, the other
 toggles it. You can use the parameters to create a shortcut in your
@@ -342,6 +343,9 @@ you want to create a shortcut or a hotkey to open the default menu and use the W
 key for the classic menu.<br>
 <br>
 Use "-exit" to exit the Start menu. This command will only work if the Start menu is not currently busy.<br>
+<br>
+Use "-reload" to exit the Start menu and start it again, so it goes through its startup anew. Like "-exit",
+it will only work if the Start menu is not currently busy. If the Start menu is not running, it just starts it.<br>
 <br>
 Use "-settings" to open the Start menu settings. This is useful for creating a shortcut for editing the settings.<br>
 <br>
