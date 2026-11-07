@@ -1649,8 +1649,8 @@ void CMenuContainer::DrawBackground( HDC hdc, const RECT &drawRect )
 	MenuBitmap bmpPagerArrows;
 	SIZE pagArrowSize;
 	MenuSkin::TOpacity opacity=m_bSubMenu?s_Skin.Submenu_opacity:s_Skin.Main_opacity;
-	// the scrolling items can be in the second pane (SecondPane=First)
-	const MenuSkin::ItemDrawSettings &scrollSettings=s_Skin.ItemSettings[m_bSubMenu?MenuSkin::SUBMENU_ITEM:(IsSecondPaneColumn(0)?MenuSkin::COLUMN2_ITEM:MenuSkin::COLUMN1_ITEM)];
+	// the scrolling items can be in the second pane
+	const MenuSkin::ItemDrawSettings &scrollSettings=s_Skin.ItemSettings[m_bSubMenu?MenuSkin::SUBMENU_ITEM:(IsSecondPaneColumn(GetScrollColumn())?MenuSkin::COLUMN2_ITEM:MenuSkin::COLUMN1_ITEM)];
 	int glow=scrollSettings.glowSize;
 	if (!s_Theme) glow=0;
 	// composited text ignores the clip rectangle, so the pager buttons need their background drawn again (see DrawThemeTextEx below)

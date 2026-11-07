@@ -709,6 +709,7 @@ CMenuContainer::CMenuContainer( CMenuContainer *pParent, int index, int options,
 
 	m_MaxWidth=0;
 	m_bTwoColumns=false;
+	m_PinnedPosition=-1;
 	m_bSecondPane=true;
 	m_bSecondPaneFirst=false;
 	m_Pane2Column=1; // the first column is the first pane, the rest the second pane (the layout sets it from the column breaks)
@@ -1055,8 +1056,10 @@ void CMenuContainer::AddInternetSearch( size_t index )
 	m_Items.insert(m_Items.begin()+index,1,item);
 }
 
-void CMenuContainer::AddStandardItems( void )
+void CMenuContainer::AddStandardItems( bool bPlacePinned )
 {
+	if (bPlacePinned)
+		m_PinnedPosition=-1;
 	if (m_pStdItem && m_pStdItem->id!=MENU_NO)
 	{
 		bool bItemsFirst=(m_Options&(CONTAINER_ITEMS_FIRST|CONTAINER_SEARCH))==CONTAINER_ITEMS_FIRST;
@@ -1194,6 +1197,17 @@ void CMenuContainer::AddStandardItems( void )
 			item.bAlignBottom=bAlignBottom;
 			item.bInlineFirst=bInlineFirst;
 			bAlignBottom=bInlineFirst=false;
+
+			if (pStdItem->id==MENU_PINNED_PROGRAMS)
+			{
+				// a placeholder, replaced once all other items are known (PlacePinnedPrograms).
+				// only the Classic main menu can place its pinned programs
+				if (pInlineParent || m_bSubMenu || s_bWin7Style)
+					continue;
+				m_Items.insert(m_Items.begin()+menuIdx,1,item);
+				menuIdx++;
+				continue;
+			}
 			TNetworkType networkType=NETWORK_NONE;
 
 			Assert(pStdItem->folder1 || !pStdItem->folder2);
@@ -1500,7 +1514,88 @@ void CMenuContainer::AddStandardItems( void )
 				menuIdx++;
 			}
 		}
+		PlacePinnedPrograms(bPlacePinned);
 	}
+}
+
+// Passes a placeholder's column break and bottom alignment to the item that takes its place
+void CMenuContainer::InheritColumnFlags( const MenuItem &placeholder, MenuItem &item )
+{
+	if (placeholder.bBreak) item.bBreak=true;
+	if (placeholder.bAlignBottom) item.bAlignBottom=true;
+}
+
+// Starts a new column after every rows items of items[first..last)
+void CMenuContainer::SetOverflowBreaks( std::vector<MenuItem> &items, int first, int last, int rows )
+{
+	if (rows<=0) return;
+	for (int i=first+rows;i<last;i+=rows)
+	{
+		items[i].bBreak=true;
+		items[i].bOverflow=true;
+	}
+}
+
+// Removes the Pinned Programs placeholders and remembers where the first one was (m_PinnedPosition)
+void CMenuContainer::PlacePinnedPrograms( bool bSetPosition )
+{
+	// the pinned programs stay at the start of m_Items (0..m_ScrollCount), because the pager, painting, keyboard and drag and drop
+	// rely on it. only the layout order changes, see GetLayoutOrder
+	for (int i=0;i<(int)m_Items.size();i++)
+	{
+		if (m_Items[i].id!=MENU_PINNED_PROGRAMS)
+			continue;
+		MenuItem placeholder=m_Items[i];
+		m_Items.erase(m_Items.begin()+i);
+		if (bSetPosition && m_PinnedPosition<0 && m_ScrollCount>0)
+		{
+			m_PinnedPosition=i;
+			InheritColumnFlags(placeholder,m_Items[0]);
+			MovePinnedPadding();
+			SetOverflowBreaks(m_Items,0,m_ScrollCount,placeholder.pStdItem?placeholder.pStdItem->rows:0);
+		}
+		else if (i<(int)m_Items.size())
+			InheritColumnFlags(placeholder,m_Items[i]);
+		i--; // continue with the item that took the placeholder's place
+	}
+}
+
+// Moves the bottom alignment from the separator after the pinned programs to the item laid out first
+void CMenuContainer::MovePinnedPadding( void )
+{
+	// when the menu starts with COLUMN_PADDING, AddStandardItems aligns that separator to the bottom. if the pinned programs
+	// are laid out later, the alignment belongs to the items laid out first instead
+	int separator=m_ScrollCount;
+	if (m_PinnedPosition<=separator+1 || separator+1>=(int)m_Items.size()) return; // the layout order doesn't change
+	if (m_Items[separator].id!=MENU_SEPARATOR || !m_Items[separator].bAlignBottom) return;
+	m_Items[separator].bAlignBottom=false;
+	m_Items[separator+1].bAlignBottom=true;
+}
+
+// The order in which InitWindowInternal lays out the items
+void CMenuContainer::GetLayoutOrder( std::vector<int> &order )
+{
+	// normally the order of m_Items. with a Pinned Programs item, the items configured before it come first,
+	// then the pinned programs and their separator, then the rest
+	int count=(int)m_Items.size();
+	order.resize(count);
+	for (int i=0;i<count;i++)
+		order[i]=i;
+	if (m_PinnedPosition<0 || !IsClassicMainMenu() || s_MenuMode!=MODE_NORMAL)
+		return;
+	int pinnedEnd=GetPinnedEnd();
+	int position=m_PinnedPosition<count?m_PinnedPosition:count;
+	if (position>pinnedEnd) // otherwise the pinned programs come first anyway
+		std::rotate(order.begin(),order.begin()+pinnedEnd,order.begin()+position);
+}
+
+// Where the pinned programs end in m_Items, including the separator after them
+int CMenuContainer::GetPinnedEnd( void )
+{
+	int end=m_ScrollCount;
+	if (end<(int)m_Items.size() && m_Items[end].id==MENU_SEPARATOR)
+		end++;
+	return end;
 }
 
 // The SecondPane setting in effect
@@ -1537,9 +1632,9 @@ bool CMenuContainer::IsSecondPaneAfterBreaks( int breaks, int count )
 	}
 }
 
-// Reads the SecondPane setting for the layout. Returns the index of the last column break,
+// Reads the SecondPane setting for the layout. Returns the position in the layout order of the last column break,
 // or -1 when only the first break starts a column (the Windows 7 style keeps two columns)
-int CMenuContainer::InitSecondPane( void )
+int CMenuContainer::InitSecondPane( const std::vector<int> &order )
 {
 	m_bSecondPane=true;
 	m_bSecondPaneFirst=false;
@@ -1548,9 +1643,9 @@ int CMenuContainer::InitSecondPane( void )
 		return -1;
 
 	int lastBreak=-1;
-	for (int i=1;i<(int)m_Items.size();i++)
-		if (m_Items[i].bBreak)
-			lastBreak=i;
+	for (int k=1;k<(int)order.size();k++)
+		if (m_Items[order[k]].bBreak && !m_Items[order[k]].bOverflow) // overflow columns never change the panes
+			lastBreak=k;
 	TSecondPane mode=GetSecondPaneMode();
 	if (mode==SECOND_PANE_NONE)
 		m_bSecondPane=false; // every break starts another first-pane column
@@ -1616,15 +1711,17 @@ int CMenuContainer::GetColumnX( int column )
 	return m_rContent.left+m_ColumnOffsets[column]-m_ColumnOffsets[m_PaneColumns[0].first];
 }
 
-// Where the pager scrolls: the content of a sub-menu, or the first column of the main menu, where the pinned programs are
+// Where the pager scrolls: the content of a sub-menu, or the column of the main menu where the pinned programs start
 RECT CMenuContainer::GetScrollRect( void )
 {
 	if (!m_bTwoColumns || m_ColumnOffsets.empty())
 		return m_rContent;
-	int pane=IsSecondPaneColumn(0)?1:0;
+	int column=GetScrollColumn();
+	int pane=IsSecondPaneColumn(column)?1:0;
 	RECT rc=pane?m_rContent2:m_rContent;
-	if (m_PaneColumns[pane].last>1)
-		rc.right=GetColumnX(1)-s_Skin.Main_separatorWidth; // more columns share the pane: stop at the gap before the next one
+	rc.left=GetColumnX(column);
+	if (column+1<m_PaneColumns[pane].last)
+		rc.right=GetColumnX(column+1)-s_Skin.Main_separatorWidth; // more columns follow in the pane: stop at the gap before the next one
 	return rc;
 }
 
@@ -2769,7 +2866,7 @@ void CMenuContainer::InitItems( void )
 		MenuItem item(MENU_PROGRAMS_TREE);
 		m_Items.push_back(item);
 	}
-	AddStandardItems();
+	AddStandardItems(true);
 
 	// remove trailing separators
 	while (!m_Items.empty() && m_Items[m_Items.size()-1].id==MENU_SEPARATOR && !m_Items[m_Items.size()-1].bInline)
@@ -3396,19 +3493,24 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 
 	// in the Classic two-column menu the last column break starts the second pane, and any earlier break adds a column to the first pane.
 	// the Windows 7 style keeps using only the first break
-	int lastBreak=InitSecondPane();
+	std::vector<int> order; // positions below are in this order (see GetLayoutOrder)
+	GetLayoutOrder(order);
+	int lastBreak=InitSecondPane(order);
 
 	{
 		int row=0, column=0, subColumn=0;
 		int y=0;
 		int maxw=0;
 		int index=m_bSecondPaneFirst?1:0;
-		for (int i=0;i<(int)m_Items.size();i++)
+		int overflowTop=0; // where the pinned programs start, so their overflow columns line up with them
+		for (int k=0;k<(int)order.size();k++)
 		{
+			int i=order[k];
 			MenuItem &item=m_Items[i];
 
-			bool bColumnBreak=item.bBreak && (index==0 || m_bSecondPaneFirst) && (column==0 || lastBreak>=0);
-			if (m_bTwoColumns && i>0 && bColumnBreak)
+			bool bColumnBreak=item.bBreak && !item.bOverflow && (index==0 || m_bSecondPaneFirst) && (column==0 || lastBreak>=0);
+			bool bOverflowBreak=item.bOverflow && !s_bWin7Style;
+			if (m_bTwoColumns && k>0 && (bColumnBreak || bOverflowBreak))
 			{
 				// start a new column
 				column++;
@@ -3422,8 +3524,13 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 					else
 						y=s_Skin.User_frame_position.x+s_Skin.User_image_padding.y-menuPadding[0].top;
 				}
-				index=GetPaneOfNewColumn(column,index,lastBreak<0 || i==lastBreak);
+				if (item.bOverflow)
+					y=overflowTop; // stays in the same pane
+				else
+					index=GetPaneOfNewColumn(column,index,lastBreak<0 || k==lastBreak);
 			}
+			if (i==0 && m_ScrollCount>0)
+				overflowTop=y;
 			item.bNew=false;
 			if (m_bTwoColumns && i<m_OriginalCount && s_MenuMode!=MODE_NORMAL && (i<=m_SearchIndex-m_SearchItemCount || i>m_SearchIndex) && item.id!=MENU_SHUTDOWN_BUTTON)
 			{
@@ -3621,7 +3728,7 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 					y=0;
 				}
 			}
-			else if (item.id==MENU_SEPARATOR && !item.bBlankSeparator && !item.bInline && m_bTwoColumns && (index==0 || m_bSecondPaneFirst) && i+1<(int)m_Items.size() && m_Items[i+1].bBreak)
+			else if (item.id==MENU_SEPARATOR && !item.bBlankSeparator && !item.bInline && m_bTwoColumns && (index==0 || m_bSecondPaneFirst) && k+1<(int)order.size() && m_Items[order[k+1]].bBreak)
 				h=0;
 			item.row=row;
 			item.column=column;
@@ -3730,7 +3837,7 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 	// calculate the horizontal position of each item
 	int maxw=0;
 	int maxh[2]={0,0}; // height of the tallest column in each pane
-	int scrollHeight=0; // the pager scrolls only the first column of the main menu, where the pinned programs are
+	int scrollHeight=0; // the pager scrolls only the column of the main menu where the pinned programs start
 	int scrollWidth=GetSystemMetrics(SM_CXVSCROLL);
 	{
 		m_ColumnOffsets.resize(columnWidths.size());
@@ -3779,7 +3886,7 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 			int pane=IsSecondPaneColumn(item.column)?1:0;
 			if (maxh[pane]<item.itemRect.bottom)
 				maxh[pane]=item.itemRect.bottom;
-			if ((item.column==0 || !m_bTwoColumns) && scrollHeight<item.itemRect.bottom)
+			if ((item.column==GetScrollColumn() || !m_bTwoColumns) && scrollHeight<item.itemRect.bottom)
 				scrollHeight=item.itemRect.bottom;
 		}
 
@@ -4150,7 +4257,7 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 	}
 
 	// create pager
-	int scrollPane=IsSecondPaneColumn(0)?1:0; // the first column can have the second-pane look (SecondPane=First)
+	int scrollPane=IsSecondPaneColumn(GetScrollColumn())?1:0; // the pinned programs can have the second-pane look
 	int scrollTop=GetScrollRect().top;
 	if (!bMultiColumn && scrollHeight>maxHeight[scrollPane] && m_ScrollCount>0 && (m_bSubMenu || !s_bWin7Style))
 	{
@@ -4165,7 +4272,7 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 				m_Items[i].itemRect.bottom=m_Items[i].itemRect.top;
 		}
 		for (size_t i=m_ScrollCount;i<m_Items.size();i++)
-			if (m_Items[i].column==0)
+			if (m_Items[i].column==GetScrollColumn())
 				OffsetRect(&m_Items[i].itemRect,0,-d);
 
 		std::map<unsigned int,int>::iterator it=s_MenuScrolls.find(m_FolderHash[0]);
@@ -4700,8 +4807,8 @@ int CMenuContainer::HitTest( const POINT &pt, bool *bArrow, bool bDrop )
 		{
 			OffsetRect(&rc,0,-m_SearchScrollPos*(rc.bottom-rc.top));
 		}
-		else if (bDrop && m_bTwoColumns && i<n-1 && m_Items[i+1].column==0 && m_Items[i+1].bAlignBottom)
-			rc.bottom=m_Items[i+1].itemRect.top; // when dropping on the padding of the first column, assume the item above the padding was hit
+		else if (bDrop && m_bTwoColumns && i<n-1 && m_Items[i+1].column==GetScrollColumn() && m_Items[i+1].bAlignBottom)
+			rc.bottom=m_Items[i+1].itemRect.top; // when dropping on the padding of the pinned programs' column, assume the item above the padding was hit
 		if (PtInRect(&rc,pt))
 		{
 			if (bArrow)

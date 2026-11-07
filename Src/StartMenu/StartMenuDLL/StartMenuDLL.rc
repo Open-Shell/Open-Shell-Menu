@@ -144,6 +144,8 @@ BEGIN
     CONTROL         "Don't track recent items",IDC_CHECKNOTRACK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,130,155,97,10
     CONTROL         "Place items first",IDC_CHECKITEMSFIRST,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,130,168,69,10
     CONTROL         "Hide extensions",IDC_CHECKNOEXT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,130,181,72,10
+    LTEXT           "Rows per column:",IDC_STATICROWS,130,195,60,8
+    EDITTEXT        IDC_EDITROWS,192,193,30,12,ES_AUTOHSCROLL | ES_NUMBER
     PUSHBUTTON      "Restore Defaults",IDC_BUTTONRESET,7,215,90,14
     DEFPUSHBUTTON   "OK",IDOK,135,215,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,192,215,50,14
@@ -1086,6 +1088,9 @@ BEGIN
     IDS_SECOND_PANE_FIRST   "First column"
     IDS_SECOND_PANE_FIRST_TIP 
                             "The column before the first column break looks like the second pane and is drawn on the left"
+    IDS_PINNED_ITEM         "Pinned programs"
+    IDS_PINNED_ITEM_TIP     "Places the pinned programs here, as a list. Without this item they are at the top of the first column"
+    IDS_ROWS_TIP            "After this many rows the list continues in the next column. Leave empty for no limit"
 END
 
 STRINGTABLE 
