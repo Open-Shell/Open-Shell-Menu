@@ -3314,14 +3314,17 @@ static void CleanStartMenuDLL( void )
 	ClearIatHook(g_ShellRegisterHotKeyHook);
 	g_ShellRegisterHotKeyHook=NULL;
 
-	CloseManagers(false);
-	ClearIatHooks();
-
-	// cleanup
+	// close the menu and the settings before the managers. an open menu calls g_SearchManager.CloseMenu() when it is destroyed,
+	// and after CloseManagers that would use the search manager's deleted lock and crash Explorer (exiting with the menu open)
 	if (g_Owner.m_hWnd) g_Owner.DestroyWindow();
 	CloseSettings();
 	CMenuContainer::CloseStartMenu();
 	CMenuFader::ClearAll();
+
+	CloseManagers(false);
+	ClearIatHooks();
+
+	// cleanup
 	UnhookDropTarget();
 	EnableHotkeys(HOTKEYS_CLEAR);
 	HWND hwnd=FindWindow(L"OpenShellMenu.CStartHookWindow",L"StartHookWindow");
