@@ -1497,9 +1497,10 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 		{
 			// scroll the pager to make this item visible
 			RECT rc=item.itemRect;
-			OffsetRect(&rc,0,-m_rContent.top);
+			int scrollTop=GetScrollRect().top;
+			OffsetRect(&rc,0,-scrollTop);
 			int pos=m_ScrollOffset;
-			int total=m_Items[m_ScrollCount-1].itemRect.bottom-m_rContent.top-m_ScrollHeight;
+			int total=m_Items[m_ScrollCount-1].itemRect.bottom-scrollTop-m_ScrollHeight;
 			if (pos>rc.top-m_ScrollButtonSize)
 				pos=rc.top-m_ScrollButtonSize;
 			else if (pos<rc.bottom+m_ScrollButtonSize-m_ScrollHeight)
