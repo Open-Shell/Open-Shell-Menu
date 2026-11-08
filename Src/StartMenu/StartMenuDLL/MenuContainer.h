@@ -25,6 +25,7 @@
 #endif
 
 enum TRecentPrograms;
+enum TSecondPane;
 
 enum TMenuID
 {
@@ -661,6 +662,14 @@ private:
 	POINT m_PaintOffset;
 	int m_MaxWidth;
 	bool m_bTwoColumns;
+	bool m_bSecondPane; // false when the SecondPane setting gives no column the second-pane look
+	bool m_bSecondPaneFirst; // SecondPane=First: the second pane is the columns before m_Pane2Column, on the left
+	int m_Pane2Column; // where the panes meet: the second pane starts here (or ends here with m_bSecondPaneFirst)
+	struct PaneColumns
+	{
+		int first, last; // [first,last)
+	};
+	PaneColumns m_PaneColumns[2]; // the columns of the first and the second pane, set by InitWindowInternal
 	RECT m_rMenu;
 	RECT m_rContent;
 	RECT m_rContent2;
@@ -701,6 +710,18 @@ private:
 
 	int AddSearchItems( const std::vector<SearchItem> &items, const CString &categoryName, unsigned int categoryHash, int originalCount );
 	void GetRecentPrograms( std::vector<MenuItem> &items, int maxCount );
+	static TSecondPane GetSecondPaneMode( void );
+	static int CountColumnBreaks( const StdMenuItem *pStdItem );
+	bool IsSecondPaneAfterBreaks( int breaks, int count );
+	int InitSecondPane( void );
+	int GetPaneOfNewColumn( int column, int pane, bool bLastBreak );
+	void UpdatePaneColumns( void );
+	int GetPaneWidth( int pane, const std::vector<int> &columnWidths );
+	int GetColumnX( int column );
+	RECT GetScrollRect( void );
+	int GetScrollRange( void );
+	bool IsClassicMainMenu( void ) { return m_bTwoColumns && !m_bSubMenu && !s_bWin7Style; }
+	bool IsSecondPaneColumn( int column ) { return column>=m_PaneColumns[1].first && column<m_PaneColumns[1].last; }
 
 	// additional commands for the context menu
 	enum

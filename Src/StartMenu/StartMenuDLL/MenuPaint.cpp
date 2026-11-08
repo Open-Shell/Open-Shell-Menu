@@ -420,6 +420,28 @@ end:;
 //	Trace("BlendPatterns: %.3f ms",(int)dt/1000.f);
 }
 
+// Flips a 32-bit bitmap horizontally
+static void MirrorRows( unsigned int *bits, int width, int height )
+{
+	for (int y=0;y<height;y++)
+		std::reverse(bits+y*width,bits+(y+1)*width);
+}
+
+// The horizontal range of something aligned to a pane (HALIGN_*1 or HALIGN_*2), given the [left,right) of each pane
+static void AlignToPane( MenuSkin::THAlign align, const int pane1[2], const int pane2[2], int &x0, int &x1 )
+{
+	if (align==MenuSkin::HALIGN_CENTER1 || align==MenuSkin::HALIGN_LEFT1 || align==MenuSkin::HALIGN_RIGHT1)
+	{
+		x0=pane1[0];
+		x1=pane1[1];
+	}
+	else if (align==MenuSkin::HALIGN_CENTER2 || align==MenuSkin::HALIGN_LEFT2 || align==MenuSkin::HALIGN_RIGHT2)
+	{
+		x0=pane2[0];
+		x1=pane2[1];
+	}
+}
+
 // Creates the bitmap for the background
 void CMenuContainer::CreateBackground( int width1, int width2, int height1, int height2, int &totalWidth, int &totalHeight, bool bCreateRegion )
 {
@@ -501,12 +523,23 @@ void CMenuContainer::CreateBackground( int width1, int width2, int height1, int 
 	totalWidth1+=menuPadding[0].left+menuPadding[0].right;
 	if (totalWidth1<total) totalWidth1=total;
 	int totalWidth2=0;
-	if (m_bTwoColumns)
+	if (m_bTwoColumns && m_bSecondPane)
 		totalWidth2=width2+menuPadding[1].left+menuPadding[1].right;
 	totalWidth=totalWidth1+totalWidth2;
+	// where each pane ends up. normally the caption, the first pane, then the second pane.
+	// with SecondPane=First the background is drawn in the normal order and then mirrored (see below), so the second pane is on the left
+	bool bPane2First=m_bTwoColumns && m_bSecondPane && m_bSecondPaneFirst && totalWidth2>0 && !s_bRTL;
+	int pane1[2]={0,totalWidth1}, pane2[2]={totalWidth1,totalWidth}; // [left,right) of each pane, to align emblems and the user
+	if (bPane2First)
+	{
+		pane2[0]=textHeight;
+		pane2[1]=textHeight+totalWidth2;
+		pane1[0]=pane2[1];
+		pane1[1]=totalWidth;
+	}
 
 	totalHeight=height1+menuPadding[0].top+menuPadding[0].bottom;
-	if (m_bTwoColumns)
+	if (m_bTwoColumns && m_bSecondPane)
 	{
 		int totalHeight2=height2+menuPadding[1].top+menuPadding[1].bottom;
 		if (totalHeight<totalHeight2) totalHeight=totalHeight2;
@@ -528,6 +561,14 @@ void CMenuContainer::CreateBackground( int width1, int width2, int height1, int 
 		m_rContent2.right=totalWidth-menuPadding[1].right;
 		m_rContent2.top=menuPadding[1].top;
 		m_rContent2.bottom=m_rContent2.top+height2;
+	}
+
+	if (bPane2First)
+	{
+		m_rContent.left=pane1[0]+menuPadding[0].left;
+		m_rContent.right=pane1[1]-menuPadding[0].right;
+		m_rContent2.left=pane2[0]+menuPadding[1].left;
+		m_rContent2.right=pane2[1]-menuPadding[1].right;
 	}
 
 	MenuBitmap bmpSearch;
@@ -903,6 +944,18 @@ void CMenuContainer::CreateBackground( int width1, int width2, int height1, int 
 
 	SelectObject(hdcTemp,bmp02);
 
+	if (bPane2First)
+	{
+		// SecondPane=First: mirror what was drawn so far, so the second pane is on the left and the skin's outer borders stay
+		// on the outside. The emblem mask is mirrored with it. Emblems and text are drawn after this and are not mirrored
+		SelectObject(hdc,bmp0); // deselect m_Bitmap so all the GDI operations get flushed
+		GdiFlush();
+		MirrorRows(bits,totalWidth,totalHeight);
+		if (EMaskBits)
+			MirrorRows(EMaskBits,totalWidth,totalHeight);
+		SelectObject(hdc,m_Bitmap);
+	}
+
 	for (int i=0;i<_countof(s_Skin.Main_emblems);i++)
 	{
 		if (s_Skin.Main_emblems[i].GetBitmap())
@@ -925,10 +978,7 @@ void CMenuContainer::CreateBackground( int width1, int width2, int height1, int 
 			int x0=0, x1=totalWidth;
 			int y0=0, y1=totalHeight;
 
-			if (alignH==MenuSkin::HALIGN_CENTER1 || alignH==MenuSkin::HALIGN_LEFT1 || alignH==MenuSkin::HALIGN_RIGHT1)
-				x1=totalWidth1;
-			else if (alignH==MenuSkin::HALIGN_CENTER2 || alignH==MenuSkin::HALIGN_LEFT2 || alignH==MenuSkin::HALIGN_RIGHT2)
-				x0=totalWidth1;
+			AlignToPane(alignH,pane1,pane2,x0,x1);
 			if (alignH==MenuSkin::HALIGN_LEFT || alignH==MenuSkin::HALIGN_LEFT1 || alignH==MenuSkin::HALIGN_LEFT2)
 				x1=x0+w;
 			else if (alignH==MenuSkin::HALIGN_RIGHT || alignH==MenuSkin::HALIGN_RIGHT1 || alignH==MenuSkin::HALIGN_RIGHT2)
@@ -985,11 +1035,7 @@ void CMenuContainer::CreateBackground( int width1, int width2, int height1, int 
 	{
 		SelectObject(hdc,bmp0); // deselect m_Bitmap so all the GDI operations get flushed
 		// mirror the background image for RTL windows
-		for (int y=0;y<totalHeight;y++)
-		{
-			int yw=y*totalWidth;
-			std::reverse(bits+yw,bits+yw+totalWidth);
-		}
+		MirrorRows(bits,totalWidth,totalHeight);
 		SelectObject(hdc,m_Bitmap);
 	}
 
@@ -1147,11 +1193,11 @@ void CMenuContainer::CreateBackground( int width1, int width2, int height1, int 
 			if (pos.x==MenuSkin::USER_CENTER)
 				pos.x=(totalWidth-frameSize.cx)/2;
 			else if (pos.x==MenuSkin::USER_CENTER1)
-				pos.x=(totalWidth1+textHeight-frameSize.cx)/2;
+				pos.x=((bPane2First?pane1[0]:textHeight)+pane1[1]-frameSize.cx)/2;
 			else if (pos.x==MenuSkin::USER_CENTER2)
 			{
 				if (totalWidth2>0)
-					pos.x=totalWidth1+(totalWidth2-frameSize.cx)/2;
+					pos.x=(pane2[0]+pane2[1]-frameSize.cx)/2;
 				else
 					pos.x=(totalWidth-frameSize.cx)/2;
 			}
@@ -1228,10 +1274,7 @@ void CMenuContainer::CreateBackground( int width1, int width2, int height1, int 
 	{
 		RECT rc0;
 		int x0=0, x1=totalWidth;
-		if (s_Skin.User_name_align==MenuSkin::HALIGN_CENTER1 || s_Skin.User_name_align==MenuSkin::HALIGN_LEFT1 || s_Skin.User_name_align==MenuSkin::HALIGN_RIGHT1)
-			x1=totalWidth1;
-		else if (s_Skin.User_name_align==MenuSkin::HALIGN_CENTER2 || s_Skin.User_name_align==MenuSkin::HALIGN_LEFT2 || s_Skin.User_name_align==MenuSkin::HALIGN_RIGHT2)
-			x0=totalWidth1;
+		AlignToPane(s_Skin.User_name_align,pane1,pane2,x0,x1);
 
 		if (s_Skin.User_name_position.left<0)
 			rc0.left=x1+s_Skin.User_name_position.left;
@@ -1606,8 +1649,13 @@ void CMenuContainer::DrawBackground( HDC hdc, const RECT &drawRect )
 	MenuBitmap bmpPagerArrows;
 	SIZE pagArrowSize;
 	MenuSkin::TOpacity opacity=m_bSubMenu?s_Skin.Submenu_opacity:s_Skin.Main_opacity;
-	int glow=s_Skin.ItemSettings[m_bSubMenu?MenuSkin::SUBMENU_ITEM:MenuSkin::COLUMN1_ITEM].glowSize;
+	// the scrolling items can be in the second pane (SecondPane=First)
+	const MenuSkin::ItemDrawSettings &scrollSettings=s_Skin.ItemSettings[m_bSubMenu?MenuSkin::SUBMENU_ITEM:(IsSecondPaneColumn(0)?MenuSkin::COLUMN2_ITEM:MenuSkin::COLUMN1_ITEM)];
+	int glow=scrollSettings.glowSize;
 	if (!s_Theme) glow=0;
+	// composited text ignores the clip rectangle, so the pager buttons need their background drawn again (see DrawThemeTextEx below)
+	bool bTextSpills=(glow || opacity==MenuSkin::OPACITY_FULLALPHA || opacity==MenuSkin::OPACITY_FULLGLASS ||
+		scrollSettings.opacity==MenuSkin::OPACITY_FULLALPHA || scrollSettings.opacity==MenuSkin::OPACITY_FULLGLASS);
 	TRecentKeys recentType=(TRecentKeys)GetSettingInt(L"RecentProgKeys");
 
 	if (m_bSubMenu)
@@ -1638,13 +1686,14 @@ void CMenuContainer::DrawBackground( HDC hdc, const RECT &drawRect )
 	HGDIOBJ font0=GetCurrentObject(hdc,OBJ_FONT);
 	SetBkMode(hdc,TRANSPARENT);
 
-	// set clip rectangle for the scrollable items
-	int clipTop=m_rContent.top;
-	int clipBottom=m_rContent.bottom;
+	// set clip rectangle for the scrollable items (the pager covers only the column that scrolls, see GetScrollRect)
+	RECT rScroll=GetScrollRect();
+	int clipTop=rScroll.top;
+	int clipBottom=rScroll.bottom;
 	if (m_bScrollUp)
-		clipTop=m_rContent.top+m_ScrollButtonSize;
+		clipTop=rScroll.top+m_ScrollButtonSize;
 	if (m_bScrollDown)
-		clipBottom=m_rContent.top+m_ScrollHeight-m_ScrollButtonSize;
+		clipBottom=rScroll.top+m_ScrollHeight-m_ScrollButtonSize;
 	if (m_ScrollHeight>0)
 		IntersectClipRect(hdc,0,clipTop,m_rMenu.right,clipBottom);
 
@@ -1665,10 +1714,10 @@ void CMenuContainer::DrawBackground( HDC hdc, const RECT &drawRect )
 			SelectClipRgn(hdc,NULL);
 			if (m_bScrollUp)
 			{
-				if (glow || opacity==MenuSkin::OPACITY_FULLALPHA || opacity==MenuSkin::OPACITY_FULLGLASS)
+				if (bTextSpills)
 				{
 					// fix background behind the up button (DrawThemeTextEx may spill onto the tablecloth)
-					RECT rc={m_rContent.left,0,m_rContent.right,clipTop};
+					RECT rc={rScroll.left,0,rScroll.right,clipTop};
 					if (bAlphaMain || !bmpMain)
 					{
 						SetDCBrushColor(hdc,m_bSubMenu?s_Skin.Submenu_background:s_Skin.Main_background);
@@ -1677,7 +1726,7 @@ void CMenuContainer::DrawBackground( HDC hdc, const RECT &drawRect )
 					if (bmpMain)
 					{
 						HGDIOBJ bmp0=SelectObject(hdc2,bmpMain);
-						IntersectClipRect(hdc,m_rContent.left,0,m_rContent.right,clipTop);
+						IntersectClipRect(hdc,rScroll.left,0,rScroll.right,clipTop);
 						MarginsBlit(hdc2,hdc,rSrcMain,m_rMenu,rMarginsMain,bAlphaMain);
 						SelectObject(hdc2,bmp0);
 						SelectClipRgn(hdc,NULL);
@@ -1685,7 +1734,7 @@ void CMenuContainer::DrawBackground( HDC hdc, const RECT &drawRect )
 				}
 
 				// draw up button
-				RECT rc=m_rContent;
+				RECT rc=rScroll;
 				rc.bottom=clipTop;
 				if (bmpPager.GetBitmap() && bmpPagerArrows.GetBitmap())
 				{
@@ -1722,10 +1771,10 @@ void CMenuContainer::DrawBackground( HDC hdc, const RECT &drawRect )
 			{
 				int bottom=clipBottom+s_Skin.ItemSettings[m_bSubMenu?MenuSkin::SUBMENU_ITEM:MenuSkin::COLUMN1_ITEM].itemHeight;
 				if (bottom>=m_rMenu.bottom) bottom=m_rMenu.bottom;
-				if (bottom>clipBottom && (glow || opacity==MenuSkin::OPACITY_FULLALPHA || opacity==MenuSkin::OPACITY_FULLGLASS))
+				if (bottom>clipBottom && bTextSpills)
 				{
 					// fix background behind the up button (DrawThemeTextEx may spill onto the tablecloth)
-					RECT rc={m_rContent.left,clipBottom,m_rContent.right,bottom};
+					RECT rc={rScroll.left,clipBottom,rScroll.right,bottom};
 					if (bAlphaMain || !bmpMain)
 					{
 						SetDCBrushColor(hdc,m_bSubMenu?s_Skin.Submenu_background:s_Skin.Main_background);
@@ -1734,7 +1783,7 @@ void CMenuContainer::DrawBackground( HDC hdc, const RECT &drawRect )
 					if (bmpMain)
 					{
 						HGDIOBJ bmp0=SelectObject(hdc2,bmpMain);
-						IntersectClipRect(hdc,m_rContent.left,clipBottom,m_rContent.right,bottom);
+						IntersectClipRect(hdc,rScroll.left,clipBottom,rScroll.right,bottom);
 						MarginsBlit(hdc2,hdc,rSrcMain,m_rMenu,rMarginsMain,bAlphaMain);
 						SelectObject(hdc2,bmp0);
 						SelectClipRgn(hdc,NULL);
@@ -1742,8 +1791,8 @@ void CMenuContainer::DrawBackground( HDC hdc, const RECT &drawRect )
 				}
 
 				// draw down button
-				RECT rc=m_rContent;
-				rc.bottom=m_rContent.top+m_ScrollHeight;
+				RECT rc=rScroll;
+				rc.bottom=rScroll.top+m_ScrollHeight;
 				rc.top=clipBottom;
 				if (bmpPager.GetBitmap() && bmpPagerArrows.GetBitmap())
 				{
@@ -2451,18 +2500,23 @@ void CMenuContainer::DrawBackground( HDC hdc, const RECT &drawRect )
 		}
 	}
 
-	// draw vertical separators
-	if (m_bSubMenu && m_ColumnOffsets.size()>1)
+	// draw vertical separators between the columns of a sub-menu, or within each pane of the main menu
+	// (the separator between the two panes is part of the background)
+	for (int pane=0;pane<2;pane++)
 	{
+		const RECT &content=pane?m_rContent2:m_rContent;
+		int sepFirst=m_PaneColumns[pane].first+1, sepLast=m_PaneColumns[pane].last; // separators go before these columns
+		if (sepFirst>=sepLast)
+			continue;
 		if (bmpSeparatorV.GetBitmap())
 		{
 			HGDIOBJ bmp0=SelectObject(hdc2,bmpSeparatorV.GetBitmap());
 			RECT rSrc={0,0,sepWidth,sepSlicesY[0]+sepSlicesY[1]+sepSlicesY[2]};
 			RECT rMargins={0,sepSlicesY[0],0,sepSlicesY[2]};
-			for (size_t i=1;i<m_ColumnOffsets.size();i++)
+			for (int i=sepFirst;i<sepLast;i++)
 			{
-				int x=m_rContent.left+m_ColumnOffsets[i];
-				RECT rc={x-sepWidth,m_rContent.top,x,m_rContent.bottom};
+				int x=GetColumnX(i);
+				RECT rc={x-sepWidth,content.top,x,content.bottom};
 				MarginsBlit(hdc2,hdc,rSrc,rc,rMargins,bmpSeparatorV.bIs32);
 			}
 			SelectObject(hdc2,bmp0);
@@ -2480,10 +2534,10 @@ void CMenuContainer::DrawBackground( HDC hdc, const RECT &drawRect )
 			{
 				offset=(sepWidth-2)/2;
 			}
-			for (size_t i=1;i<m_ColumnOffsets.size();i++)
+			for (int i=sepFirst;i<sepLast;i++)
 			{
-				int x=m_rContent.left+m_ColumnOffsets[i]+offset;
-				RECT rc={x-sepWidth,m_rContent.top,x,m_rContent.bottom};
+				int x=GetColumnX(i)+offset;
+				RECT rc={x-sepWidth,content.top,x,content.bottom};
 				if (s_Theme)
 					DrawThemeBackground(s_Theme,hdc,TP_SEPARATOR,TS_NORMAL,&rc,NULL);
 				else
