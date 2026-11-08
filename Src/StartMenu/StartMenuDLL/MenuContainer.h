@@ -719,6 +719,7 @@ private:
 	int GetPaneWidth( int pane, const std::vector<int> &columnWidths );
 	int GetColumnX( int column );
 	RECT GetScrollRect( void );
+	int GetScrollRange( void );
 	bool IsClassicMainMenu( void ) { return m_bTwoColumns && !m_bSubMenu && !s_bWin7Style; }
 	bool IsSecondPaneColumn( int column ) { return column>=m_PaneColumns[1].first && column<m_PaneColumns[1].last; }
 
