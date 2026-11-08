@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!-- VS 2026 provides v145; VS 2022 continues to use v143. -->
+    <OpenShellPlatformToolset Condition="'$(OpenShellPlatformToolset)'=='' and '$(VisualStudioVersion)' &gt;= '18.0'">v145</OpenShellPlatformToolset>
+    <OpenShellPlatformToolset Condition="'$(OpenShellPlatformToolset)'==''">v143</OpenShellPlatformToolset>
+    <CS_VERSION Condition="'$(CS_VERSION)'==''">4.4.1000</CS_VERSION>
+    <CS_VERSION_ORIG Condition="'$(CS_VERSION_ORIG)'==''">$(CS_VERSION)</CS_VERSION_ORIG>
+  </PropertyGroup>
+</Project>

@@ -71,6 +71,21 @@ static HRESULT SHOpenFolderAndSelectItemsSafe(PCIDLIST_ABSOLUTE pidlFolder, UINT
 	});
 }
 
+// Open a shortcut's target location, not the folder containing the shortcut itself.
+static HRESULT OpenContainingItemSafe(PCIDLIST_ABSOLUTE pidl)
+{
+	return ExecuteOnSTAThread([=]() {
+		CComPtr<IShellItem> item, target;
+		CAbsolutePidl targetPidl;
+		if (SUCCEEDED(SHCreateItemFromIDList(pidl, IID_IShellItem, (void**)&item)) &&
+			SUCCEEDED(item->BindToHandler(NULL, BHID_LinkTargetItem, IID_IShellItem, (void**)&target)) &&
+			SUCCEEDED(SHGetIDListFromObject(target, &targetPidl)))
+			return SHOpenFolderAndSelectItems(targetPidl, 0, NULL, 0);
+
+		return SHOpenFolderAndSelectItems(pidl, 0, NULL, 0);
+	});
+}
+
 static CString g_RenameText;
 static POINT g_RenamePos;
 
@@ -3178,7 +3193,7 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 				// Use the shell API on a worker STA for that operation, without passing
 				// the apartment-bound IContextMenu interface to another thread.
 				if (verb.CompareNoCase(L"opencontaining") == 0)
-					hr = SHOpenFolderAndSelectItemsSafe(pItemPidl1, 0, NULL, 0);
+					hr = OpenContainingItemSafe(pItemPidl1);
 				else
 					hr = pInvokeMenu->InvokeCommand((LPCMINVOKECOMMANDINFO)&info);
 				LOG_MENU(LOG_EXECUTE,L"Invoke command, ptr=%p, res=%d",this,hr);

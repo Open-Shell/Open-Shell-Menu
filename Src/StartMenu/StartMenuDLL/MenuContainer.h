@@ -10,6 +10,7 @@
 #include "SearchManager.h"
 #include "DragDrop.h"
 #include "TouchHelper.h"
+#include "MenuFolderWatch.h"
 #include <vector>
 #include <map>
 #include <ctxtcall.h>
@@ -312,6 +313,8 @@ public:
 		MESSAGE_HANDLER( WM_GESTURE, OnGesture )
 		MESSAGE_HANDLER( WM_GESTURENOTIFY, OnGestureNotify )
 		MESSAGE_HANDLER( MCM_REFRESH, OnRefresh )
+		MESSAGE_HANDLER( MCM_FOLDERCHANGED, OnFolderChanged )
+		MESSAGE_HANDLER( MCM_OUTSIDECLICK, OnOutsideClick )
 		MESSAGE_HANDLER( MCM_SETCONTEXTITEM, OnSetContextItem )
 		MESSAGE_HANDLER( MCM_REDRAWEDIT, OnRedrawEdit )
 		MESSAGE_HANDLER( MCM_REFRESHICONS, OnRefreshIcons )
@@ -367,9 +370,19 @@ protected:
 	LRESULT OnDestroy( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled );
 	LRESULT OnShowWindow( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled );
 	LRESULT OnRefresh( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled );
+	LRESULT OnFolderChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled );
+	void StartFolderWatch( void );
+	void RefreshFolderContents( void );
+	void QueueFolderRefresh( void );
+	bool CanRefreshFolders( void ) const;
+	int FindRefreshItem( PCIDLIST_ABSOLUTE pidl, TMenuID id, unsigned int nameHash ) const;
 	LRESULT OnPaint( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled );
 	LRESULT OnEraseBkgnd( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled ) { return 1; }
 	LRESULT OnActivate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled );
+	LRESULT OnOutsideClick( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled );
+	static void KeepAfterAsyncDrop( void );
+	static void RestoreActiveDragImage( void );
+	static LRESULT CALLBACK AsyncDropMouseHook( int code, WPARAM wParam, LPARAM lParam );
 	LRESULT OnMouseActivate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled );
 	LRESULT OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled );
 	LRESULT OnMouseLeave( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled );
@@ -614,6 +627,9 @@ private:
 	bool m_bRefreshItems;
 	bool m_bWorkAreaPosted;
 	volatile DWORD m_RefreshPosted;
+	CMenuFolderWatch m_FolderWatch;
+	CAbsolutePidl m_ProgramWatchRoots[2];
+	bool m_bFolderDirty, m_bTreeDirty, m_bFolderRefreshing, m_bFolderWatchStopped;
 	int m_Options;
 	const StdMenuItem *m_pStdItem; // the first item
 	CMenuContainer *m_pParent; // parent menu
@@ -645,6 +661,9 @@ private:
 	CComPtr<IDropTargetHelper> m_pDropTargetHelper; // to show images while dragging
 	CComPtr<IDragSourceHelper2> m_pDragSourceHelper;
 	CComPtr<IDataObject> m_pDragObject;
+	HWND m_DragImageWindow; // current menu or embedded tree receiving the drag
+	POINT m_DragImagePoint; // last screen coordinates passed to the Shell helper
+	DWORD m_DragImageEffect;
 	CComPtr<IDropTarget> m_pDropTarget;
 	const CItemManager::ItemInfo *m_pDropTargetInfo;
 	int m_DropTargetIndex;
@@ -763,6 +782,7 @@ private:
 		TIMER_BALLOON_HIDE=6,
 		TIMER_SEARCH=7,
 		TIMER_DRAG=8,
+		TIMER_FOLDER_REFRESH=9,
 
 		MCM_REFRESH=WM_USER+10, // posted to force the container to refresh its contents
 		MCM_SETCONTEXTITEM=WM_USER+11, // sets the item for the context menu. wParam is the nameHash of the item
@@ -770,6 +790,8 @@ private:
 		MCM_REFRESHICONS=WM_USER+13, // refreshes the icon list and redraws all menus
 		MCM_SETHOTITEM=WM_USER+14, // sets the hot item
 		MCM_WORKAREACHANGED=WM_USER+15, // when the working area is changed
+		MCM_FOLDERCHANGED=WM_USER+16, // SHChangeNotifyRegister shared-memory notification
+		MCM_OUTSIDECLICK=WM_USER+17, // click outside an inactive menu after an async drop
 
 		// some constants
 		MIN_SCROLL_HEIGHT=13, // the scroll buttons are at least this tall
@@ -886,6 +908,8 @@ private:
 	static bool s_bHasTouch; // the device has integrated touch digitizer
 	static char s_bActiveDirectory; // the Active Directory services are available (-1 - uninitialized)
 	static bool s_bPreventClosing; // prevents the menus from closing even if they lose focus
+	static bool s_bKeepAfterAsyncDrop; // keep menus when the native transfer dialog gains focus
+	static HHOOK s_AsyncDropMouseHook; // exists only for the retained menu session
 	static bool s_bDragClosed; // the menu was closed during a drag operation
 	static bool s_bTempHidden; // the menu windows are temporarily hidden
 	static bool s_bDisableHover; // disable hovering while the search box has the focus

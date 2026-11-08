@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="CopyStartMenuSkins" AfterTargets="Build"
+          Condition="'$(MSBuildProjectName)'=='StartMenu' and '$(DesignTimeBuild)'!='true'">
+    <ItemGroup>
+      <StartMenuRuntimeSkins Include="$(MSBuildThisFileDirectory)build\bin\Skins\*.skin;$(MSBuildThisFileDirectory)build\bin\Skins\*.skin7" />
+    </ItemGroup>
+    <Copy SourceFiles="@(StartMenuRuntimeSkins)" DestinationFolder="$(TargetDir)Skins" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

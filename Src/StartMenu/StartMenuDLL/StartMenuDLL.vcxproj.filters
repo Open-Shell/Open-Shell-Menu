@@ -101,6 +101,9 @@
     <ClInclude Include="LogManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MenuFolderWatch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="MenuContainer.h">
       <Filter>Header Files</Filter>
     </ClInclude>

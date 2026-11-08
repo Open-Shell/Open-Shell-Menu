@@ -360,3 +360,6 @@ Src/Setup/Temp/
 *.zip
 *.bin
 *.chm
+
+# Disposable native Shell regression test fixtures
+/build/open-containing-tests/

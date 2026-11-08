@@ -3043,6 +3043,8 @@ void CMenuContainer::AnimateMenu( int flags, int speed, const RECT &rect )
 			s_UserPicture.SetWindowPos(NULL,&s_UserPictureRect,SWP_NOZORDER|SWP_NOACTIVATE|SWP_SHOWWINDOW);
 		}
 
+		RestoreActiveDragImage(); // keep the preview above the newly raised menu
+
 		// animate
 		auto time0=steady_clock::now();
 		while (true)
@@ -3098,6 +3100,8 @@ void CMenuContainer::AnimateMenu( int flags, int speed, const RECT &rect )
 			}
 			rgn0=ExtCreateRegion(&xform,rgnSize,(RGNDATA*)&buf[0]);
 		}
+
+		RestoreActiveDragImage(); // keep the preview above the newly raised menu
 
 		// animate
 		auto time0=steady_clock::now();
@@ -3169,6 +3173,7 @@ void CMenuContainer::AnimateMenu( int flags, int speed, const RECT &rect )
 	{
 		// no animation
 		SetWindowPos((flags&AW_TOPMOST)?HWND_TOPMOST:HWND_TOP,&rect,SWP_SHOWWINDOW|((flags&AW_ACTIVATE)?0:SWP_NOACTIVATE));
+		RestoreActiveDragImage();
 		RedrawWindow(NULL,NULL,RDW_INVALIDATE|RDW_FRAME|RDW_UPDATENOW);
 		if (bUserPic)
 		{
