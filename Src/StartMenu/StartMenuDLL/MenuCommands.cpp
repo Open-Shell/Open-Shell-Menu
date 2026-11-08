@@ -3117,12 +3117,15 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 			info.lpVerbW=MAKEINTRESOURCEW(res-verbOffset);
 			info.nShow=SW_SHOWNORMAL;
 			bool bOpenTruePath=false;
+			bool bOpenFolderPath=false;
 			wchar_t targetlnkPath[_MAX_PATH]; // path to target.lnk in a fake folder
 			wchar_t dir[_MAX_PATH];
 			if (SHGetPathFromIDList(pItemPidl1,dir))
 			{
 				if (_stricmp(command,"open")==0 && GetSettingBool(L"OpenTruePath") && GetFakeFolder(targetlnkPath,_countof(targetlnkPath),dir))
 					bOpenTruePath=true;
+				else if (_stricmp(command,"open")==0 && GetSettingBool(L"OpenTruePath") && (GetFileAttributes(dir)==FILE_ATTRIBUTE_DIRECTORY))
+					bOpenFolderPath=true;
 				else
 				{
 					PathRemoveFileSpec(dir);
@@ -3169,6 +3172,12 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 				HINSTANCE hinst=ShellExecute(NULL,NULL,targetlnkPath,NULL,NULL,SW_SHOWNORMAL);
 				LOG_MENU(LOG_EXECUTE,L"Invoke command, ptr=%p, res=%d",this,hinst);
 				executeSuccess=static_cast<int>(reinterpret_cast<uintptr_t>(hinst))>=32;
+			}
+			else if (bOpenFolderPath)
+			{
+				HINSTANCE hinst = ShellExecute(NULL,NULL,dir,NULL,NULL,SW_SHOWNORMAL);
+				LOG_MENU(LOG_EXECUTE, L"Invoke command, ptr=%p, res=%d",this,hinst);
+				executeSuccess = static_cast<int>(reinterpret_cast<uintptr_t>(hinst)) >= 32;
 			}
 			else
 			{
