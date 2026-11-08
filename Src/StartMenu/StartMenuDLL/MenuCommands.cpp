@@ -3123,9 +3123,9 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 			if (SHGetPathFromIDList(pItemPidl1,dir))
 			{
 				if (_stricmp(command,"open")==0 && GetSettingBool(L"OpenTruePath") && GetFakeFolder(targetlnkPath,_countof(targetlnkPath),dir))
-					bOpenTruePath=true;
-				else if (_stricmp(command,"open")==0 && GetSettingBool(L"OpenTruePath") && (GetFileAttributes(dir)==FILE_ATTRIBUTE_DIRECTORY))
-					bOpenFolderPath=true;
+					bOpenTruePath = true;
+				else if (_stricmp(command,"open")==0 && GetSettingBool(L"OpenTruePath") && ((GetFileAttributes(dir)&FILE_ATTRIBUTE_DIRECTORY)==FILE_ATTRIBUTE_DIRECTORY))
+					bOpenFolderPath = true;
 				else
 				{
 					PathRemoveFileSpec(dir);
