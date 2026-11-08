@@ -34,7 +34,7 @@ public:
 	void ResetTempIcons( void );
 	void LoadCacheFile( void );
 	void SaveCacheFile( void );
-	void ClearCache( void );
+	bool ClearCache( void );
 
 	static int GetDPI( bool bOverride ) { return (bOverride && s_DPIOverride)?s_DPIOverride:s_DPI; }
 	static bool GetDPIOverride( void ) { return s_DPIOverride!=0; }
@@ -178,9 +178,10 @@ public:
 	const ItemInfo* GetLinkIcon(IShellLink* link, TIconSizeType iconSizeType);
 	const ItemInfo *GetMetroAppInfo10( const wchar_t *appid );
 	void UpdateItemInfo( const ItemInfo *pInfo, int refreshFlags, bool bHasWriteLock=false );
-	void WaitForShortcuts( const POINT &balloonPos );
 	bool IsTaskbarPinned( const wchar_t *appid );
-	void UpdateNewPrograms( const POINT &balloonPos );
+	void ResetNewPrograms( void );
+	bool AreShortcutsReady( void ) const;
+	void UpdateNewPrograms( void );
 	bool IsNewProgram( PIDLIST_ABSOLUTE pidl, bool bFolder, bool bMetroApp );
 	bool HasNewPrograms( bool bReal ) { return m_bHasNewPrograms[bReal?0:1]; }
 	bool HasNewApps( bool bReal ) { return m_bHasNewApps[bReal?0:1]; }
@@ -270,14 +271,16 @@ private:
 	HANDLE m_PreloadItemsThread;
 	HANDLE m_RefreshInfoThread;
 	HANDLE m_SaveCacheThread;
+	bool m_CacheCleared=false;
 	DWORD m_MainThreadId, m_PreloadItemsThreadId, m_RefreshInfoThreadId;
 
 	// per-thread info used to load icons
 	struct LoadIconData
 	{
 		int m_IconSizes[ICON_SIZE_COUNT];
-		HIMAGELIST m_TempLists[ICON_SIZE_COUNT];
+		HIMAGELIST m_TempLists[ICON_SIZE_COUNT]={};
 		CComPtr<IImageList2> m_pTempLists[ICON_SIZE_COUNT];
+		IImageList2 *GetTempList( int index );
 		CComPtr<IWICImagingFactory> m_pFactory;
 
 		void Init( void );

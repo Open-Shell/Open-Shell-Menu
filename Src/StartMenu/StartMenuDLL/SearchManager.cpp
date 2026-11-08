@@ -58,8 +58,11 @@ void CSearchManager::Init( void )
 		InitializeCriticalSection(&m_CriticalSections[i]);
 	m_SearchEvent=CreateEvent(NULL,FALSE,FALSE,NULL);
 	m_ExitEvent=CreateEvent(NULL,TRUE,FALSE,NULL);
-	for (int i=0;i<_countof(m_SearchThreads);i++)
-		m_SearchThreads[i]=CreateThread(NULL,0,StaticSearchThread,this,0,NULL);
+	if (m_SearchEvent && m_ExitEvent)
+	{
+		for (int i=0;i<_countof(m_SearchThreads);i++)
+			m_SearchThreads[i]=CreateThread(NULL,0,StaticSearchThread,this,0,NULL);
+	}
 	m_MainThreadId=GetCurrentThreadId();
 	LoadItemRanks();
 }
@@ -67,11 +70,17 @@ void CSearchManager::Init( void )
 void CSearchManager::Close( void )
 {
 	if (!m_bInitialized) return;
-	SetEvent(m_ExitEvent);
-	WaitForMultipleObjects(_countof(m_SearchThreads),m_SearchThreads,TRUE,INFINITE);
-	CloseHandle(m_SearchEvent);
-	for (int i=0;i<_countof(m_SearchThreads);i++)
-		CloseHandle(m_SearchThreads[i]);
+	if (m_ExitEvent) SetEvent(m_ExitEvent);
+	for (HANDLE &thread : m_SearchThreads)
+	{
+		if (!thread) continue;
+		WaitForSingleObject(thread,INFINITE);
+		CloseHandle(thread);
+		thread=NULL;
+	}
+	if (m_SearchEvent) CloseHandle(m_SearchEvent);
+	if (m_ExitEvent) CloseHandle(m_ExitEvent);
+	m_SearchEvent=m_ExitEvent=NULL;
 	for (int i=0;i<LOCK_COUNT;i++)
 		DeleteCriticalSection(&m_CriticalSections[i]);
 	m_bInitialized=false;

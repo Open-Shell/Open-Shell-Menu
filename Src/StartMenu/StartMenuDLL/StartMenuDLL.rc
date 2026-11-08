@@ -1309,6 +1309,8 @@ BEGIN
     IDS_SELECT_LAST         "Select the last item in shutdown menu"
     IDS_SELECT_LAST_TIP     "When this is checked, the last item will be selected by default when the shutdown menu is opened with the keyboard"
     IDS_CLEAR_CACHE         "Clear cached information"
+    IDS_CLEAR_CACHE_RESTART "The saved cache has been cleared. Open-Shell will rebuild it the next time it starts."
+    IDS_CLEAR_CACHE_FAILED  "Open-Shell could not clear the saved cache."
 END
 
 STRINGTABLE 
