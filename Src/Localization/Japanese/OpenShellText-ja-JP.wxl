@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="ja-JP" Codepage="932" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+  <String Id="Error32bit" Overridable="yes">このインストーラーは 32 ビット版 Windows 専用です。64 ビット版 Windows では Setup64 を実行してください。</String>
+  <String Id="Error64bit" Overridable="yes">このインストーラーは 64 ビット版 Windows 専用です。ARM64 版 Windows では SetupARM64 を実行してください。</String>
+  <String Id="ErrorWin7" Overridable="yes">Open-Shell には Windows 7 以降が必要です。</String>
+  <String Id="ErrorNewVersion" Overridable="yes">新しいバージョンの [ProductName] が既にインストールされています。セットアップを終了します。</String>
+  <String Id="ExplorerTitle" Overridable="yes">Classic Explorer</String>
+  <String Id="ExplorerDesc" Overridable="yes">Classic Explorer は Windows Explorer にツールバーを追加し、コピー UI を置き換え、いくつかの使い勝手の問題を修正します</String>
+  <String Id="StartMenuTitle" Overridable="yes">Open-Shell メニュー</String>
+  <String Id="StartMenuDesc" Overridable="yes">Open-Shell メニューは、Windows スタートメニューを高度にカスタマイズ可能なものに置き換えます</String>
+  <String Id="IETitle" Overridable="yes">Classic IE</String>
+  <String Id="IEDesc" Overridable="yes">Classic IE は Internet Explorer のタイトルバーとステータスバーをカスタマイズできます</String>
+  <String Id="UpdateTitle" Overridable="yes">Open-Shell 更新</String>
+  <String Id="UpdateDesc" Overridable="yes">Open-Shell 更新は定期的に新しいバージョンを確認します</String>
+  <String Id="HelpDesc" Overridable="yes">Open-Shell のドキュメントを表示します</String>
+  <String Id="ReadmeDesc" Overridable="yes">Open-Shell の概要を表示します</String>
+  <String Id="ExplorerSettingsDesc" Overridable="yes">Classic Explorer の設定を編集します</String>
+  <String Id="StartSettingsDesc" Overridable="yes">クラシックスタートメニューの設定を編集します</String>
+  <String Id="IESettingsDesc" Overridable="yes">Internet Explorer のタイトルバーとステータスバーの設定を編集します</String>
+  <String Id="UpdateSettingsDesc" Overridable="yes">Open-Shell の新バージョン確認の設定を編集します</String>
+  <String Id="StartMenuFolder" Overridable="yes">スタートメニューフォルダーを作成する</String>
+  <String Id="WebLink" Overridable="yes">Open-Shell の Web サイト</String>
+  <String Id="DonateLink" Overridable="yes">Open-Shell に寄付する</String>
+  <String Id="FacebookLink" Overridable="yes">Facebook でフォローする</String>
+  <String Id="ViewReadme" Overridable="yes">Readme ファイルを表示する</String>
+  <String Id="HelpItem" Overridable="yes">Open-Shell ヘルプ</String>
+  <String Id="ReadmeItem" Overridable="yes">Open-Shell Readme</String>
+  <String Id="UpdateItem" Overridable="yes">Open-Shell 更新</String>
+  <String Id="ExplorerItem" Overridable="yes">Classic Explorer の設定</String>
+  <String Id="StartMenuItem" Overridable="yes">Open-Shell メニューの設定</String>
+  <String Id="IEItem" Overridable="yes">Classic IE の設定</String>
+  <String Id="StartScreenDesc" Overridable="yes">スタート画面を開きます</String>
+  <String Id="OpenShellDesc" Overridable="yes">Open-Shell は、Windows 向けの使い勝手を向上させる機能を集めたものです</String>
+</WixLocalization>

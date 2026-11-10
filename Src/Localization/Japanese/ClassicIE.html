@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+
+
+
+
+
+
+
+
+
+
+ <meta content="text/html; charset=UTF-8" http-equiv="content-type"><title>Classic IE</title>
+<style type="text/css">
+h1 {
+  color: #0078d4;
+  font-family: "Segoe UI",Tahoma,sans-serif;
+  font-weight: 600;
+}
+p {
+  font-family: "Segoe UI",Tahoma,sans-serif;
+}
+body {
+  font-family: "Segoe UI",Tahoma,sans-serif;
+}
+
+  </style></head><body>
+<a target="_blank" href="https://github.com/Open-Shell/Open-Shell-Menu"><img src="images/OpenShell.png" style="border: 0px solid ; width: 64px; height: 64px; float:left;" alt="Open-Shell website" title="Open-Shell website"></a><h1 style="padding-top: 12px; padding-bottom: 12px;">&nbsp; Classic IE</h1>
+<span style="font-style: italic; color: #2b88d8; font-weight: bold;"></span><span style="color: #2b88d8; font-weight: bold;"><br>
+Classic IE</span>
+は、
+Internet Explorer 用の小さなプラグインで、以下を行います：<br>
+<ul>
+  <li>タイトルバーにキャプションを追加し、ページの完全なタイトルを確認できるようにします</li>
+  <li>ステータスバーにセキュリティゾーンを表示します</li>
+  <li>ステータスバーに読み込みの進行状況を表示します</li>
+</ul>
+<br>
+タブに収まらない場合でも、ページの完全なタイトルを確認できます：<br>
+<img style="width: 561px;" alt="" src="images/ie9_caption.png"><br>
+<br>進行状況とセキュリティゾーンを確認できます：<br>
+<img style="width: 322px;" alt="" src="images/ie9_status.png"><br>
+<br>
+<h1><a name="install"></a>インストール</h1>
+Classic IE のインストール後に Internet Explorer を初めて実行すると、
+ClassicIEBHO という新しいアドオンがインストールされたこと、および
+それを有効にするかどうかを尋ねるプロンプトが表示されることがあります。「有効にする」ボタンをクリックしてください。
+プロンプトが表示されない場合は、<span style="font-weight: bold;">ツール -&gt; アドオンの管理</span> に移動し、ClassicIEBHO が有効になっていることを確認してください。アドオンを有効にした後、プラグインを有効化するために Internet Explorer を再起動する必要があります。<br>
+<br>
+<h1><a name="settings"></a>設定</h1>
+設定には <span style="font-weight: bold;">ツール -&gt; Classic IE の設定</span>
+またはスタートメニューからアクセスできます。設定では、
+キャプションの色とフォント、およびステータスバーに表示する情報を制御します。<br>
+<img style="width: 512px;" alt="" src="images/ie9_settings.png"><br>
+<br>基本設定のみを表示するか、利用可能なすべての設定を表示するかを選択できます。各設定にマウスを合わせると、その目的の説明が表示されます。検索ボックスに入力して、名前で設定を検索できます。<br>
+すべての設定には既定値があります。既定値は固定の場合もあれば、
+現在のシステム設定に依存する場合もあります。一度設定を編集すると「変更済み」となり、太字で表示されます。既定値に戻すには、設定を右クリックします。<br>
+
+<br>
+設定を XML ファイルに保存し、後で読み込み直すことができます。
+これらの機能にアクセスするには <span style="font-weight: bold;">バックアップ</span> ボタンを押します。そこから
+すべての設定を既定値にリセットすることもできます。<br>
+
+
+<br>
+
+
+設定を保存するには OK を押します。新しい設定を適用するには Internet Explorer を再起動する必要があります。<br>
+
+
+<br>
+<h1><a name="admin"></a>管理者設定</h1>
+設定は
+ユーザーごとで、レジストリに保存されます。既定ではすべてのユーザーが
+自分のすべての設定を編集できます。管理者は特定の設定をロックして、
+どのユーザーも編集できないようにできます。これは設定を <span style="font-weight: bold;">HKEY_LOCAL_MACHINE\SOFTWARE\OpenShell\ClassicIE</span> レジストリキーに追加することで実現されます。<br>
+<br>
+設定をロックするのではなく、その初期値だけを上書きしたい場合もあります。
+その場合は、レジストリ値の名前に「_Default」を追加します。<br>
+<br>
+設定のレジストリ名とその値を知る最も簡単な方法は、それを変更してから
+<span style="font-weight: bold;">HKEY_CURRENT_USER\Software\OpenShell\ClassicIE\Settings</span> で調べることです。<br>
+
+設定を既定値にロックしたいが、
+既定値が何か分からない場合があります。その場合は DWORD 値を作成し、
+0xDEFA に設定します。<br>
+
+<br>
+
+グローバル設定 <span style="font-weight: bold;">EnableSettings</span> もあります。レジストリで 0 に設定すると、
+ユーザーが設定ダイアログを開けなくなります：<br>
+
+<img style="width: 492px;" alt="" src="images/settings_disable_ie9.png"><br>
+<br>
+グループポリシーによる設定の編集もサポートされています。インストールフォルダーにある <b>PolicyDefinitions.zip</b> ファイルを展開し、詳細についてはドキュメント <b>PolicyDefinitions.rtf</b> を読んでください。<br>
+<br>
+</body></html>

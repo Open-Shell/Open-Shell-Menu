@@ -1,0 +1,2203 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type">
+  <title>スタートメニューのスキン作成</title>
+  <style type="text/css">
+h1 {
+  color: #0078d4;
+  font-family: "Segoe UI",Tahoma,sans-serif;
+  font-weight: 600;
+}
+h2 {
+  color: #005a9e;
+  font-family: "Segoe UI",Tahoma,sans-serif;
+  font-weight: 600;
+}
+h3 {
+  color: #005a9e;
+  font-weight: 600;
+}
+body {
+  font-family: "Segoe UI",Tahoma,sans-serif;
+}
+  </style></head>
+<body>
+<h1>スタートメニューのスキン作成チュートリアル</h1>
+<br>
+<h1>はじめに</h1><span style="font-weight: bold; color: rgb(0, 112, 192);">Open-Shell</span> はスタートメニュー用のスキンファイルをサポートしています。スキンでは次のようなものを変更できます：
+<br>
+<ul>
+<li>メニューの背景画像または色</li>
+<li>各種要素のフォントとテキスト色</li>
+<li>矢印やその他のアイコン</li>
+<li>サイズ、余白、配置</li>
+<li>メニュー区切り線に使用する画像</li>
+</ul>
+<br>
+スキンに関するすべての情報は <span style="font-weight: bold;">.skin</span> または <span style="font-weight: bold;">.skin7</span> ファイルに格納されます（<span style="font-weight: bold;">.skin7</span> ファイルは Windows 7 スタイルで使用するためのものです）。スキンファイルは Open-Shell の <span style="font-weight: bold;">Skins</span> ディレクトリ（たとえば <span style="font-weight: bold;">C:\Program Files\Open-Shell\Skins</span>）にインストールする必要があります。
+<br>
+<br>
+<span style="font-weight: bold;">チュートリアルの目次</span>：
+<br>
+<div style="margin-left: 40px;"><a href="#skin_file">スキンファイルの構造</a>
+<br>
+<a href="#slices">ビットマップスライス</a>
+<br>
+<a href="#main_menu">メインメニュー</a>
+<br>
+<a href="#submenu">サブメニュー</a>
+<br>
+<a href="#about">バージョン情報ボックス</a>
+<br>
+<a href="#variations">スキンのバリエーション</a>
+<br>
+<a href="#options">スキンオプション</a>
+<br>
+<a href="#custom">カスタムスキン</a>
+<br>
+<a href="#errors">トラブルシューティング</a>
+<br>
+<a href="#reference">スキン記述ファイル リファレンス</a>
+<br>
+</div>
+<br>
+<br>
+<h1><a name="skin_file"></a>スキンファイルの構造</h1>
+スキンファイルは、ビットマップやアイコンなどの特定のリソースを含む DLL です。唯一必須のリソースは、ID=1、type="SKIN" のテキストリソースです。これがスキンを記述するテキストです。この記述では、ビットマップやアイコンなどの他のリソースを参照できます。
+<br>
+<br>
+新しいスキンを作成する最も簡単な方法は、既存の .skin ファイルから始めることです。既定のスキンの 1 つをコピーし、新しい名前で保存します。そして Visual Studio のリソースエディター、または <a href="http://www.angusj.com/resourcehacker/">Resource Hacker</a> のような他のリソースエディターで開きます：
+<br>
+<br>
+<img src="images/reshacker.png" style="width: 428px; height: 262px;" alt="Skin file" title="Skin file">
+<br>
+<br>
+Resource Hacker の優れた機能は、テキストをそのまま直接編集できることです。完了したら「Compile Script」ボタンを押し、ファイルを保存します。
+<br>
+<span style="font-weight: bold;">注意：</span> <span style="font-weight: bold;">Skins</span> フォルダーは OS によって保護されていることがよくあります。そのフォルダー内のファイルをツールで直接編集したい場合、ツールを管理者として起動する必要があります。
+<br>
+<br>
+ビットマップリソースを置き換えるには、<span style="font-weight: bold;">操作 &gt; ビットマップの置き換え</span> を選択します。その後、新しいビットマップファイルを選び、置き換えたいビットマップリソースの ID を選び、<span style="font-weight: bold;">置き換え</span> をクリックして保存します。アイコンリソースも同様の方法で置き換えられます。
+<br>
+<br>
+新しいビットマップを追加するには、<span style="font-weight: bold;">操作 &gt; 新しいリソースの追加</span> を選択します。新しいビットマップファイルを選び、新しい名前（数字でなければなりません）を入力し、言語は空白のままでかまいません。最後に <span style="font-weight: bold;">リソースの追加</span> をクリックして保存します。
+<br>
+<br>
+<br>
+<h1><a name="bitmaps"></a>ビットマップ</h1>
+スタートメニューは、そのグラフィカル要素にさまざまなビットマップリソースを使用します。メニュー内のすべてのビットマップには、その設定用の名前があります（たとえば "Main_pager_arrows" や "Search_bitmap"）。ビットマップリソースは設定 <span style="font-weight: bold;">&lt;name&gt;=&lt;resource index&gt;</span> で指定します。たとえば：
+<br>
+<code style="font-weight: bold;">
+<br>
+Main_bitmap=1  </code><span style="font-weight: bold;"></span><span style="font-style: italic;">インデックス 1 のビットマップリソースを使用</span>
+<br>
+<br>
+リソースとして <span style="font-weight: bold;">BMP</span>、<span style="font-weight: bold;">PNG</span>、<span style="font-weight: bold;">JPG</span> 画像を使用できます。BMP ファイルは BITMAP リソースセクションに配置します。PNG ファイルと JPG ファイルは IMAGE リソースセクションに配置します。メニューはまず指定されたリソースインデックスを BITMAP セクションで検索し、次に IMAGE セクションを検索します。
+<br>
+BMP 画像と PNG 画像は、透過をサポートするためにアルファチャンネルを持つことができます。JPG 画像は常に不透明で、もちろん品質も低くなります。
+<br>
+<br>
+ビットマップはオプションでカラーマスクを持つことができます。マスクは、ビットマップが最大 3 つの追加色（「ティントカラー」と呼ばれます）とどのように混ざるかを決定します。マスクの赤チャンネルは最初のティントカラーをどれだけ混ぜるかを制御し、緑チャンネルは 2 番目のティントカラーを、青チャンネルは 3 番目のティントカラーを制御します。既定では、最初のティントカラーはシステムウィンドウ（グラス）色で、2 番目のティントカラーはメニュー背景色です。
+<br>
+マスクはビットマップの RGB 部分にのみ適用されます。アルファチャンネルは変更されません：
+<br>
+<br>
+<img style="width: 200px; height: 200px;" alt="Color masks" title="Color masks" src="images/color_mask.png">
+<br>
+この例では、最初の画像が背景、2 番目がマスク、3 番目が最終結果です。マスクの赤い部分はグラス色（紫）を背景とブレンドします。緑の部分はメニュー色（グレー）を背景とブレンドします。マスク画像の赤と緑の強度を変えることで、色がどれだけブレンドされるかを制御します。
+<br>
+<br>
+マスクは次の 2 つの方法のいずれかで指定できます  <span style="font-weight: bold;">&lt;bitmap&gt;_mask=&lt;resource index&gt;</span> または <span style="font-weight: bold;">&lt;bitmap&gt;_mask=#RRGGBB</span>（16 進数形式の色）。マスクがビットマップの場合、メインビットマップと同じ寸法でなければなりません。いくつかの例：
+<br>
+<code>
+<br>
+<span style="font-weight: bold;">Main_bitmap_mask=2  インデックス 2 のビットマップリソースを使用</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_bitmap_mask=#FF0000  赤=255、緑=0、青=0 の固定色を使用</span><br style="font-weight: bold;">
+</code>
+<br>
+ティントカラーを変更するには：
+<br>
+<br>
+<code><span style="font-weight: bold;">Main_bitmap_tint1=#000000  最初のティントカラーは黒</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_bitmap_tint2=#808080  2 番目のティントカラーはグレー</span><br style="font-weight: bold;">
+</code>
+<br>
+メインビットマップは単色にすることもできます。ビットマップとマスクの両方が単色の場合、最終結果は、ビットマップ色とティントカラーがマスクに従ってすべて混ざり合った結果の単色ビットマップになります。
+<br>
+メインビットマップが単色で、マスクがビットマップの場合、マスクビットマップの寸法が最終ビットマップの寸法を決定します。この場合、マスクのアルファチャンネルが結果のアルファチャンネルとして使用されます。
+<br>
+<br>
+マスクとティントカラーは強力な仕組みで、多数のビットマップリソースを用意することなく、多様な可能性を実現できます。カラーティントの良い使用例については、Metro スキンを参照してください。
+<br>
+<br>
+<span style="font-weight: bold;">サポートされているビットマップについては、末尾のリファレンスセクションを参照してください。</span><br style="font-weight: bold;">
+<br>
+<h2>名前付き色</h2>
+単色が受け入れられる場所ではどこでも、定義済みの名前付き色の 1 つを使用できます。任意の時点での実際の色は、現在の Windows 設定に依存します。名前付き色を使用することで、現在の Windows カラースキームに従うスキンを作成できます。
+<br>
+<br>
+少数の色は、クラシックウィンドウ要素用のシステム色です  ボタン色、テキストハイライト色などです。たとえば：
+<br>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">Main_bitmap=$SystemActiveBorder  システムのアクティブ境界線色を使用</span><br style="font-weight: bold; font-family: monospace;"><span style="font-weight: bold; font-family: monospace;"></span></big>
+<br>
+<span style="font-weight: bold;">これらのシステム色の完全な一覧は、リファレンスセクションで確認できます。</span>
+<br>
+<br>
+残りの名前付き色は Windows 8 以降でのみ使用できます。これらは Metro パレットから来ており、一緒に使うと見栄えがするように設計された数百の名前付き色の完全なセットです。
+<br>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">Main_bitmap_jump=$StartHighlight  スタート画面のハイライト色を使用</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">
+<br>
+</span></big>すべての色がすべてのバージョンの Windows で使用できるわけではありません。Windows 8.1 では Windows 8 に存在しない新しい色が追加され、Windows 10 ではさらに多くの色が追加されています。すべてのバージョンの Windows で見栄えするスキンを作るには、優先順に色のリストを使用できます。最初のものが使用できない場合、メニューはリスト内の次のものを使用します。
+<br>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">Main_selection=$SystemAccentDark2|$StartSelectionBackground  システムのアクセントダーク 2 色を使用、使用できない場合はスタート選択背景色を使用</span></big>
+<br>
+<br>
+Metro 色の完全な一覧は、Classic Shell Utility を使用して取得できます。これはメインの <a href="http://www.classicshell.net/downloads">ダウンロードページ</a> にあります。
+<br>
+<br>
+Metro 色の使用例については、Metro スキンを参照してください。これは名前付き色を多用して、スタート画面の現在のカラースキームに一致する外観を実現しています。
+<br style="font-weight: bold; font-family: monospace;">
+<br>
+<h1><a name="slices"></a>ビットマップスライス</h1>
+スタートメニューの要素の多くは固定サイズではなく（メニュー項目の数、フォントサイズなどに応じてサイズ変更されます）、ビットマップは固定サイズであるため、指定された領域を埋めるためにビットマップのサイズを変更する方法が必要です。ビットマップ全体を単に引き伸ばすだけでは、境界周辺の細かいディテールがぼやけてしまうため機能しません。
+<br>
+<br>
+そこで「スライス」システムの出番です。各ビットマップは水平方向と垂直方向にスライスに分割されます：
+<br>
+<br>
+<img src="images/slices.png" style="width: 200px; height: 200px;" alt="bitmap slices" title="bitmap slices">
+<br>
+<br>
+4 つの隅は決して引き伸ばされません。左と右のスライスは垂直方向にのみ引き伸ばされます。上と下のスライスは水平方向にのみ引き伸ばされます。そして中央部分はどの方向にも引き伸ばすことができます。これにより、鋭いエッジや中央の滑らかなグラデーションを犠牲にすることなく、任意のサイズの背景を得ることができます：
+<br>
+<br>
+<img src="images/resize.png" style="width: 129px; height: 55px;" alt="Resized images" title="Resized images">
+<br>
+<br>
+一部の画像は 3 つより多くのスライスを持つことができます。メインメニュー背景は 6 つのスライスを持ちます  キャプション領域用に 3 つ、メニュー領域用に 3 つです。
+<br>
+<br>
+一部の画像は垂直方向と水平方向の両方のスライスを必要としません。メニュー区切り線画像は、すべての区切り線が同じ高さであるため、水平方向にのみ分割されます。
+<br>
+<br>
+<br>
+<h1><a name="backgrounds"></a>背景</h1>
+背景はビットマップとそのスライスの組み合わせです。これは次の設定で構成されます：<span style="font-weight: bold;">&lt;name&gt;、&lt;name&gt;_mask、&lt;name&gt;_slices_X、&lt;name&gt;_slices_Y</span>。たとえば名前が "Main_bitmap" の場合：
+<br>
+<br>
+<code><span style="font-weight: bold;">Main_bitmap=1  </span></code><span style="font-weight: bold;"></span><span style="font-style: italic;">インデックス 1 のビットマップリソースを使用</span>
+<br>
+<code><span style="font-weight: bold;">Main_bitmap_mask=2  </span></code><span style="font-weight: bold;"></span><span style="font-style: italic;">インデックス 2 のビットマップリソースを使用</span>
+<br>
+<code><span style="font-weight: bold;">Main_bitmap_slices_X=6,1,1,6,1,13</span></code><span style="font-weight: bold;"></span><span style="font-style: italic;"></span>
+<br>
+<code><span style="font-weight: bold;">Main_bitmap_slices_Y=60,317,8</span></code><span style="font-weight: bold;"></span><span style="font-style: italic;"></span>
+<br>
+<br>
+</span></code>
+すべての背景が X と Y の両方のスライスを持つわけではありません。たとえば水平区切り線は X のみを持ち、垂直区切り線は Y のみを持ちます。これは一方向にしか引き伸ばせないためです。
+<br>
+<br>
+<span style="font-weight: bold;">サポートされている背景については、末尾のリファレンスセクションを参照してください。</span>
+<br style="font-weight: bold;">
+<br>
+<br>
+<h1><a name="items"></a>スキン項目</h1>
+スキン項目は、メニューの特定の要素（たとえば選択された要素）を制御する設定の組み合わせです。次の設定がサポートされています：
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_font</span>  テキストに使用するフォント
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_glow_size</span>  テキストのグローサイズ（Windows 7 でのみ動作）
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_text_color</span>  テキストの色（通常、選択、無効、無効+選択の 4 色）
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_text_padding</span>  テキストの全辺の余白（左、上、右、下）
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_icon_padding</span>  アイコンの全辺の余白
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_selection</span>  項目の背景、通常は選択されたとき（この設定には _mask、_slices_X、_slices_Y のサブ設定があり、#RRGGBB 形式の単色にすることもできます）
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_arrow_color</span>  矢印が単色の場合のサブメニュー矢印三角形の色（通常と選択の 2 色）
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_arrow</span>  矢印がビットマップの場合の矢印用ビットマップ
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_arrow_padding</span>  矢印の左右の余白
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_icon_frame</span>  アイコンのフレーム用の背景
+<br>
+<span style="font-weight: bold;">&lt;name&gt;_icon_frame_offset</span>  フレームとアイコンの間の X と Y の余白（X は左右に、Y は上下に適用されます）
+<br>
+<br>
+たとえばこれはメインメニューの通常テキストを定義します：
+<br>
+<code><span style="font-weight: bold;">Main_font="Segoe UI",normal,-10</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_text_color=#FFFFFF,#FFFFFF,#9F9F9F,#AFAFAF</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_text_padding=1,0,8,0</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_icon_padding=4,3,3,3</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_selection=3</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_selection_slices_X=4,63,4</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_selection_slices_Y=4,20,4</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_arrow_color=#FFFFFF,#FFFFFF</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_arrow_padding=8,9</span><br style="font-weight: bold;">
+</code>
+<br>
+フォントを指定するときは、フォント名、ウェイト（normal または <span style="font-weight: bold;">bold</span>）、およびサイズを指定する必要があります。フォントサイズはポイントで指定します。1 ポイントは 1 インチの 1/72 です。したがって、ピクセル単位のフォントサイズは次のようになります：
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">pixel_size = point_size * DPI / 72</span>
+<br>
+<br>
+ここで DPI は現在の DPI 表示設定です。
+フォントサイズは負または正にすることができます。負のサイズは文字の高さを測定し、正のサイズはフォントのセル高さを測定します。セルは通常文字より高いため、フォントサイズ <span style="font-weight: bold;">-10</span> は通常 <span style="font-weight: bold;">10</span> よりわずかに大きくなります。
+<br>
+<br>
+<br>
+一部の項目は他の項目から設定を継承します。たとえば "Main_split" 項目は次の設定だけを持つことがあります：
+<br>
+<code><span style="font-weight: bold;">Main_split_selection=11</span>
+<br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_split_selection_slices_X=4,63,4,0,16,4</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_split_selection_slices_Y=4,20,4</span>
+<br style="font-weight: bold;">
+</code>
+<br>
+指定されていない設定は "Main" 項目から取得されます。
+<br>
+<br>
+<span style="font-weight: bold;">サポートされている項目については、末尾のリファレンスセクションを参照してください。</span>
+<br>
+<br>
+<h1><a name="main_menu"></a>メインメニュー</h1>
+ビットマップ、背景、スキン項目とは何かが分かったので、メインメニューの外観を定義する準備ができました。
+<br>
+<br>
+メインメニューは背景に単色を使用するか、ビットマップを使用できます。
+<br>
+<br>
+単色を使用したい場合は、スキン記述で次を使用します：
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">Main_opacity=solid</span><span style="font-style: italic;"></span>&nbsp;<span style="font-style: italic;"> メニューは単色の矩形</span>
+<br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;">Main_background=#00FF00</span>&nbsp; <span style="font-style: italic;">緑色</span>
+<br style="font-family: monospace; font-weight: bold;">
+<br>
+色（およびこのファイル内のすべての色）は <span style="font-weight: bold;">#RRGGBB</span> 16 進数形式です。これは HTML テキストで使用されるものと同じ形式です。
+<br>
+<br>
+ビットマップを指定するには、次を使用します：
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">Main_bitmap=1</span>&nbsp;<span style="font-style: italic;"> ビットマップリソース 1 を使用</span><br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;">Main_bitmap_slices_X=8,1,1,5,1,13</span>&nbsp;<span style="font-style: italic;"> 水平スライス</span><br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;">Main_bitmap_slices_Y=13,50,9</span>&nbsp;<span style="font-style: italic;"> 垂直スライス</span><br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;">Main_opacity=glass</span>&nbsp;<span style="font-style: italic;"> グラス効果を使用</span><br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;"></span>
+<br>
+<span style="font-weight: bold;">Main_opacity</span> は <span style="font-weight: bold;">solid</span>、<span style="font-weight: bold;">region</span>、<span style="font-weight: bold;">alpha</span>、<span style="font-weight: bold;">glass、fullalpha </span>または<span style="font-weight: bold;"> fullglass</span> にすることができます。<span style="font-weight: bold;">Solid</span> は、メニューが <span style="font-weight: bold;">Main_background</span> 色で塗りつぶされ、ビットマップがその上に描画されることを意味します。<span style="font-weight: bold;">Region</span> は、alpha=0 のピクセルが透明になり、残りが不透明になることを意味します。<span style="font-weight: bold;">Alpha</span> は、ビットマップが背後のデスクトップとアルファブレンドされることを意味します。<span style="font-weight: bold;">Glass</span> は、alpha=0 のピクセルが透明になり、残りすべてがグラス色とピクセル色の間でブレンドされることを意味します（alpha=1 は完全なグラス、alpha=255 は完全に不透明）。<span style="font-weight: bold;">Fullalpha</span> と <span style="font-weight: bold;">fullglass</span> は alpha/glass と同じですが、メニュー項目の背後の背景を透明にできることをスタートメニューに通知します。
+<br>
+<br>
+ビットマップは特定の制限に従う必要があります：
+<br>
+<ul>
+  <li>ビットマップは 24 ビットまたはアルファチャンネル付きの 32 ビットのいずれかです。</li>
+  <li>32 ビット画像の場合、アルファチャンネルを乗算済み（premultiply）にしないでください。「アルファを乗算する」の意味が分からない場合は、気にしないでください
+<br>
+  </li>
+  <li><span style="font-weight: bold;">fullalpha</span> または <span style="font-weight: bold;">fullglass</span> を使用しない場合、メニュー項目が配置される領域は完全に不透明でなければなりません
+<br>
+</li>
+  <li><span style="font-weight: bold;">region</span>、<span style="font-weight: bold;">alpha</span>、<span style="font-weight: bold;">glass</span>、<span style="font-weight: bold;">fullalpha</span> または <span style="font-weight: bold;">fullglass</span> モードでは、完全に透明な（alpha=0）ピクセルを配置できる場所に制限があります。ビットマップの各水平線について、左端と右端に透明なピクセルを置くことはできますが、中央には置けません。非透明な（alpha&gt;0）ピクセルは穴のない連続したものでなければなりません。</li>
+  <li>右から左へ表示するバージョンの Windows（アラビア語やヘブライ語など）では、ビットマップはミラーリングされます。テキストや方向に敏感なグラフィック（ロゴなど）は逆になります。右から左へ表示する Windows をサポートしたい場合は、そのようなグラフィックを使用しないか、代替画像を使用するオプションを提供してください</li>
+  <li>Windows 7 スタイル（拡張子 .skin7 のスキン）は <span style="font-weight: bold;">fullalpha または fullglass の不透明度モードをサポートしていません</span>
+<br>
+  </li>
+</ul>アルファチャンネル付きの 32 ビットビットマップを作成するには、Photoshop や GIMP などの画像エディターが必要です。Photoshop ではアルファチャンネルはここにあります：
+<br>
+<br>
+<img src="images/photoshop.png" style="width: 213px; height: 223px;" alt="Alpha in Photoshop" title="Alpha in Photoshop">
+d
+<br>
+<br>
+bmp ファイルを保存するときは、必ず 32 ビットファイル形式を選択してください。
+<br>
+<br>
+<span style="font-weight: bold;">Main_bitmap_slices_X</span> の最初の 3 つの数値はキャプション領域に関係します。キャプションが不要な場合はすべて 0 に設定します。キャプションが必要な場合は、数値をビットマップのキャプション領域の左、中央、右スライスに設定します。
+<br>
+<span style="font-weight: bold;">Main_bitmap_slices_X </span>の次の 3 つの数値は、メニュー領域の左、中央、右スライス用です。
+<br>
+<span style="font-weight: bold;">Main_bitmap_slices_Y </span>の 3 つの数値は、メニュー全体の上、中央、下スライス用です。同じ数値がキャプションとメニューに使用されます。
+<br>
+<br>
+スライスがどのように見えるべきかの例を次に示します：
+<br>
+<img src="images/main_slices.png" style="width: 185px; height: 324px;" alt="Main menu slices" title="Main menu slices">
+<br>
+ハイライトされた垂直スライスは幅 1 ピクセルで、キャプション領域とメニュー領域の幅を埋めるように引き伸ばされます。
+<br>
+<br>
+メニュー背景が単色または完全に矩形のビットマップで、Windows 7 のクラシックテーマで実行している場合、メニューを 1 ピクセルの細い境界線にするか 2 ピクセルの 3D 境界線にするかを選択できます：
+<br>
+<span style="font-family: monospace; font-weight: bold;">Main_thin_frame=1 </span><span style="font-style: italic;"> 太い 3D フレームの代わりに細いフレームを使用（クラシックモードのみ）</span><br style="font-weight: bold; font-family: monospace;">
+<br>
+<br>
+<h2>キャプション</h2>
+キャプションは、メニューの側面にある <span style="font-weight: bold;">Windows 7 Home</span> のようなテキストを表示する領域です。キャプションが必要な場合は、メインメニュー用のビットマップを用意する必要があります。キャプションに関連するパラメーターがいくつかあります：
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">Caption_font="Segoe UI",normal,18</span>&nbsp;<span style="font-style: italic;"> キャプションフォントの名前、ウェイト、サイズ</span><br style="font-family: monospace;">
+<span style="font-family: monospace; font-weight: bold;">Caption_text_color=#FFFFFF</span>&nbsp;<span style="font-style: italic;"> キャプションテキストの色</span><br style="font-family: monospace;">
+<span style="font-family: monospace; font-weight: bold;">Caption_glow_color=#FFFFFF</span>&nbsp;<span style="font-style: italic;"> テキスト背後のグローの色</span><br style="font-family: monospace;">
+<span style="font-family: monospace; font-weight: bold;">Caption_glow_size=10</span>&nbsp;<span style="font-style: italic;"> グローのサイズ（0  グローなし）</span><br style="font-family: monospace;">
+<span style="font-family: monospace; font-weight: bold;">Caption_padding=4,8,2,16</span>&nbsp;<span style="font-style: italic;"> キャプションの左、上、右、下の余白</span><br style="font-family: monospace;">
+<br>
+余白は、キャプションテキストの各辺に残すピクセル数です。
+<br>
+<br>
+<br>
+<h2>2 列</h2>
+すべてのクラシックスキンは、1 列モードまたは 2 列モードのいずれかをサポートする必要があります。Windows 7 スキンは 2 列のみをサポートします。
+<br>
+システムオプション "TWO_COLUMNS" があり、これはスキンが 2 列モードで実行されるときに設定されます。そのオプションを使用して、異なるビットマップやその他の設定を提供できます。オプションの詳細については、スキンオプションのセクションを参照してください。
+<br>
+<br>
+2 列用のメインビットマップは、メニューにキャプションがある場合と同様に、6 つの垂直スライスを持つ必要があります。ただし、キャプションセクションとメニューセクションの代わりに、第 1 列セクションと第 2 列セクションがあります。
+<br>
+<br>
+第 2 列は、異なるフォント、色、選択ビットマップなどを指定するための独自のプロパティセットを持つことができます：
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">Main2_opacity=fullglass
+<br>
+Main2_font="Segoe UI",bold,-10
+<br>
+Main2_text_color=#FFFFFF,#FFFFFF,#7F7F7F,#7F7F7F
+<br>Main2_padding=3,10,4,8
+<br></span><span style="font-weight: bold;">
+<br>
+</span>これらのプロパティはオプションです。設定されていないものは、第 1 列の値が使用されます。
+<br>
+<br>
+<br>
+<h2>メニュー項目</h2>
+メインメニューは異なる種類の項目を表示できます。また、一部の項目は複数の状態を持つことができます。各項目は、スキン内で 1 つ以上の「スキン項目」（上記で説明）として記述されます。項目の例を次に示します：
+<br>
+<span style="font-weight: bold;">Main</span>  メインメニューの通常項目
+<br>
+<span style="font-weight: bold;">Main_new</span>  ハイライトされた新しいプログラム
+<br>
+<span style="font-weight: bold;">Main2_separator</span>  メインメニューの第 2 列の区切り線
+<br>
+<br>
+<span style="font-weight: bold;">区切り線に関する注意：</span> 単純な区切り線（テキストなし）の場合、区切り線の高さは提供されたビットマップの高さによって決まります。区切り線ビットマップが指定されていない場合、メニューは既定のエッチング線を使用します。
+<br>
+<br>
+<img src="images/separator.png" style="width: 267px; height: 138px;" alt="Custom separator" title="Custom separator">
+<br>
+<br>
+<br><span style="font-weight: bold;">完全な一覧については、末尾のリファレンスセクションを参照してください。</span>
+<br>
+<br>
+<h2>パターン</h2>
+メインメニューは、メイン背景とブレンドされるタイル状（繰り返し）テクスチャのオーバーレイをサポートしています。最大 4 つのパターンを持つことができます。
+<br>
+<br>
+<big>
+<span style="font-weight: bold; font-family: monospace;">Pattern1=11  最初のパターンは画像リソース 11 を使用</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Pattern2=15</span>
+</big>
+<br>
+<br>
+通常のビットマップと同様に、パターンはマスクとティントカラーを持つことができます
+<br>
+<br>
+<big>
+<span style="font-weight: bold; font-family: monospace;">Pattern1_mask=#303000  tint1 の 20% と tint2 の 20% をブレンドするマスク</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-family: monospace; font-weight: bold;">Pattern1_tint1=#000000  黒色</span><br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;">Pattern1_tint2=#FFFF00  黄色</span></big>
+<br>
+<br>
+既定では、パターンはメニュー全体を覆います。マスク画像を使用して、パターンが表示される場所を制御できます。赤チャンネルは最初のパターンを、緑は 2 番目のパターンを、青は 3 番目のパターンを、アルファは 4 番目のパターンを制御します。
+<br>
+<br>
+<img style="width: 200px; height: 200px;" alt="Color masks" title="Color masks" src="images/pattern_mask.png">
+<br>
+この例では、マスクの赤い領域が Pattern1 に置き換えられ、緑の領域が Pattern2 に置き換えられます。
+<br>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">
+Main_pattern_mask=19  パターンマスクに画像リソース 19 を使用
+<br>
+Main_pattern_search_mask=20  メニューの検索モード用マスク
+<br>
+Main_pattern_jump_mask=21  ジャンプリストモード用マスク
+<br>
+</span></big><big><span style="font-weight: bold; font-family: monospace;">Search_pattern_mask=22  メインメニューの検索部分用マスク
+<br></span></big><big><span style="font-weight: bold; font-family: monospace;">Search_pattern_search_mask=23  検索モードでのメインメニューの検索部分用マスク
+<br></span></big><big><span style="font-weight: bold; font-family: monospace;">Search_pattern_jump_mask=24  ジャンプリストモードでのメインメニューの検索部分用マスク
+<br>
+</span></big>
+<br>
+マスクは、対応する画像  <span style="font-weight: bold;">Main_bitmap</span>、<span style="font-weight: bold;">Main_bitmap_search</span>、<span style="font-weight: bold;">Main_bitmap_jump</span>、<span style="font-weight: bold;">Search_background</span>  と同じサイズでなければなりません。<span style="font-weight: bold;">
+<br>
+<br>
+注意：
+</span>
+複数のパターンを一緒にブレンドすると遅くなることがあります。最速の結果を得るには、ほとんどの領域をフル強度のマスク（100% 赤または 100% 青など）を持つ単一のパターンに制限してみてください。半透明のパターンが必要な場合は、半強度のマスクを使用するよりも、パターンビットマップのアルファチャンネルに透過性を持たせる方が効率的です。
+<br>
+<br>
+パターンの使用例については、Metallic スキンを参照してください。
+<br>
+<br>
+<h2>エンブレム</h2>
+メインメニュー背景には、追加の画像を描画できます。これを「エンブレム」と呼びます。これらは引き伸ばしなしで描画されます。最大 10 個まで持つことができます。最初の 4 つはマスクビットマップを使用して、画像内でエンブレムが表示される場所と隠される場所を制御できます。
+<br>
+<br>
+<big>
+<span style="font-weight: bold; font-family: monospace;">Main_emblem1=11  エンブレムに画像リソース 11 を使用</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Main_emblem1_padding=20,20,20,20  エンブレムの全辺に 20 ピクセルの余白を確保</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Main_emblem1_alignH=right  メニューの右側に配置</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Main_emblem1_alignV=bottom  メニューの下側に配置</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Main_emblem_mask=12  エンブレムマスクに画像リソース 12 を使用</span><br style="font-weight: bold; font-family: monospace;">
+</big>
+<big>
+<span style="font-weight: bold; font-family: monospace;">Main_</span></big><big><span style="font-weight: bold; font-family: monospace;">emblem</span>
+</big>
+<big>
+<span style="font-weight: bold; font-family: monospace;">_search_mask=20  メニューの検索モード用エンブレムマスク
+<br>
+Main_</span></big><big><span style="font-weight: bold; font-family: monospace;">emblem</span></big><big><span style="font-weight: bold; font-family: monospace;">_jump_mask=21  </span></big><big><span style="font-weight: bold; font-family: monospace;">ジャンプリストモード用エンブレム </span></big><big><span style="font-weight: bold; font-family: monospace;">マスク
+<br>
+</span></big><big><span style="font-weight: bold; font-family: monospace;">Search_</span></big><big><span style="font-weight: bold; font-family: monospace;">emblem</span></big><big><span style="font-weight: bold; font-family: monospace;">_mask=22  </span></big><big><span style="font-weight: bold; font-family: monospace;">メインメニューの検索部分用エンブレム </span></big><big><span style="font-weight: bold; font-family: monospace;">マスク
+<br></span></big><big><span style="font-weight: bold; font-family: monospace;">Search_</span></big><big><span style="font-weight: bold; font-family: monospace;">emblem</span></big><big><span style="font-weight: bold; font-family: monospace;">_search_mask=23  </span></big><big><span style="font-weight: bold; font-family: monospace;">検索モードでのメインメニューの検索部分用エンブレム </span></big><big><span style="font-weight: bold; font-family: monospace;"> マスク
+<br></span></big><big><span style="font-weight: bold; font-family: monospace;">Search_</span></big><big><span style="font-weight: bold; font-family: monospace;">emblem</span></big><big><span style="font-weight: bold; font-family: monospace;">_jump_mask=24  </span></big><big><span style="font-weight: bold; font-family: monospace;">ジャンプリストモードでのメインメニューの検索部分用エンブレム </span></big><big><span style="font-weight: bold; font-family: monospace;">マスク
+<br>
+</span></big>
+<br>
+水平方向の配置は、メニュー全体に対して <span style="font-weight: bold;">left</span>、<span style="font-weight: bold;">right</span>、<span style="font-weight: bold;">center</span>、第 1 列に対して <span style="font-weight: bold;">left1</span>、<span style="font-weight: bold;">right1,</span> <span style="font-weight: bold;">center1</span>、第 2 列に対して <span style="font-weight: bold;">left2</span>、<span style="font-weight: bold;">right2,</span> <span style="font-weight: bold;">center2</span>、または <span style="font-weight: bold;">corner</span> にできます。corner 配置は、スタートメニューが表示されている画面の同じ隅にエンブレムを配置します。
+<br>
+<br>
+垂直方向の配置は <span style="font-weight: bold;">top</span>、<span style="font-weight: bold;">bottom</span>、<span style="font-weight: bold;">center</span> または <span style="font-weight: bold;">corner</span> にできます。
+<br>
+<br>
+エンブレムマスクは、エンブレムが表示される場所を制御します。赤は最初のエンブレム、緑は 2 番目、というようになります。
+<br>
+<br>
+<br>
+<h2>その他のメニュー要素</h2>
+<br>
+矢印に使用するカスタムビットマップを提供できます：
+<br>
+<br>
+<span style="font-weight: bold; font-family: monospace;">Main_arrow=3</span>&nbsp;<span style="font-style: italic;"> サブメニュー矢印ビットマップのリソース ID</span>
+<br style="font-weight: bold; font-family: monospace;"><span style="font-weight: bold; font-family: monospace;"></span>
+<br>
+矢印ビットマップ（<span style="font-weight: bold;">Main_arrow</span>）には、次のように 2 つの矢印画像が必要です：
+<br>
+<img src="images/menu_arrows.png" style="width: 24px; height: 78px;" alt="Sub-menu arrows" title="Sub-menu arrows">
+<br>
+上半分は通常の矢印に使用され、下半分は選択された矢印に使用されます。
+<br>
+<br>
+ページャーは、メニュー項目が収まらない場合にスクロールするために使用されます。ページャーには背景と矢印用のビットマップが必要です：
+<br>
+<span style="font-family: monospace; font-weight: bold;">
+<br>
+Main_pager=2</span>&nbsp;<span style="font-style: italic;"> ページャービットマップのリソース ID</span>
+<br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;">Main_pager_slices_X=3,1,3</span><span style="font-style: italic;">&nbsp; ページャービットマップの水平スライス</span
+<br>
+<br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;">Main_pager_slices_Y=4,66,4</span>&nbsp;<span style="font-style: italic;"> ページャービットマップの垂直スライス</span>
+<br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;">Main_pager_arrows=3</span>&nbsp;<span style="font-style: italic;"> ページャー矢印ビットマップのリソース ID</span>
+<br style="font-family: monospace; font-weight: bold;"><span style="font-family: monospace; font-weight: bold;"></span>
+<br>
+<span style="font-weight: bold;">Main_pager</span> には、スクロールボタン用の通常背景と選択背景があります：
+<br>
+<img src="images/pager_buttons.png" style="width: 48px; height: 90px;" alt="Pager buttons" title="Pager buttons">
+<br>
+<br><span style="font-weight: bold;">Main_pager_arrows</span> には、次のように 4 つの矢印画像が必要です：
+<br>
+<img src="images/pager_arrows.png" style="width: 50px; height: 32px;" alt="Pager Arrows" title="Pager Arrows">
+<br>
+上の 2 つは上を向き、下の 2 つは下を向き、左の 2 つは通常、右の 2 つは選択されています。
+<br>
+<br>
+<br>
+<h2>余白についての詳細</h2>
+スタートメニューは、すべてのグラフィカル要素を正しく配置するために複数の余白設定を使用します。この画像から分かります：
+<br>
+<img src="images/padding.png" style="width: 400px; height: 376px;" alt="Padding settings" title="Padding settings">
+<br>
+<br>
+数値を調整して、キャプションの希望する配置、またはアイコンとテキストの間の隙間などを得てください。
+<br>
+<br>
+<br>
+<h2>ユーザー画像（クラシックスキン）</h2>
+<br>
+スタートメニューはユーザー画像も表示できます。ユーザー画像のサイズを設定することで有効になります。すべてのオリジナルスキンは 48x48 ピクセルを使用していますが、128x128 までの任意のサイズを選択できます：
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">User_image_size=48</span>
+<br>
+<br>
+また、メニュー内での画像の位置も設定する必要があります：
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">User_frame_position=-10,6</span>
+<br>
+<br>正の位置は左と上から測定され、負の数値は右と下からです。したがって "-10,6" は右から 10 ピクセル、上から 6 ピクセルを意味します。水平位置は "center"、"center1"、"center2" にすることもできます。その場合、画像はメニュー全体、第 1 列、または第 2 列の上で中央揃えになります：
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">User_frame_position=center2,6</span><span style="font-weight: bold; font-family: monospace;"></span>&nbsp;
+<span style="font-style: italic;"> 第 2 列の上で中央揃え</span>
+<br>
+<br>
+オプションで、フレームビットマップを指定できます：
+<br>
+<br>
+<span style="font-weight: bold; font-family: monospace;">User_bitmap=12</span>&nbsp;
+<span style="font-style: italic;"> フレームビットマップのリソース ID</span>
+<br>
+<span style="font-weight: bold; font-family: monospace;">User_image_offset=8,8</span>&nbsp;
+<span style="font-style: italic;"> フレームの左上隅とユーザー画像の左上隅の間のピクセル数
+<br>
+<br>
+</span>フレームはユーザー画像の上に描画されるため、画像があるべき場所に穴が必要です。つまり、フレームビットマップにはアルファチャンネルが必要です。
+<br>
+<br>
+既定では、ユーザー画像は不透明で描画されます。このプロパティで画像の透過性を制御できます：
+<br>
+<br>
+<span style="font-weight: bold; font-family: monospace;">User_image_alpha=200</span>&nbsp;
+<span style="font-style: italic;"> 透過性を 200 に設定（255 中）</span>
+<br>
+<br>
+<br>
+<h2>ユーザー画像（Windows 7 スキン）</h2>
+<br>
+Windows 7 スタイルは、ユーザー画像をスタートメニューのサイズを超えて拡張できる別ウィンドウとして表示します。ユーザー画像は 48x48 ピクセルに制限され、その周りのフレームは常に 64x64 ピクセルです。この制限は、サイズがメニューの第 2 列の項目で使用される特大アイコンのサイズと一致しなければならないためです。
+<br>
+<br>
+次の設定を提供できます：
+<br>
+<span style="font-weight: bold; font-family: monospace;">User_bitmap=12</span>&nbsp;
+<span style="font-style: italic;"> フレームビットマップのリソース ID</span>
+<br>
+<code><span style="font-weight: bold; font-family: monospace;"></span><span style="font-weight: bold;">User_bitmap_outside=1</span></code> <span style="font-style: italic;">  フレームがメインメニューの外に出られるかどうか（ただしスタートメニューが画面下部にある場合のみ）</span>
+<br>
+<code><span style="font-weight: bold;">User_image_padding= -4,8</span></code> <span style="font-style: italic;">  フレームの上下の余白（フレームの垂直位置を微調整するために使用。水平位置は常に中央揃え）</span>
+<br>
+<br>
+<br>
+<h2>ユーザー名（クラシックスキンのみ）</h2>
+<br>
+スタートメニューはユーザー名も表示できます。この機能を有効にするには、メニュー内での名前の位置、そのフォント、配置を提供する必要があります：
+<br>
+<br>
+<span style="font-family: monospace;"><span style="font-weight: bold;">User_name_position=10,15,-75,55
+<br>
+User_name_align=right
+<br>
+User_font="Segoe UI",bold,22
+<br>
+User_text_color=#FFFFFF
+<br>
+User_glow_color=#000000
+<br>
+User_glow_size=2
+<br>
+</span></span><span style="font-family: monospace; font-weight: bold;"></span>
+<br>
+<br>
+<span style="font-weight: bold;"></span><span style="font-family: monospace; font-weight: bold;"></span>4 つの数値は矩形の左、上、右、下のオフセットです。正の数値は左と上からのオフセットを意味します。負の数値は右と下からのオフセットを意味します。この例では、矩形は左から 10 ピクセル、上から 15、右から 75、そして<span style="font-weight: bold;">下</span>は<span style="font-weight: bold;">上</span>から 55 になります。上と下の数値（2 番目と 4 番目）が両方とも正であるため、矩形はメニューの上に揃えられ、常に高さ 40 ピクセルになります。
+<br>
+<br>
+スキン内の他のフォントとは異なり、ユーザー名のフォントは画面 DPI が変わってもスケールしません。フォントのスケーリングの詳細については、以下の<span style="font-weight: bold;">スケーリング</span>セクションを参照してください。
+<br>
+<br>
+配置は <span style="font-weight: bold;">center, center1, center2, left, left1, left2, right, right1 </span>または<span style="font-weight: bold;"> right2</span> にできます。この設定がない場合、名前は既定で中央揃えになります。<span style="font-weight: bold;">Center</span>、<span style="font-weight: bold;">left</span>、<span style="font-weight: bold;">right</span> は名前をメニュー全体に対して配置します。<span style="font-weight: bold;">Center1, left1 </span>と<span style="font-weight: bold;"> right1</span> は第 1 列内で配置し、<span style="font-weight: bold;">center2, left2 </span>と<span style="font-weight: bold;"> right2</span> は第 2 列内で配置します。
+<br>
+<br>
+ユーザー名は通常システムから取得されます。フルネームを提供するシステムでは「Smith, John」のようになります。それ以外の場合は「jsmith」のようなログイン名になります。設定の<span style="font-weight: bold;">メニューの外観</span>タブにある<span style="font-weight: bold;">ユーザー名テキスト</span>設定を使用して、テキストを上書きできます。
+<br>
+<br>
+<br>
+<h2>検索ボックス</h2>
+検索ボックスの隣のアイコンは、メニュー背景に合わせてスキン化できます。次のように 8 つの画像を含む 1 つのビットマップを提供する必要があります：
+<br>
+<img style="width: 80px; height: 36px;" alt="Search icons" title="Search icons" src="images/search_icons.png">
+<br>
+上の行には 16x16 の画像があり、下の行には 20x20 があります。そしてビットマップ ID を指定します：
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">Search_bitmap=11</span><br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;"></span>
+<br>
+<h1><a name="win7"></a>Windows 7 スタイル
+<br>
+</h1>
+Windows 7 スタイル（.skin7 スキン）には、メインメニューに対していくつかの追加要件があります。
+<br>
+<br>
+まず、3 つの別々の背景を設定する必要があります。<span style="font-weight: bold;">Main_bitmap</span>（上記のとおり）、<span style="font-weight: bold;">Main_bitmap_search</span>（検索中に使用）、<span style="font-weight: bold;">Main_bitmap_jump</span>（ジャンプリストが開かれたときに使用）です。3 つの背景すべての上下の余白を同じにすることをお勧めします。そうしないと、メニューが異なるモード間で遷移するときにメニュー項目が動く可能性があります。
+<br>
+<br>
+次に、スキンには <span style="font-weight: bold;">Shutdown</span>、<span style="font-weight: bold;">List</span>、<span style="font-weight: bold;">Programs</span> など、いくつかの新しいスキン項目を定義する必要があります。完全な一覧については、末尾のリファレンスセクションを参照してください。
+<br>
+<br>
+定義する必要がある追加のビットマップリソースもいくつかあり、これらもリファレンスセクションに記載されています。これには、さまざまなモードでの検索ボックス周辺の背景、カスタムピンアイコンなどが含まれます。
+<br>
+<br>
+<br>
+<h1><a name="submenu"></a>サブメニュー</h1>
+サブメニューのパラメーターは、シンプルなメインメニューと似ています：
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;"></span><span style="font-family: monospace; font-weight: bold;"></span><span style="font-family: monospace; font-weight: bold;">Submenu_padding=2,2,2,2
+<br>
+Submenu_thin_frame=1</span>
+<br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;"></span><span style="font-family: monospace; font-weight: bold;"></span><span style="font-family: monospace; font-weight: bold;">Submenu_font="Segoe UI",normal,-9</span><br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;">Submenu_background=#FFFFFF</span><br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;">Submenu_text_color=#000000,#000000,#7F7F7F,#7F7F7F</span><br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;"></span><span style="font-family: monospace; font-weight: bold;">Submenu_selection=2</span><br style="font-family: monospace; font-weight: bold;"> <span style="font-family: monospace; font-weight: bold;">Submenu_selection_slices_X=3,1,3</span><br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;">Submenu_selection_slices_Y=4,66,4</span><br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;">Submenu_separator=3</span>
+<br style="font-family: monospace; font-weight: bold;"> <span style="font-family: monospace; font-weight: bold;">Submenu_separator_slices_X=3,34,3</span>
+<br>
+<span style="font-weight: bold; font-family: monospace;">.......</span>
+<br>
+<br>
+サブメニューは垂直区切り線を持つこともできます。これはメニューが複数の列を持つ場合に使用されます：
+<br>
+<span style="font-weight: bold; font-family: monospace;">Submenu_separatorV=12&nbsp;</span><span style="font-style: italic;"> 複数列間の垂直区切り線として使用するビットマップ</span>
+<br>
+<span style="font-weight: bold; font-family: monospace;">Submenu_separator_slices_Y=2,16,2&nbsp;</span><span style="font-style: italic;"> Submenu_separatorV の垂直スライス</span>
+<br>
+<br>
+<br>
+<h1><a name="about"></a>バージョン情報ボックス</h1>
+スタートメニューの設定には、メッセージボックスを開く <span style="font-weight: bold;">このスキンについて</span> ボタンがあります。これを使用して、スキンと自分自身に関する情報を提供してください。スキンの要件があれば記載してください  Aero が必要ですか？ Vista 専用ですか？
+<br>
+<br>
+パラメーターは次のとおりです：
+<br>
+<span style="font-weight: bold; font-family: monospace;">About=Some text</span><span style="font-style: italic;">&nbsp; 表示したいテキスト</span>
+<br>
+<span style="font-weight: bold; font-family: monospace;">AboutIcon=1</span><span style="font-style: italic;">&nbsp; バージョン情報ボックスで使用するアイコンリソース</span>
+<br>
+<br>
+テキスト内では <span style="font-weight: bold;">\n</span> を改行として使用できます（例：<span style="font-weight: bold;">"Line1\nLine2"</span>）。テキストは <span style="font-weight: bold;">&lt;A HREF="www.mycoolsite.com"&gt;Visit my site&lt;/A&gt;</span> 形式のハイパーリンクもサポートしています。
+<br>
+<br>
+アイコンは表示したい任意のアイコンリソースにできます。アイコンが提供されない場合、システムの「情報」アイコンが使用されます。
+<br>
+<br>
+<br>
+<h1><a name="variations"></a>スキンのバリエーション</h1>
+1 つのスキンファイルに複数のスキンを含めることができます。最初のもの（ID=1 の SKIN リソースで定義）がメインスキンで、残りはバリエーションです。バリエーションはメインの SKIN リソースで次のように記述されます：
+<br>
+<span style="font-family: monospace; font-weight: bold;">Variation1=0, "Large Icons, With Caption"</span><br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;">Variation2=2, "Large Icons, No Caption"</span>
+<br>
+<br>
+各バリエーションにはリソース ID とテキストがあります。ID は二次 SKIN リソースを参照し、これには一部のパラメーターのオーバーライド（たとえば代替の Main_bitmap や Submenu_font）が含まれます。テキストは設定ボックスで使用されるスキンバリエーションの名前です。
+<br>
+<br>
+スキンのバリエーションにより、複数のスキンを 1 つのファイルにまとめることができ、一緒に配布しやすくなります。また、すべてのスキンがスキンファイルのビットマップリソースを共有できるため、全体のサイズが削減されます。
+<br>
+<br>
+<br>
+<h1><a name="options"></a>スキンオプション</h1>
+スキンは、ユーザーが選択するオプションのリストを定義できます。単純な場合、オプションは ON または OFF にできるチェックボックスです。オプションは次のように定義されます：
+<br>
+<big><span style="font-family: monospace; font-weight: bold;">OPTION CAPTION="Caption",1</span><br style="font-family: monospace; font-weight: bold;">
+<span style="font-family: monospace; font-weight: bold;">OPTION SMALL_ICONS="Small Icons",0</span></big>
+<br style="font-family: monospace; font-weight: bold;">
+<br>
+最初に OPTION という単語、次にオプションの名前（CAPTION など）、次にチェックボックスのラベル（"Caption" など）、最後に既定値（1  ON、0  OFF）があります。
+<br>
+<br>
+スキンファイルの末尾に、一部のパラメーターのオーバーライドを提供する 1 つ以上のセクションを置くことができます。各セクションには条件があり、ユーザーが選択したオプションに基づいて評価されます。条件は、<span style="font-weight: bold;">AND</span>、<span style="font-weight: bold;">OR</span>、<span style="font-weight: bold;">NOT</span> などの演算を使用する式にできます  たとえば <span style="font-weight: bold;">OPTION1 AND (OPTION2 OR NOT OPTION3)</span>。
+<br>
+たとえば：
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">[NOT CAPTION]</span></big><span style="font-style: italic;"> このセクションは CAPTION が OFF のときに使用されます</span><br style="font-weight: bold; font-family: monospace;">
+<big><span style="font-weight: bold; font-family: monospace;">Main_bitmap_slices_X=0,0,0,15,1,13</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Main_padding=12,10,10,8</span></big>
+<br style="font-weight: bold; font-family: monospace;">
+<br style="font-weight: bold; font-family: monospace;">
+<big><span style="font-weight: bold; font-family: monospace;">[SMALL_ICONS]</span></big><span style="font-weight: bold; font-family: monospace;"></span><span style="font-style: italic;"> このセクションは SMALL_ICONS が ON のときに使用されます</span><br style="font-weight: bold; font-family: monospace;">
+<big><span style="font-weight: bold; font-family: monospace;">Main_large_icons=0</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Main_font="Segoe UI",normal,-9</span></big>
+<br style="font-weight: bold; font-family: monospace;">
+<br>
+各セクションはそのヘッダーから始まり、次のセクションまたはファイルの末尾で終わります。したがって、セクションはファイルの最後に配置することが重要です。
+<br>
+<br>
+他のオプションに応じてオプションを無効にすることができます。これは、オプションに式を提供し、式が false のときの代替既定値を提供することで行います。たとえば：
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">OPTION USER_NAME="Show user name",0</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">OPTION CENTER_NAME="Center user name",1, <span style="color: rgb(204, 102, 0);">USER_NAME</span>, <span style="color: rgb(51, 204, 255);">0</span></span></big>
+<br style="font-weight: bold; font-family: monospace;">
+<br>
+「Center user name」オプションは <span style="color: rgb(204, 102, 0); font-weight: bold;">USER_NAME</span> が false のとき（つまり「Show user name」オプションのチェックが外れているとき）に無効になります。オプションが無効になると、その値は <span style="font-weight: bold; color: rgb(51, 204, 255);">0</span> に固定されます。これは、ユーザー名を表示しないなら中央揃えにできないことをユーザーに明確にするためのものです。
+<br>
+<br>
+<span style="font-weight: bold;">重要な注意：</span> オプションは、その前に定義された他のオプションにのみ依存できます。したがって、この例では <span style="font-weight: bold;">USER_NAME</span> は <span style="font-weight: bold;">CENTER_NAME</span> の後に定義する必要があります。
+<br>
+<br>
+<h2>複雑なオプション</h2>
+より複雑なオプションは、ON または OFF になることに加えて、実際の値を持つことができます。値は数値、テキスト文字列、色、または画像にできます。
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">
+<br>
+</span></big>これは <span style="font-weight: bold;">COLOR_CUSTOM</span> という名前の色オプションを定義します。既定値は <span style="font-weight: bold;">FFFFFF</span> です。オプションの条件は <span style="font-weight: bold;">TRUE</span> で、常に有効になります。
+<br>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">OPTION_COLOR COLOR_CUSTOM=Custom color,0,TRUE,FFFFFF</span></big>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">[COLOR_CUSTOM]</span>
+<br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">Main_background=@COLOR_CUSTOM@</span><br style="font-weight: bold; font-family: monospace;">
+</big>
+<br>
+オプションはチェックボックスとカラーピッカーとして表示されます。チェックボックスがクリックされると、値 <span style="font-weight: bold;">COLOR_CUSTOM</span> が true になり、<span style="font-weight: bold;">[COLOR_CUSTOM]</span> セクションが有効になります。ユーザーが選択した実際の色値が <span style="font-weight: bold;">@COLOR_CUSTOM@</span> を置き換えます。
+<br>
+<br>
+数値、テキスト、または画像オプションには、<span style="font-weight: bold;">OPTION_NUMBER</span>、<span style="font-weight: bold;">OPTION_STRING</span>、<span style="font-weight: bold;">OPTION_IMAGE</span> を使用します。
+<br>
+<br>
+複雑なオプションの多くの例については、Metallic スキンを参照してください。
+<br>
+<br>
+<h2>スキンモード</h2>
+クラシックスキン（.skin ファイルに保存されているもの）は 3 つのモードで使用できます  「1 列」、「2 列」、「すべてのプログラム」。1 番目と 2 番目は現在のメニュースタイルに応じて使用されます。最後のものは Windows 7 で Windows スタートメニューの「すべてのプログラム」サブメニューを表示するために使用されます。
+<br>
+<br>
+スキンシステムは 2 つの組み込みオプション <span style="font-weight: bold;">TWO_COLUMNS</span> と <span style="font-weight: bold;">ALL_PROGRAMS</span> を定義します。スキンはこれらを使用して、どのモードが要求されているかを検出できます。たとえば：
+<br>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">[ALL_PROGRAMS]</span></big> <span style="font-style: italic;"> このセクションは「すべてのプログラム」メニューでのみ使用されます</span>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">Submenu_text_color=#0000FF,#0000FF,#7F7F7F,#7F7F7F</span></big> <span style="font-style: italic;"> テキスト色を上書き</span>
+<br>
+<br>
+すべてのオプションがすべてのモードで意味を持つわけではないので、ユーザーから隠すとよいでしょう。たとえばキャプション設定は「2 列」モードでは使用できず、メインメニュー設定は「すべてのプログラム」モードでは無視されます。
+<br>
+表示するオプションを制限するために、次の設定を定義できます：
+<br>
+Classic1_options  「1 列」モードで表示するオプションのリスト
+<br>
+Classic2_options  「2 列」モードで表示するオプションのリスト
+<br>
+AllPrograms_options 「すべてのプログラム」モードで表示するオプションのリスト
+<br>
+<br>
+たとえば：
+<br>
+<code><big><span style="font-weight: bold;">Classic1_options=CAPTION, USER_IMAGE, USER_NAME, CENTER_NAME, SMALL_ICONS</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Classic2_options=NO_ICONS, SMALL_ICONS</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">AllPrograms_options=THICK_BORDER, SOLID_SELECTION</span></big>
+<br style="font-weight: bold;">
+</code>
+<br>
+<h2>ラジオグループ</h2>
+オプションのセットを提示し、一度に 1 つだけがアクティブになるようにしたい場合があります。これはラジオグループと呼ばれます。次のように定義します：
+<br>
+<br>
+<code><big><span style="font-weight: bold;">OPTION RADIOGROUP=&lt;name of the group&gt;,0,&lt;option1&gt;|&lt;option2&gt;</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">OPTION &lt;option1&gt;=&lt;name1&gt;,1</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">OPTION &lt;option2&gt;=&lt;name2&gt;,0</span></big><br style="font-weight: bold;">
+</code>
+<br>
+リスト内の最初のオプションがグループを定義します。名前、値（無視されます）、可能なオプションのリストがあります。
+<br>
+次のいくつかのオプションが可能な選択肢を定義します。そのうち正確に 1 つが 1 に設定されている必要があり、それが既定の選択になります。ユーザーがオプションの 1 つをクリックすると、残りは自動的に 0 に設定されます。
+<br>
+<br>
+たとえば：
+<br>
+<br>
+<code><big><span style="font-weight: bold;">OPTION RADIOGROUP=Transparency,0,TRANSPARENT_LESS|TRANSPARENT_DEF|TRANSPARENT_MORE</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">OPTION TRANSPARENT_LESS=Less,0</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">OPTION TRANSPARENT_DEF=Default,1</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">OPTION TRANSPARENT_MORE=More,0</span></big>
+<br style="font-weight: bold;">
+</code>
+<br>
+<br>
+<h1><a name="scaling"></a>スケーリング</h1>
+<h2>DPI スケーリング</h2>
+スキンパラメーターは、既定の解像度 96 DPI 用に作成されています。より高い DPI 設定でスキンを使用する場合、一部のパラメーターを拡大するオプションがあります。たとえば：
+<br>
+<br>
+<big><span style="font-family: monospace; font-weight: bold;">Main_arrow_padding=8,10,50%</span>
+<br>
+</big>
+<br>
+これは、矢印の余白が DPI の増加の 50% でスケールされることを意味します。現在の DPI が 120（96 DPI より 25% 増加）の場合、数値は 25% の 50%、つまり 12.5% 拡大されます。8 は 9 になり、10 は 11.25（四捨五入して 11）になります。代わりにスキンが次のようだった場合：
+<br>
+<br>
+<big><span style="font-family: monospace; font-weight: bold;">Main_arrow_padding=8,10,100%</span></big>
+<br>
+<br>
+25% の増加が完全に適用されるため、8 は 10 になり、10 は 12.5（四捨五入して 13）になります。
+<br>
+<br>
+各数値に異なるスケーリング値を使用することもできます：
+<br>
+<br>
+<big><span style="font-weight: bold; font-family: monospace;">Main_icon_padding=4,4,3,4,100%,0%,100%,0%</span><br style="font-weight: bold; font-family: monospace;">
+</big>
+<br>
+この場合、最初と 3 番目の数値は 100% でスケールされ、残りはスケールされません。
+<br>
+<br>
+すべてのスキンパラメーターがスケーリングをサポートしているわけではありません。たとえばビットマップスライスは、一部のビットマップリソースの部分を表すため、スケールできません。スケールできるパラメーターは、リファレンスセクションでそのようにマークされています。
+<br>
+<br>
+<h2>フォント</h2>
+既定では、フォントは DPI とともに 100% でスケールされます。これを上書きできます：
+<br>
+<br>
+<big style="font-family: monospace;"><span style="font-weight: bold;">Main_font="Segoe UI",normal,-9,50%</span><br style="font-weight: bold;">
+</big>
+<br>
+これにより、<span style="font-weight: bold;">Main_font</span> は DPI 増加率の半分でスケールします。
+<br>
+<br>
+<span style="font-weight: bold;">注意：</span> 1 つの例外は <span style="font-weight: bold;">User_font</span> です。これは <span style="font-weight: bold;">User_name_position</span> ボックスに収まることを意図しているため、既定ではスケールされません。フォントをスケールさせたい場合は、ユーザー名の位置にも同じスケールを使用する必要があります。
+<br>
+<br>
+<h2>高 DPI パラメーター</h2>
+DPI が 144 以上（テキストサイズ 150% 以上）の場合、スキンは設定 HIGH_DPI を定義し、より高い解像度で使用することを意図した代替ビットマップリソースやその他のパラメーターを提供できます。たとえば、矢印やアイコンなどのより大きなグラフィカル要素を定義するために使用します。
+<br>
+<br>
+<h1><a name="localization"></a>ローカライズ</h1>
+組み込みスキンには、すべてのオプションとバリエーションのローカライズが含まれています。テキストをスキンファイルに直接提供する代わりに、設定はローカライズ DLL 内の文字列を参照します。たとえば：
+<br>
+<span style="font-family: monospace; font-weight: bold;">OPTION USER_IMAGE=#7014,1
+<br>
+OPTION SMALL_ICONS=#7011,0
+<br>
+<br>
+</span>#7014 は、DLL 内の文字列番号 #7014 を検索することを意味します。カスタムスキンは DLL に既に存在する文字列を使用できますが、残念ながら新しい文字列をスキン自体で追加することはできません。
+<br>
+<br>
+<span style="font-family: monospace; font-weight: bold;">
+<br>
+</span><h1><a name="custom"></a>カスタムスキン</h1>
+開発中は、ちょっとした変更のたびにスキンファイルを Resource-Hack しなければならないのは面倒です。そのため、スタートメニューは特別な「カスタム」スキンをサポートしています。すべてのリソースを DLL に詰め込む代わりに、Skins ディレクトリにルーズファイルとして置くことができます：
+<br>
+<br>
+<span style="font-weight: bold; font-family: monospace;">1.txt</span> <span style="font-style: italic;"> メインのスキン記述</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">12.bmp</span> <span style="font-style: italic;"> 1.txt で使用されるビットマップ</span>
+<br>
+2.txt <span style="font-style: italic;"> スキンのバリエーション</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">7.ico</span><br style="font-weight: bold; font-family: monospace;">
+<span style="font-weight: bold; font-family: monospace;">...</span><br style="font-weight: bold; font-family: monospace;">
+<br>
+ファイル名は、スキンファイル内のそのアセットのリソース ID でなければなりません。たとえば <span style="font-weight: bold;">12.bmp</span> は ID 12 のビットマップリソースになります。スキンファイルにパッケージ化する準備ができるまで、それらを編集してください。
+<br>
+<br>
+「カスタム」スキンオプションは、スタートメニューが <span style="font-weight: bold;">1.txt</span> ファイルを見つけられる場合にのみ設定で利用できます。
+<br>
+<br>
+カスタムスキンには、他のスキンでは利用できない追加パラメーターがあります：
+<br>
+<span style="font-weight: bold; font-family: monospace;">ForceRTL=1</span><br style="font-weight: bold; font-family: monospace;">
+<br>
+これにより、スタートメニューが右から左モードで実行されます。アラビア語 OS で背景画像がどのように見えるかを確認するために使用します。<span style="font-weight: bold;">注意：</span> RTL エミュレーションは完全ではありません。1 つの顕著な違いは、すべてのメニューアイコンがミラーリングされることです。実際の RTL Windows ではそうなりません。
+<br>
+<br>
+<br>
+<h1><a name="errors"></a>トラブルシューティング</h1>
+スキンがエラーを引き起こしている場合、スタートメニューはそれを破棄し、代わりに既定のスキンを使用します。原因は、リソースの欠落から互換性のないバージョン、サイズの間違ったビットマップなど、さまざまです。
+<br>
+<br>
+問題の原因を特定するには、スタートメニュー設定で「スキンエラーを報告する」をオンにします。すると、次のようなポップアップが表示されます：
+<br>
+<img style="width: 400px; height: 260px;" alt="Skin error" title="Skin error" src="images/error_balloon.png">
+<br>
+<br>
+現在のスキンバリエーションと現在のスキンオプションに関連するエラーのみが報告されることに注意してください。したがって、すべての条件で動作することを確認するために、すべての組み合わせでスキンをテストしてください。
+<br>
+<br>
+<br>
+<h1><a name="reference"></a>スキンリファレンス</h1>
+このセクションでは、スキンファイルで使用できるすべての設定について説明します。個々の設定を定義する前に、設定が持つことができる型を定義する必要があります。設定は次の型のいずれかです：テキスト、数値（または複数の数値）、色（または複数の色）、フォント、アイコン、ビットマップ、背景、またはスキン項目。背景やスキン項目のようないくつかの設定には、以下で説明する複数のサブ設定があります。サブ設定の名前は親設定の名前で始まります。
+<br>
+<br>
+型の詳細を次に示します：
+<br>
+<br>
+<span style="font-weight: bold;">色</span>は 16 進数形式 #RRGGBB で表され、各色成分は 2 桁の 16 進数を取ります。たとえば：
+<br>
+<code><span style="font-weight: bold;">Caption_text_color=#00FF00</span><br style="font-weight: bold;">
+</code>
+<br>
+名前付き色にすることもできます。実際の値は現在のシステム設定に依存します：
+<br>
+<code><span style="font-weight: bold;">Caption_text_color=$StartHighlight
+<br>
+<br>
+</span></code>これらは、すべてのバージョンの Windows で利用可能な主要なシステム色です：
+<br><span style="font-weight: bold;">$SystemScrollbar</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemBackground</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemActiveCaption</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemInactiveCaption</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemMenu</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemWindow</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemWindowFrame</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemMenuText</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemWindowText</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemCaptionText</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemActiveBorder</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemInactiveBorder</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemAppWorkspace</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemHighlight</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemHighlightText</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemBtnFace</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemBtnShadow</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemGrayText</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemBtnText</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemInactiveCaptionText</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemBtnHighlight</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$System3DDKShadow</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$System3DLight</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemInfoText</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemInfoBK</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemHotLight</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemGradientActiveCaption</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemGradientInactiveCaption</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemMenuHilight</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">$SystemMenuBar</span><br style="font-weight: bold;">
+Windows 8 以降では、Metro パレットからさらに多くの名前付き色を使用できます。完全な一覧を表示するには <span style="font-weight: bold;">Classic Shell Utility</span> を使用してください。
+<br>
+<br>
+<br>
+<span style="font-weight: bold;">フォント</span>は、フォントの名前、サイズ、ウェイト（normal または bold）を選択します。たとえば：
+<br>
+<code><span style="font-weight: bold;">Main_font="Segoe UI",normal,-10
+<br>
+<br>
+<br>
+</span></code><span style="font-weight: bold;">アイコン</span>は、スキンファイル内のアイコンリソース番号への参照です：
+<br>
+About=1
+<br>
+<br>
+<br>
+<span style="font-weight: bold;">ビットマップ</span>は、スキンファイル内のビットマップリソース番号への参照です。ビットマップリソースをティントカラーとどのように混ぜるかを決定するオプションのマスクを持つことができます。マスクは別のビットマップまたは単色にできます：
+<br>
+<code><span style="font-weight: bold;">Main_bitmap=2</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">Main_bitmap_mask=#FF0000
+<br>
+Main_bitmap_tint1=#E0E000
+<br>
+</span></code>
+<br>
+<br>
+<span style="font-weight: bold;">背景</span>は、必要なサイズにサイズ変更できるビットマップです。ビットマップリソースとスライス番号で構成されます。スライス数は実際の背景によって異なります。3x3 のものもあれば、3x1 のもの、6x3 のものもあります。
+<br>
+<br>
+指定された &lt;name&gt; を持つ背景に可能な設定：
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+<tbody><tr><td style="vertical-align: top; font-weight: bold;">名前</td>
+      <td style="vertical-align: top; font-weight: bold;">型
+<br>
+      </td>
+      <td style="vertical-align: top; font-weight: bold;">備考
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">&lt;name&gt;
+<br>
+</span></td>
+      <td style="vertical-align: top;">数値または色
+<br>
+      </td>
+      <td style="vertical-align: top;">メイン画像。BITMAP または IMAGE リソース識別子、あるいは #RRGGBB 色にできます
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">&lt;name&gt;_mask</span></td>
+      <td style="vertical-align: top;">数値または色
+<br>
+      </td>
+      <td style="vertical-align: top;">カラーマスク。ビットマップリソース識別子または #RRGGBB 色にできます。ビットマップの場合、元のビットマップと同じサイズでなければなりません
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">&lt;name&gt;_slices_X</span></td>
+      <td style="vertical-align: top;">数値
+<br>
+      </td>
+      <td style="vertical-align: top;">水平スライスのサイズ。数値の合計はビットマップの幅を超えてはなりません
+<br>
+      </td>
+    </tr><tr>
+      <td style="vertical-align: top;"><span style="color: black;">&lt;name&gt;_slices_Y</span></td>
+      <td style="vertical-align: top;">数値</td>
+      <td style="vertical-align: top;">垂直スライスのサイズ。数値の合計はビットマップの高さを超えてはなりません</td>
+    </tr><tr>
+      <td style="vertical-align: top;">&lt;name&gt;_tint1
+<br>
+      </td>
+      <td style="vertical-align: top;">色
+<br>
+      </td>
+      <td style="vertical-align: top;">最初のティントカラー。マスクの赤チャンネルに従ってメイン画像とブレンドされます。既定ではグラス色です
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_tint2</td>
+      <td style="vertical-align: top;">色</td>
+      <td style="vertical-align: top;">2 番目のティントカラー。マスクの緑チャンネルに従ってメイン画像とブレンドされます。既定ではメニュー背景色です
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_tint3</td>
+      <td style="vertical-align: top;">色</td>
+      <td style="vertical-align: top;">3 番目のティントカラー。マスクの青チャンネルに従ってメイン画像とブレンドされます。既定では黒です</td>
+    </tr>
+    </tbody>
+</table>
+<br>
+<br>
+<span style="font-weight: bold;">スキン項目</span>は、個々のメニュー要素の完全な外観を制御します。フォント、色、その他の設定を設定します。
+<br>
+<br>
+指定された &lt;name&gt; を持つスキン項目に可能な設定：
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+<tbody><tr><td style="vertical-align: top; font-weight: bold;">名前</td><td style="vertical-align: top; font-weight: bold;">型
+<br>
+      </td><td style="vertical-align: top; font-weight: bold;">備考
+<br>
+      </td></tr><tr>
+      <td style="vertical-align: top;">&lt;name&gt;_font
+<br>
+      </td>
+      <td style="vertical-align: top;">フォント
+<br>
+      </td>
+      <td style="vertical-align: top;">項目のテキスト用フォント
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_text_color
+<br>
+      </td>
+      <td style="vertical-align: top;">4 色
+<br>
+      </td>
+      <td style="vertical-align: top;">テキストの色  通常、選択、無効、無効+選択
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_glow_size
+<br>
+      </td>
+      <td style="vertical-align: top;">数値
+<br>
+      </td>
+      <td style="vertical-align: top;">グローのサイズ（ピクセル単位、Windows 7 でのみサポート）
+     </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_text_padding
+<br>
+      </td>
+      <td style="vertical-align: top;">4 つの数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">項目のテキスト周囲の左、上、右、下の余白
+<br>
+</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_icon_padding
+<br>
+      </td>
+      <td style="vertical-align: top;">4 つの数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">アイコン周囲の左、上、右、下の余白
+   </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_selection
+<br>
+      </td>
+      <td style="vertical-align: top;">背景または色
+<br>
+      </td>
+      <td style="vertical-align: top;">選択されたときの項目の背景（単色にすることもできます）
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_arrow_color
+<br>
+      </td>
+      <td style="vertical-align: top;">2 色
+<br>
+      </td>
+      <td style="vertical-align: top;">矢印の色  通常と選択（矢印が単色の場合）
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_arrow
+<br>
+      </td>
+      <td style="vertical-align: top;">ビットマップ
+<br>
+      </td>
+      <td style="vertical-align: top;">矢印ビットマップ（矢印がビットマップの場合）。ビットマップには 2 つの画像が含まれている必要があり、上が通常、下が選択です
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_arrow_padding
+<br>
+      </td>
+      <td style="vertical-align: top;">2 つの数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">矢印の左側と右側の余白
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_icon_frame
+<br>
+      </td>
+      <td style="vertical-align: top;">背景
+<br>
+      </td>
+      <td style="vertical-align: top;">アイコンフレーム用の背景
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&lt;name&gt;_icon_frame_offset
+<br>
+      </td>
+      <td style="vertical-align: top;">2 つの数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">アイコンとフレームの間の水平および垂直の余白
+      </td>
+    </tr>
+</tbody>
+</table>
+<br>
+<br>
+さまざまな型の設定を定義する方法が分かったので、次にメニュースキンで使用されるすべての設定の一覧を示します：
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; font-weight: bold;">名前
+     </td>
+      <td style="vertical-align: top; font-weight: bold;">型
+<br>
+      </td>
+      <td style="vertical-align: top; font-weight: bold;">備考
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">About
+<br>
+</span></td>
+      <td style="vertical-align: top;">テキスト
+<br>
+      </td>
+      <td style="vertical-align: top;">バージョン情報ボックスに表示するテキスト
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">AboutIcon</span>
+     </td>
+      <td style="vertical-align: top;">アイコン
+<br>
+      </td>
+      <td style="vertical-align: top;">バージョン情報ボックスに表示するアイコン
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Version</span>
+     </td>
+      <td style="vertical-align: top;">数値
+<br>
+      </td>
+      <td style="vertical-align: top;">バージョン 2 を使用
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;" colspan="3" align="center"><span style="font-weight: bold;">キャプション</span>
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Caption_font</span>
+     </td>
+      <td style="vertical-align: top;">フォント
+<br>
+      </td>
+      <td style="vertical-align: top;">メインメニューの側面のキャプションで使用するフォント
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Caption_text_color</span></td>
+      <td style="vertical-align: top;">色
+<br>
+      </td>
+      <td style="vertical-align: top;">キャプションテキストの色
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Caption_glow_color</span></td>
+      <td style="vertical-align: top;">色
+<br>
+      </td>
+      <td style="vertical-align: top;">キャプションテキストのグローの色
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Caption_glow_size</span></td>
+      <td style="vertical-align: top;">数値
+<br>
+      </td>
+      <td style="vertical-align: top;">グローのサイズ（ピクセル単位、Windows 7 でのみサポート）
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Caption_padding</span></td>
+      <td style="vertical-align: top;">4 つの数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">キャプションテキスト周囲の左、上、右、下の余白
+<br>
+      </td>
+    </tr>
+    <tr align="center">
+      <td colspan="3" style="vertical-align: top;"><span style="font-weight: bold;">パターン</span>
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Pattern1 から Pattern4
+<br>
+      </td>
+      <td style="vertical-align: top;">背景
+<br>
+      </td>
+      <td style="vertical-align: top;">メインメニュー用のタイル状画像
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_emblem1 から Main_emblem10
+<br>
+      </td>
+      <td style="vertical-align: top;">背景
+<br>
+      </td>
+      <td style="vertical-align: top;">メインメニュー用のエンブレム画像
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_emblem1_padding
+<br>
+      </td>
+      <td style="vertical-align: top;">4 つの数値（スケール付き）
+<br>
+      </td>
+      <td style="vertical-align: top;">エンブレム画像周囲の左、上、右、下の余白
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_emblem1_alignH
+<br>
+      </td>
+      <td style="vertical-align: top;">文字列</td>
+      <td style="vertical-align: top;">エンブレムの水平配置  center, center1, center2, left, left1, left2, right, right1, right2, corner
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_emblem1_alignV
+<br>
+      </td>
+      <td style="vertical-align: top;">文字列
+<br>
+      </td>
+      <td style="vertical-align: top;">エンブレムの垂直配置  center, top, bottom, corner
+<br>
+      </td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;" colspan="3" align="center"><span style="font-weight: bold;">メインメニュー</span>
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_background</span></td>
+      <td style="vertical-align: top;">色
+<br>
+      </td>
+      <td style="vertical-align: top;">メインメニューの背景色
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_bitmap</span></td>
+      <td style="vertical-align: top;">背景
+<br>
+      </td>
+      <td style="vertical-align: top;">メインメニューの背景。6 つの垂直スライスと 3 つの水平スライスが必要
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_opacity</span></td>
+      <td style="vertical-align: top;">テキスト</td>
+      <td style="vertical-align: top;">メインメニューの不透明度  solid, region, alpha, glass, fullalpha, fullglass
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_large_icons</span></td>
+      <td style="vertical-align: top;">数値
+<br>
+      </td>
+      <td style="vertical-align: top;">メインメニューで大きいアイコンを使用するには 1 に設定
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_thin_frame</span></td>
+      <td style="vertical-align: top;">数値
+<br>
+      </td>
+      <td style="vertical-align: top;">細い境界線を使用するには 1 に設定（太い 3D 境界線の代わり）。Windows 7 のクラシックテーマにのみ適用
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_padding</span></td>
+      <td style="vertical-align: top;">4 つの数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">メインメニューの項目周囲の左、上、右、下の余白
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">メインメニューの通常項目の外観
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_split</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">メインメニューの分割項目の外観。Main から継承</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_new</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">メインメニューのハイライト項目（新しいプログラムなど）の外観。Main から継承</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_separator</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">メインメニューの区切り線内のテキストの外観。Main から継承
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_separator</span></td>
+      <td style="vertical-align: top;">背景</td>
+      <td style="vertical-align: top;">メインメニューの水平区切り線用ビットマップ
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_separatorV</span></td>
+      <td style="vertical-align: top;">背景
+<br>
+      </td>
+      <td style="vertical-align: top;">メインメニューの 2 列間の垂直区切り線
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_pager</span></td>
+      <td style="vertical-align: top;">背景
+<br>
+      </td>
+      <td style="vertical-align: top;">メインメニューページャーの背景。2 つの画像が必要で、上が通常状態、下がハイライト状態
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_pager_arrows</span></td>
+      <td style="vertical-align: top;">ビットマップ
+<br>
+      </td>
+      <td style="vertical-align: top;">ページャー用矢印。上、下、通常、ホット状態の 2x2 グリッドが必要
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_hint_font</span></td>
+      <td style="vertical-align: top;">フォント
+<br>
+      </td>
+      <td style="vertical-align: top;">検索ボックスのヒントテキスト用フォント
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_pattern_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">ビットマップ
+<br>
+      </td>
+      <td style="vertical-align: top;">メインメニュー内のパターンの配置を制御するビットマップマスク（Main_bitmap のサイズと一致する必要があります）
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_emblem_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">ビットマップ
+<br>
+      </td>
+      <td style="vertical-align: top;">メインメニュー内のエンブレムの配置を制御するビットマップマスク（Main_bitmap のサイズと一致する必要があります）</td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;" colspan="3" align="center"><span style="font-weight: bold;">2 列メインメニュー</span>
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main2_opacity</span></td>
+      <td style="vertical-align: top;">テキスト</td>
+      <td style="vertical-align: top;">メインメニューの第 2 列の不透明度
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_no_icons2</span></td>
+      <td style="vertical-align: top;">数値
+<br>
+      </td>
+      <td style="vertical-align: top;">第 2 列のアイコンを非表示にするには 1 に設定
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main2_padding</span></td>
+      <td style="vertical-align: top;">4 つの数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">第 2 列の項目周囲の左、上、右、下の余白
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main2</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">第 2 列の通常項目の外観。Main から継承
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main2_split</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">第 2 列の分割項目の外観。Main2 から継承
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main2_new</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">第 2 列のハイライト項目の外観。Main2 から継承
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main2_separator</span></td>
+      <td style="vertical-align: top;">背景
+<br>
+      </td>
+      <td style="vertical-align: top;">第 2 列の水平区切り線。<span style="color: black;">Main_separator</span> から継承</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;" colspan="3" align="center"><span style="font-weight: bold;">Windows 7 スタイルのメインメニュー</span>
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_bitmap_search</span></td>
+      <td style="vertical-align: top;">背景</td>
+      <td style="vertical-align: top;">検索モードでのメインメニューの背景
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_search_padding</span></td>
+      <td style="vertical-align: top;">4 つの数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">検索モードでのメニュー項目の余白
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_bitmap_jump</span></td>
+      <td style="vertical-align: top;">背景</td>
+      <td style="vertical-align: top;">ジャンプリストモードでのメインメニューの背景
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_jump_padding</span></td>
+      <td style="vertical-align: top;">4 つの数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">ジャンプリスト項目の余白
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Main_search_indent</span></td>
+      <td style="vertical-align: top;">数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">検索ヘッダーに対する検索結果のインデント（ピクセル単位）
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_pattern_search_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">ビットマップ</td>
+      <td style="vertical-align: top;">検索モードでのメインメニュー用パターンマスク（Main_bitmap_search のサイズと一致する必要があります）
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_pattern_jump_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">ビットマップ</td>
+      <td style="vertical-align: top;">ジャンプリストモードでのメインメニュー用パターンマスク（Main_bitmap_jump のサイズと一致する必要があります）</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_emblem_search_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">ビットマップ</td>
+      <td style="vertical-align: top;">検索モードでのメインメニュー用エンブレムマスク（Main_bitmap_search のサイズと一致する必要があります）</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Main_emblem_jump_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">ビットマップ</td>
+      <td style="vertical-align: top;">ジャンプリストモードでのメインメニュー用エンブレムマスク（Main_bitmap_jump のサイズと一致する必要があります）</td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;"><span style="color: black;">Shutdown</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">シャットダウンボタンの外観。Main から継承
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Shutdown_search</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">検索モードでのシャットダウンボタンの外観。Shutdown から継承
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Shutdown_jump</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">ジャンプリストモードでのシャットダウンボタンの外観。Shutdown から継承
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Shutdown_padding</span></td>
+      <td style="vertical-align: top;">4 つの数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">シャットダウンボタン周囲の余白
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">List</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">検索結果とジャンプリスト項目の外観。Main から継承
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">List_split</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">2 つの部分に分割された検索結果とジャンプリスト項目の外観。List から継承
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">List_separator</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">検索結果とジャンプリストの区切り線内のテキストの外観。List から継承
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">List_separator</span></td>
+      <td style="vertical-align: top;">背景</td>
+      <td style="vertical-align: top;">検索結果とジャンプリスト用の水平区切り線。<span style="color: black;">Main_separator</span> から継承</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">List_separator_split</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">検索結果の分割区切り線の外観。List_split から継承
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">List_separator_split</span></td>
+      <td style="vertical-align: top;">背景</td>
+      <td style="vertical-align: top;">検索結果とジャンプリスト用の水平分割区切り線。<span style="color: black;">Main_separator</span> から継承</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Programs_icon</span></td>
+      <td style="vertical-align: top;">ビットマップ
+<br>
+      </td>
+      <td style="vertical-align: top;">「すべてのプログラム」ボタン用アイコン。2 つの画像が必要で、1 つは通常状態、1 つは選択状態
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Programs_button</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">「すべてのプログラム」ボタンの外観。Main から継承
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Programs_button_new</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">ハイライトされた「すべてのプログラム」ボタンの外観。Main から継承
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_bitmap</span></td>
+      <td style="vertical-align: top;">ビットマップ
+<br>
+      </td>
+      <td style="vertical-align: top;">検索ボックスで使用されるさまざまなアイコンを含むビットマップ
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_arrow</span></td>
+      <td style="vertical-align: top;">ビットマップ
+<br>
+      </td>
+      <td style="vertical-align: top;">検索区切り線内の矢印用ビットマップ。2 つの画像が必要で、1 つは最小化状態、1 つは最大化状態
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_padding</span></td>
+      <td style="vertical-align: top;">4 つの数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">検索ボックス周囲の余白
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_frame</span></td>
+      <td style="vertical-align: top;">数値
+<br>
+      </td>
+      <td style="vertical-align: top;">検索ボックスの黒いフレームを無効にするには 0 に設定（たとえば Search_background に組み込みの境界線がある場合）
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_background</span></td>
+      <td style="vertical-align: top;">背景
+<br>
+      </td>
+      <td style="vertical-align: top;">検索ボックス周囲の背景
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_background_padding</span></td>
+      <td style="vertical-align: top;">4 つの数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">検索背景周囲の余白
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_background_search</span></td>
+      <td style="vertical-align: top;">背景
+<br>
+      </td>
+      <td style="vertical-align: top;">検索モードでの検索ボックス周囲の背景
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_background_search_padding</span></td>
+      <td style="vertical-align: top;">4 つの数値（スケール付き）</td>
+      <td style="vertical-align: top;">検索モードでの検索背景周囲の余白
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_background_jump</span></td>
+      <td style="vertical-align: top;">背景</td>
+      <td style="vertical-align: top;">ジャンプリストモードでの検索ボックス周囲の背景</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Search_background_jump_padding</span></td>
+      <td style="vertical-align: top;">4 つの数値（スケール付き）</td>
+      <td style="vertical-align: top;">ジャンプリストモードでの検索背景周囲の余白</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Search_pattern_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">ビットマップ
+<br>
+      </td>
+      <td style="vertical-align: top;">検索ボックス周囲のパターンマスク（Search_background のサイズと一致する必要があります）
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Search_pattern_search_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">ビットマップ</td>
+      <td style="vertical-align: top;">検索モードでの検索ボックス周囲のパターンマスク（Search_background_search のサイズと一致する必要があります）</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Search_pattern_jump_mask
+<br>
+      </td>
+      <td style="vertical-align: top;">ビットマップ</td>
+      <td style="vertical-align: top;">ジャンプリストモードでの検索ボックス周囲のパターンマスク（Search_background_jump のサイズと一致する必要があります）</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Search_emblem_mask</td>
+      <td style="vertical-align: top;">ビットマップ</td>
+      <td style="vertical-align: top;">検索ボックス周囲のエンブレムマスク（Search_background のサイズと一致する必要があります）</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Search_emblem_search_mask</td>
+      <td style="vertical-align: top;">ビットマップ</td>
+      <td style="vertical-align: top;">検索モードでの検索ボックス周囲のエンブレムマスク（Search_background_search のサイズと一致する必要があります）</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Search_emblem_jump_mask</td>
+      <td style="vertical-align: top;">ビットマップ</td>
+      <td style="vertical-align: top;">ジャンプリストモードでの検索ボックス周囲のエンブレムマスク（Search_background_jump のサイズと一致する必要があります）</td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;"><span style="color: black;">Pin_bitmap</span></td>
+      <td style="vertical-align: top;">ビットマップ
+<br>
+      </td>
+      <td style="vertical-align: top;">ピン留めおよびピン解除項目用アイコン。ピン留め、ピン解除、通常、選択状態の 2x2 グリッドが必要
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">More_bitmap</span></td>
+      <td style="vertical-align: top;">ビットマップ
+<br>
+      </td>
+      <td style="vertical-align: top;">「詳細結果」項目用アイコン。2 つの画像が必要で、1 つは通常、1 つは選択状態
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Shutdown_bitmap</span></td>
+      <td style="vertical-align: top;">ビットマップ
+<br>
+      </td>
+      <td style="vertical-align: top;">インストールする更新プログラムがあるときにシャットダウンボタンに追加されるアイコン
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Programs_background</span></td>
+      <td style="vertical-align: top;">色
+<br>
+      </td>
+      <td style="vertical-align: top;">プログラムツリーの背景色
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Programs</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">プログラムツリー内の項目の外観。Main から継承
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Programs_new</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">プログラムツリー内のハイライト項目の外観。Programs から継承
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Programs_indent</span></td>
+      <td style="vertical-align: top;">数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">プログラムツリー内のネストされた項目の追加インデント（正または負）
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;" colspan="3" align="center"><span style="font-weight: bold;">ユーザー画像（クラシックスタイル）</span>
+</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_bitmap</span></td>
+      <td style="vertical-align: top;">ビットマップ
+<br>
+      </td>
+      <td style="vertical-align: top;">ユーザービットマップ用フレーム
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_image_offset</span></td>
+      <td style="vertical-align: top;">2 つの数値</td>
+      <td style="vertical-align: top;">フレーム内のユーザー画像のオフセット</td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_image_size
+<br>
+      </span></td>
+      <td style="vertical-align: top;">数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">ユーザー画像のサイズ
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_image_alpha</span><span style="color: black;"></span></td>
+      <td style="vertical-align: top;">数値</td>
+      <td style="vertical-align: top;">フレーム内のユーザー画像の 0 から 255 の不透明度
+<br>
+      </td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_frame_position</span><span style="color: black;"></span></td>
+      <td style="vertical-align: top;">2 つの値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">フレームの水平および垂直位置。水平は "center"、"center1"、"center2" にすることもできます</td>
+    </tr>
+    <tr align="center">
+      <td colspan="3" rowspan="1" style="vertical-align: top;"><span style="font-weight: bold;">ユーザー画像（Windows 7 スタイル）</span>
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_bitmap</span></td>
+      <td style="vertical-align: top;">ビットマップ</td>
+      <td style="vertical-align: top;">ユーザービットマップ用フレーム。64x64 以上でなければなりません</td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_image_offset</span></td>
+      <td style="vertical-align: top;">2 つの数値
+<br>
+      </td>
+      <td style="vertical-align: top;">フレーム内のユーザー画像のオフセット
+<br>
+</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_image_size</span></td>
+      <td style="vertical-align: top;">数値</td>
+      <td style="vertical-align: top;">ユーザー画像のサイズ（User_bitmap のサイズ以上である必要があります）。既定は 48</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_image_padding</span></td>
+      <td style="vertical-align: top;">2 つの数値（スケール付き）</td>
+      <td style="vertical-align: top;">ユーザーフレーム周囲の上下の余白</td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_bitmap_outside</span><span style="color: black;"></span></td>
+      <td style="vertical-align: top;">数値</td>
+      <td style="vertical-align: top;">ユーザービットマップがメインメニューの外に部分的に表示されるようにするには 1 に設定（メニューが下部にある場合のみ）</td>    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_frame_position</span><span style="color: black;"></span></td>
+      <td style="vertical-align: top;">数値（スケール付き）</td>
+      <td style="vertical-align: top;">ユーザーフレームがメインメニュー内に部分的に入る量。既定は 36
+<br>
+      </td>
+    </tr>
+<tr>
+      <td style="vertical-align: top;" colspan="3" align="center"><span style="font-weight: bold;">ユーザー名（クラシックスタイルのみ）
+<br>
+</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_name_position</span></td>
+      <td style="vertical-align: top;">4 つの数値
+<br>
+      </td>
+      <td style="vertical-align: top;">ユーザー名の位置
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_name_align</span></td>
+      <td style="vertical-align: top;">文字列
+<br>
+      </td>
+      <td style="vertical-align: top;">ユーザー名の配置  center, center1, center2, left, left1, left2, right, right1, right2
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_font</span></td>
+      <td style="vertical-align: top;">フォント
+<br>
+      </td>
+      <td style="vertical-align: top;">ユーザー名用フォント。既定ではこのフォントは DPI とともにスケールされません
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_text_color</span></td>
+      <td style="vertical-align: top;">色
+<br>
+      </td>
+      <td style="vertical-align: top;">ユーザー名の色
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_glow_color</span></td>
+      <td style="vertical-align: top;">色
+<br>
+      </td>
+      <td style="vertical-align: top;">ユーザー名のグロー色
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">User_glow_size</span></td>
+      <td style="vertical-align: top;">数値
+<br>
+      </td>
+      <td style="vertical-align: top;">グローのサイズ（ピクセル単位、Windows 7 でのみサポート）</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;" colspan="3" align="center"><span style="font-weight: bold;">サブメニュー</span>
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_background</span></td>
+      <td style="vertical-align: top;">色
+<br>
+      </td>
+      <td style="vertical-align: top;">サブメニューの背景色
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_bitmap</span></td>
+      <td style="vertical-align: top;">背景
+<br>
+      </td>
+      <td style="vertical-align: top;">サブメニューの背景画像
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_opacity</span></td>
+      <td style="vertical-align: top;">テキスト</td>
+      <td style="vertical-align: top;">サブメニューの不透明度
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">サブメニュー内の項目の外観
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_split</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">サブメニュー内の分割項目の外観。Submenu から継承
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_new</span></td>
+      <td style="vertical-align: top;">スキン項目
+<br>
+      </td>
+      <td style="vertical-align: top;">サブメニュー内のハイライト項目の外観。Submenu から継承
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_separator</span></td>
+      <td style="vertical-align: top;">背景</td>
+      <td style="vertical-align: top;">サブメニュー内の区切り線用ビットマップ
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_separator</span></td>
+      <td style="vertical-align: top;">スキン項目</td>
+      <td style="vertical-align: top;">サブメニュー内の区切り線内のテキストの外観。Submenu から継承</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_separator_split</span></td>
+      <td style="vertical-align: top;">背景</td>
+      <td style="vertical-align: top;">サブメニュー内の分割区切り線用ビットマップ。<span style="color: black;">Submenu_separator</span> から継承</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_separator_split</span></td>
+      <td style="vertical-align: top;">スキン項目</td>
+      <td style="vertical-align: top;">サブメニュー内の分割区切り線項目内のテキストの外観。Submenu_split から継承</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_padding</span></td>
+      <td style="vertical-align: top;">4 つの数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">サブメニュー項目の全辺の余白
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_offset</span></td>
+      <td style="vertical-align: top;">数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">親メニューに対するサブメニューの追加水平オフセット（正または負）
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_thin_frame</span></td>
+      <td style="vertical-align: top;">数値
+<br>
+      </td>
+      <td style="vertical-align: top;">細い境界線を使用するには 1 に設定（太い 3D 境界線の代わり）。Windows 7 のクラシックテーマにのみ適用</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_separatorV</span></td>
+      <td style="vertical-align: top;">背景
+<br>
+      </td>
+      <td style="vertical-align: top;">サブメニューの列間の垂直区切り線
+<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_pager</span></td>
+      <td style="vertical-align: top;">背景</td>
+      <td style="vertical-align: top;">サブメニューページャーの背景。2 つの画像が必要で、上が通常状態、下がハイライト状態</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">Submenu_pager_arrows</span></td>
+      <td style="vertical-align: top;">ビットマップ
+<br>
+      </td>
+      <td style="vertical-align: top;">ページャー用矢印。上、下、通常、ホット状態の 2x2 グリッドが必要</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="color: black;">AllPrograms_offset</span></td>
+      <td style="vertical-align: top;">数値（スケール付き）
+      </td>
+      <td style="vertical-align: top;">すべてのプログラムモードでの最初のサブメニューの追加水平オフセット（正または負）</td>
+    </tr>
+  </tbody>
+</table>
+<br>
+</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

@@ -39,6 +39,8 @@ call _BuildGerman.bat
 if ERRORLEVEL 1 exit /b 1
 call _BuildItalian.bat
 if ERRORLEVEL 1 exit /b 1
+call _BuildJapanese.bat
+if ERRORLEVEL 1 exit /b 1
 call _BuildPolish.bat
 if ERRORLEVEL 1 exit /b 1
 call _BuildRussian.bat
