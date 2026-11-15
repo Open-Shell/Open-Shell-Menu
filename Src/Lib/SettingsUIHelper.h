@@ -243,7 +243,7 @@ struct CTreeItem
 	CString icon;
 	CString iconD;
 	unsigned int settings;
-	int rows; // rows per column of a Pinned programs list (0 - no limit)
+	int rows; // rows per column of a Pinned programs or Recent Programs list (0 - no limit)
 	const CStdCommand *pStdCommand; // always valid
 
 	CTreeItem( void ) { settings=0; rows=0; pStdCommand=NULL; }

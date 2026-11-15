@@ -1198,11 +1198,12 @@ void CMenuContainer::AddStandardItems( bool bPlacePinned )
 			item.bInlineFirst=bInlineFirst;
 			bAlignBottom=bInlineFirst=false;
 
-			if (pStdItem->id==MENU_PINNED_PROGRAMS)
+			bool bPinned=(pStdItem->id==MENU_PINNED_PROGRAMS);
+			if (bPinned || IsRecentProgramList(pStdItem))
 			{
-				// a placeholder, replaced once all other items are known (PlacePinnedPrograms).
+				// a placeholder, replaced once all other items are known (InsertRecentProgramLists, PlacePinnedPrograms).
 				// only the Classic main menu can place its pinned programs
-				if (pInlineParent || m_bSubMenu || s_bWin7Style)
+				if (pInlineParent || (bPinned && (m_bSubMenu || s_bWin7Style)))
 					continue;
 				m_Items.insert(m_Items.begin()+menuIdx,1,item);
 				menuIdx++;
@@ -1514,8 +1515,46 @@ void CMenuContainer::AddStandardItems( bool bPlacePinned )
 				menuIdx++;
 			}
 		}
+		InsertRecentProgramLists();
 		PlacePinnedPrograms(bPlacePinned);
 	}
+}
+
+// The number of recent programs to show
+int CMenuContainer::GetRecentProgramCount( void )
+{
+	// the sign of MaxRecentPrograms only picks the order
+	int count=GetSettingInt(L"MaxRecentPrograms");
+	if (count<0) count=-count;
+	if (count>MRU_PROGRAMS_COUNT) count=MRU_PROGRAMS_COUNT;
+	return count;
+}
+
+// Lets the items that have a jump list open it as a split sub-menu
+void CMenuContainer::SetJumplistFlags( std::vector<MenuItem> &items )
+{
+	for (std::vector<MenuItem>::iterator it=items.begin();it!=items.end();++it)
+	{
+		MenuItem &item=*it;
+		if (!item.bLink || item.bFolder || !item.pItem1) continue;
+		CItemManager::RWLock lock(&g_ItemManager,false,CItemManager::RWLOCK_ITEMS);
+		item.bFolder=(!item.pItemInfo->GetAppid().IsEmpty() && HasJumplist(item.pItemInfo->GetAppid()));
+		item.bHasJumpList=item.bFolder;
+		item.bSplit=item.bFolder;
+	}
+}
+
+// Whether the item at index gets the second-pane look, going by the column breaks before it (for items added before the layout)
+bool CMenuContainer::IsInSecondPane( int index )
+{
+	int breaks=0, count=0;
+	for (int i=1;i<(int)m_Items.size();i++)
+	{
+		if (!m_Items[i].bBreak || m_Items[i].bOverflow) continue; // overflow columns never change the panes
+		count++;
+		if (i<=index) breaks++;
+	}
+	return IsSecondPaneAfterBreaks(breaks,count);
 }
 
 // Passes a placeholder's column break and bottom alignment to the item that takes its place
@@ -1533,6 +1572,42 @@ void CMenuContainer::SetOverflowBreaks( std::vector<MenuItem> &items, int first,
 	{
 		items[i].bBreak=true;
 		items[i].bOverflow=true;
+	}
+}
+
+// Whether the item is a Recent Programs item shown as a list (MENU_FLAT_LIST)
+bool CMenuContainer::IsRecentProgramList( const StdMenuItem *pStdItem )
+{
+	return pStdItem && pStdItem->id==MENU_RECENT_PROGRAMS && (pStdItem->settings&StdMenuItem::MENU_FLAT_LIST);
+}
+
+// The recent programs that take the place of the Recent Programs item at index, with their overflow breaks
+void CMenuContainer::GetRecentProgramList( int index, std::vector<MenuItem> &items )
+{
+	int count=GetRecentProgramCount();
+	if (count>0)
+		GetRecentPrograms(items,count,IsInSecondPane(index));
+	if (!m_bSubMenu && GetSettingBool(L"EnableJumplists"))
+		SetJumplistFlags(items);
+	SetOverflowBreaks(items,0,(int)items.size(),m_Items[index].pStdItem->rows);
+}
+
+// Replaces each Recent Programs item shown as a list by the recent programs themselves
+void CMenuContainer::InsertRecentProgramLists( void )
+{
+	// this runs after all other items are added, because GetRecentPrograms skips programs that are already in the main menu
+	for (int i=0;i<(int)m_Items.size();i++)
+	{
+		if (!IsRecentProgramList(m_Items[i].pStdItem))
+			continue;
+		std::vector<MenuItem> items;
+		GetRecentProgramList(i,items);
+		MenuItem copy=m_Items[i];
+		m_Items.erase(m_Items.begin()+i);
+		m_Items.insert(m_Items.begin()+i,items.begin(),items.end());
+		if (i<(int)m_Items.size())
+			InheritColumnFlags(copy,m_Items[i]);
+		i+=(int)items.size()-1; // continue after the inserted items
 	}
 }
 
@@ -1870,12 +1945,13 @@ static bool IgnoreUserAssistItem(const UserAssistItem& uaItem)
 	return false;
 }
 
-void CMenuContainer::GetRecentPrograms( std::vector<MenuItem> &items, int maxCount )
+void CMenuContainer::GetRecentPrograms( std::vector<MenuItem> &items, int maxCount, bool bSecondPane )
 {
 	bool bShowMetro=GetSettingBool(L"RecentMetroApps");
 	const std::vector<MenuItem> &mainItems=s_Menus[0]->m_Items;
 
-	int iconSizeFlag=(!m_bSubMenu && s_Skin.Main_icon_size==MenuSkin::ICON_SIZE_LARGE)?CItemManager::INFO_LARGE_ICON:CItemManager::INFO_SMALL_ICON;
+	MenuSkin::TIconSize mainIconSize=bSecondPane?s_Skin.Main2_icon_size:s_Skin.Main_icon_size;
+	int iconSizeFlag=(!m_bSubMenu && mainIconSize==MenuSkin::ICON_SIZE_LARGE)?CItemManager::INFO_LARGE_ICON:CItemManager::INFO_SMALL_ICON;
 	if (s_RecentPrograms==RECENT_PROGRAMS_RECENT)
 	{
 		for (int i=0;i<MRU_PROGRAMS_COUNT;i++)
@@ -2823,10 +2899,7 @@ void CMenuContainer::InitItems( void )
 
 	if (m_Options&CONTAINER_RECENT)
 	{
-		int nRecent=GetSettingInt(L"MaxRecentPrograms");
-		if (nRecent<0)
-			nRecent=-nRecent;
-		if (nRecent>MRU_PROGRAMS_COUNT) nRecent=MRU_PROGRAMS_COUNT;
+		int nRecent=GetRecentProgramCount();
 		if (nRecent>0)
 		{
 			// prepend recent programs
@@ -2850,19 +2923,7 @@ void CMenuContainer::InitItems( void )
 	}
 
 	if (!m_bSubMenu && GetSettingBool(L"EnableJumplists"))
-	{
-		for (std::vector<MenuItem>::iterator it=m_Items.begin();it!=m_Items.end();++it)
-		{
-			MenuItem &item=*it;
-			if (item.bLink && !item.bFolder && item.pItem1)
-			{
-				CItemManager::RWLock lock(&g_ItemManager,false,CItemManager::RWLOCK_ITEMS);
-				item.bFolder=(!item.pItemInfo->GetAppid().IsEmpty() && HasJumplist(item.pItemInfo->GetAppid()));
-				item.bHasJumpList=item.bFolder;
-				item.bSplit=item.bFolder;
-			}
-		}
-	}
+		SetJumplistFlags(m_Items);
 
 	m_ScrollCount=(int)m_Items.size();
 	if (m_ScrollCount>0 && m_Items[m_ScrollCount-1].id==MENU_PROGRAMS_TREE)
@@ -3335,21 +3396,20 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 	bool bRecentReverse=GetSettingInt(L"MaxRecentPrograms")<0;
 	bool bRecentByName=GetSettingBool(L"RecentSortName");
 
-	int firstRecent=-1, lastRecent=-1;
+	// the layout is done in MRU order, and each block of recent programs is put in display order after it.
+	// every Recent Programs item shown as a list adds a block of its own
+	std::vector<std::pair<int,int>> recentBlocks; // [first,last) of each block
 	if ((bRecentReverse || bRecentByName) && (!m_bSubMenu || (m_Options&CONTAINER_RECENT)))
 	{
 		for (int i=0;i<(int)m_Items.size();i++)
 		{
-			if (m_Items[i].id==MENU_RECENT)
-			{
-				if (firstRecent==-1) firstRecent=i;
-				lastRecent=i+1;
-			}
-			else if (firstRecent!=-1)
-				break;
+			if (m_Items[i].id!=MENU_RECENT) continue;
+			int first=i;
+			while (i<(int)m_Items.size() && m_Items[i].id==MENU_RECENT)
+				i++;
+			std::sort(m_Items.begin()+first,m_Items.begin()+i,MenuItem::MruOrderComparator());
+			recentBlocks.push_back(std::make_pair(first,i));
 		}
-		if (firstRecent>=0)
-			std::sort(m_Items.begin()+firstRecent,m_Items.begin()+lastRecent,MenuItem::MruOrderComparator());
 	}
 
 	m_bTwoColumns=(!m_bSubMenu && s_Skin.TwoColumns);
@@ -3509,7 +3569,7 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 		int y=0;
 		int maxw=0;
 		int index=m_bSecondPaneFirst?1:0;
-		int overflowTop=0; // where the pinned programs start, so their overflow columns line up with them
+		int overflowTop=0; // where the current list starts, so its overflow columns line up with it
 		for (int k=0;k<(int)order.size();k++)
 		{
 			int i=order[k];
@@ -3536,7 +3596,9 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 				else
 					index=GetPaneOfNewColumn(column,index,lastBreak<0 || k==lastBreak);
 			}
-			if (i==0 && m_ScrollCount>0)
+			bool bPinnedStart=(i==0 && m_ScrollCount>0);
+			bool bRecentStart=(item.id==MENU_RECENT && (k==0 || m_Items[order[k-1]].id!=MENU_RECENT));
+			if (bPinnedStart || bRecentStart)
 				overflowTop=y;
 			item.bNew=false;
 			if (m_bTwoColumns && i<m_OriginalCount && s_MenuMode!=MODE_NORMAL && (i<=m_SearchIndex-m_SearchItemCount || i>m_SearchIndex) && item.id!=MENU_SHUTDOWN_BUTTON)
@@ -4215,11 +4277,17 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 			}
 		}
 
-		if (firstRecent>=0)
+		for (std::vector<std::pair<int,int>>::const_iterator block=recentBlocks.begin();block!=recentBlocks.end();++block)
 		{
-			// reorder recent items
-			int top=m_Items[firstRecent].itemRect.top;
-			int firstRow=m_Items[firstRecent].row;
+			// reorder recent items. they take the places the layout gave them in MRU order, which may span several columns
+			int firstRecent=block->first, lastRecent=block->second;
+			struct Place { RECT rect; int row, column; };
+			std::vector<Place> places;
+			for (int i=firstRecent;i<lastRecent;i++)
+			{
+				Place place={m_Items[i].itemRect,m_Items[i].row,m_Items[i].column};
+				places.push_back(place);
+			}
 			if (bRecentByName)
 				std::sort(m_Items.begin()+firstRecent,m_Items.begin()+lastRecent,MenuItem::MruNameComparator());
 
@@ -4255,12 +4323,10 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 				std::reverse(m_Items.begin()+firstRecent,m_Items.begin()+lastRecent);
 			for (int i=firstRecent;i<lastRecent;i++)
 			{
-				RECT &rc=m_Items[i].itemRect;
-				int h=rc.bottom-rc.top;
-				rc.top=top;
-				top+=h;
-				rc.bottom=top;
-				m_Items[i].row=firstRow-firstRecent+i;
+				const Place &place=places[i-firstRecent];
+				m_Items[i].itemRect=place.rect;
+				m_Items[i].row=place.row;
+				m_Items[i].column=place.column;
 			}
 		}
 	}

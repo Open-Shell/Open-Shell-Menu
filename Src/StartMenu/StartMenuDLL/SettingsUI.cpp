@@ -1471,6 +1471,7 @@ public:
 		COMMAND_HANDLER( IDC_CHECKTRACK, BN_CLICKED, OnCheckTrack )
 		COMMAND_HANDLER( IDC_CHECKNOTRACK, BN_CLICKED, OnCheckTrack )
 		COMMAND_HANDLER( IDC_CHECKMULTICOLUMN, BN_CLICKED, OnCheckMulti )
+		COMMAND_HANDLER( IDC_CHECKFLATLIST, BN_CLICKED, OnCheckFlatList )
 		COMMAND_HANDLER( IDC_BUTTONRESET, BN_CLICKED, OnReset )
 		CHAIN_MSG_MAP( CEditCustomItemDlg )
 	END_MSG_MAP()
@@ -1500,15 +1501,19 @@ protected:
 	LRESULT OnIconChanged( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
 	LRESULT OnCheckTrack( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
 	LRESULT OnCheckMulti( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
+	LRESULT OnCheckFlatList( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
 	LRESULT OnBrowseCommand( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
 	LRESULT OnBrowseLink( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
 	LRESULT OnBrowseIcon( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
 	LRESULT OnReset( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
 
 private:
-	// Rows per column applies to the list of pinned programs
+	// Show as a list applies to the Recent Programs item. Rows per column applies to the pinned programs, and to the recent
+	// programs shown as a list
 	bool IsPinnedPrograms( void ) { return m_pItem->pStdCommand && wcscmp(m_pItem->pStdCommand->name,L"pinned_programs")==0; }
-	void EnableRows( void );
+	bool IsRecentPrograms( void ) { return m_pItem->pStdCommand && wcscmp(m_pItem->pStdCommand->name,L"recent_programs")==0; }
+	bool HasRows( void ) { return IsPinnedPrograms() || (IsRecentPrograms() && IsDlgButtonChecked(IDC_CHECKFLATLIST)==BST_CHECKED); }
+	void EnableListControls( void );
 
 	int m_Style, m_StyleMask;
 };
@@ -1540,8 +1545,9 @@ LRESULT CEditMenuDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 	CheckDlgButton(IDC_CHECKINLINE,(m_pItem->settings&StdMenuItem::MENU_INLINE)?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHECKSPLIT,(m_pItem->settings&StdMenuItem::MENU_SPLIT_BUTTON)?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHECKNOEXT,(m_pItem->settings&StdMenuItem::MENU_NOEXTENSIONS)?BST_CHECKED:BST_UNCHECKED);
+	CheckDlgButton(IDC_CHECKFLATLIST,(m_pItem->settings&StdMenuItem::MENU_FLAT_LIST)?BST_CHECKED:BST_UNCHECKED);
 	if (m_pItem->rows>0) SetDlgItemInt(IDC_EDITROWS,m_pItem->rows,FALSE);
-	EnableRows();
+	EnableListControls();
 	if (m_pItem->pStdCommand && (wcscmp(m_pItem->pStdCommand->name,L"programs")==0 || wcscmp(m_pItem->pStdCommand->name,L"apps")==0))
 	{
 		CheckDlgButton(IDC_CHECKMULTICOLUMN,BST_CHECKED);
@@ -1659,6 +1665,11 @@ LRESULT CEditMenuDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 	tool.uId=(UINT_PTR)(HWND)GetDlgItem(IDC_EDITROWS);
 	tooltip.SendMessage(TTM_ADDTOOL,0,(LPARAM)&tool);
 
+	str=LoadStringEx(IDS_FLAT_LIST_TIP);
+	tool.lpszText=(LPWSTR)(LPCWSTR)str;
+	tool.uId=(UINT_PTR)(HWND)GetDlgItem(IDC_CHECKFLATLIST);
+	tooltip.SendMessage(TTM_ADDTOOL,0,(LPARAM)&tool);
+
 	str=LoadStringEx(IDS_RESTORE_TIP);
 	tool.lpszText=(LPWSTR)(LPCWSTR)str;
 	tool.uId=(UINT_PTR)(HWND)GetDlgItem(IDC_BUTTONRESET);
@@ -1689,7 +1700,8 @@ LRESULT CEditMenuDlg::OnOK( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 	if (IsDlgButtonChecked(IDC_CHECKINLINE)==BST_CHECKED) m_pItem->settings|=StdMenuItem::MENU_INLINE;
 	if (IsDlgButtonChecked(IDC_CHECKSPLIT)==BST_CHECKED) m_pItem->settings|=StdMenuItem::MENU_SPLIT_BUTTON;
 	if (IsDlgButtonChecked(IDC_CHECKNOEXT)==BST_CHECKED) m_pItem->settings|=StdMenuItem::MENU_NOEXTENSIONS;
-	m_pItem->rows=IsPinnedPrograms()?(int)GetDlgItemInt(IDC_EDITROWS,NULL,FALSE):0;
+	if (IsRecentPrograms() && IsDlgButtonChecked(IDC_CHECKFLATLIST)==BST_CHECKED) m_pItem->settings|=StdMenuItem::MENU_FLAT_LIST;
+	m_pItem->rows=HasRows()?(int)GetDlgItemInt(IDC_EDITROWS,NULL,FALSE):0;
 	if (bForceMultiColumn)
 	{
 		// special handling of the Programs menu
@@ -1725,16 +1737,22 @@ LRESULT CEditMenuDlg::OnCommandChanged( WORD wNotifyCode, WORD wID, HWND hWndCtl
 		CheckDlgButton(IDC_CHECKMULTICOLUMN,(m_pItem->settings&StdMenuItem::MENU_MULTICOLUMN)?BST_CHECKED:BST_UNCHECKED);
 		GetDlgItem(IDC_CHECKMULTICOLUMN).EnableWindow(TRUE);
 	}
-	EnableRows();
+	EnableListControls();
 	UpdateIcons(IDC_ICONN,0);
 	return 0;
 }
 
-// Rows per column can be set only for the Pinned programs item
-void CEditMenuDlg::EnableRows( void )
+void CEditMenuDlg::EnableListControls( void )
 {
-	GetDlgItem(IDC_STATICROWS).EnableWindow(IsPinnedPrograms());
-	GetDlgItem(IDC_EDITROWS).EnableWindow(IsPinnedPrograms());
+	GetDlgItem(IDC_CHECKFLATLIST).EnableWindow(IsRecentPrograms());
+	GetDlgItem(IDC_STATICROWS).EnableWindow(HasRows());
+	GetDlgItem(IDC_EDITROWS).EnableWindow(HasRows());
+}
+
+LRESULT CEditMenuDlg::OnCheckFlatList( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled )
+{
+	EnableListControls();
+	return 0;
 }
 
 LRESULT CEditMenuDlg::OnLinkChanged( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled )
@@ -1837,8 +1855,10 @@ LRESULT CEditMenuDlg::OnReset( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 	CheckDlgButton(IDC_CHECKINLINE,(m_pItem->settings&StdMenuItem::MENU_INLINE)?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHECKSPLIT,(m_pItem->settings&StdMenuItem::MENU_SPLIT_BUTTON)?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHECKNOEXT,(m_pItem->settings&StdMenuItem::MENU_NOEXTENSIONS)?BST_CHECKED:BST_UNCHECKED);
+	CheckDlgButton(IDC_CHECKFLATLIST,(m_pItem->settings&StdMenuItem::MENU_FLAT_LIST)?BST_CHECKED:BST_UNCHECKED);
 	m_pItem->rows=0;
 	SetDlgItemText(IDC_EDITROWS,L"");
+	EnableListControls();
 	if (m_pItem->pStdCommand && (wcscmp(m_pItem->pStdCommand->name,L"programs")==0 || wcscmp(m_pItem->pStdCommand->name,L"apps")==0))
 	{
 		CheckDlgButton(IDC_CHECKMULTICOLUMN,BST_CHECKED);
@@ -1896,6 +1916,7 @@ void CCustomMenuDlg::ParseTreeItemExtra( CTreeItem *pItem, CSettingsParser &pars
 		if (_wcsicmp(token,L"INLINE")==0) pItem->settings|=StdMenuItem::MENU_INLINE;
 		if (_wcsicmp(token,L"SPLIT")==0) pItem->settings|=StdMenuItem::MENU_SPLIT_BUTTON;
 		if (_wcsicmp(token,L"NOEXTENSIONS")==0) pItem->settings|=StdMenuItem::MENU_NOEXTENSIONS;
+		if (_wcsicmp(token,L"FLAT_LIST")==0) pItem->settings|=StdMenuItem::MENU_FLAT_LIST;
 	}
 }
 
@@ -1923,6 +1944,7 @@ void CCustomMenuDlg::SerializeItemExtra( CTreeItem *pItem, std::vector<wchar_t> 
 	if (pItem->settings&StdMenuItem::MENU_INLINE) AppendString(stringBuilder,L"INLINE|");
 	if (pItem->settings&StdMenuItem::MENU_SPLIT_BUTTON) AppendString(stringBuilder,L"SPLIT|");
 	if (pItem->settings&StdMenuItem::MENU_NOEXTENSIONS) AppendString(stringBuilder,L"NOEXTENSIONS|");
+	if (pItem->settings&StdMenuItem::MENU_FLAT_LIST) AppendString(stringBuilder,L"FLAT_LIST|");
 	stringBuilder[stringBuilder.size()-1]='\n';
 }
 

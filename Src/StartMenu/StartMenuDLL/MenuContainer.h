@@ -115,7 +115,7 @@ struct StdMenuItem
 	const wchar_t *iconPath;
 	const wchar_t *link;
 	unsigned int settings;
-	int rows; // Pinned programs list: rows per column before the list continues in the next column (0 - no limit)
+	int rows; // Pinned programs and Recent Programs lists: rows per column before the list continues in the next column (0 - no limit)
 	const StdMenuItem *submenu;
 	CString labelString, tipString; // additional storage for the strings
 
@@ -138,6 +138,7 @@ struct StdMenuItem
 		MENU_SPLIT_BUTTON   = 0x002000, // the item is drawn as a split button
 		MENU_ITEM_DISABLED  = 0x004000, // the item is disabled
 		MENU_NORECENT       = 0x008000, // don't show recent items in the root menu (because a sub-menu uses MENU_RECENT_ITEMS)
+		MENU_FLAT_LIST      = 0x010000, // show the recent programs as a list in place of the item, instead of a sub-menu
 
 		// style
 		MENU_STYLE_CLASSIC1 = 0x100000,
@@ -713,9 +714,15 @@ private:
 	};
 
 	int AddSearchItems( const std::vector<SearchItem> &items, const CString &categoryName, unsigned int categoryHash, int originalCount );
-	void GetRecentPrograms( std::vector<MenuItem> &items, int maxCount );
+	void GetRecentPrograms( std::vector<MenuItem> &items, int maxCount, bool bSecondPane=false );
+	static int GetRecentProgramCount( void );
+	static void SetJumplistFlags( std::vector<MenuItem> &items );
+	bool IsInSecondPane( int index );
 	static void InheritColumnFlags( const MenuItem &placeholder, MenuItem &item );
 	static void SetOverflowBreaks( std::vector<MenuItem> &items, int first, int last, int rows );
+	static bool IsRecentProgramList( const StdMenuItem *pStdItem );
+	void GetRecentProgramList( int index, std::vector<MenuItem> &items );
+	void InsertRecentProgramLists( void );
 	void PlacePinnedPrograms( bool bSetPosition );
 	void MovePinnedPadding( void );
 	void GetLayoutOrder( std::vector<int> &order );
