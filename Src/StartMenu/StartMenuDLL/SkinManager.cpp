@@ -2196,6 +2196,9 @@ bool MenuSkin::LoadSkin( HMODULE hMod, const wchar_t *variation, const wchar_t *
 			return false;
 		if (!LoadSkinItem(hMod,parser,L"Main2_new",ItemSettings[COLUMN2_NEW],&ItemSettings[COLUMN2_ITEM],Main_background,bRTL))
 			return false;
+		// like the first column: the text of named separators (headings) needs a font and colors
+		if (!LoadSkinItem(hMod,parser,L"Main2_separator",ItemSettings[COLUMN2_SEPARATOR],&ItemSettings[COLUMN2_ITEM],Main_background,bRTL))
+			return false;
 		ItemSettings[COLUMN2_SEPARATOR].sepHeight=ScaleSkinElement(DEFAULT_SEPARATOR_HEIGHT);
 		str=parser.FindSetting(L"Main2_separator");
 		if (str)

@@ -1121,9 +1121,9 @@ void CMenuContainer::AddStandardItems( void )
 				if (!bFound && !bEmpty) continue;
 			}
 
-			if (pStdItem->id==MENU_SEPARATOR && menuIdx>0 && m_Items[menuIdx-1].id==MENU_SEPARATOR)
+			if (pStdItem->id==MENU_SEPARATOR && !pStdItem->label && menuIdx>0 && m_Items[menuIdx-1].id==MENU_SEPARATOR)
 			{
-				// prevent double separators unless that's exactly what is requested
+				// prevent double separators unless that's exactly what is requested. a heading (a separator with a label) always stays
 				if (pStdItem>m_pStdItem && pStdItem[-1].id!=MENU_SEPARATOR)
 					continue;
 			}
@@ -2610,8 +2610,8 @@ void CMenuContainer::InitItems( void )
 	}
 	AddStandardItems();
 
-	// remove trailing separators
-	while (!m_Items.empty() && m_Items[m_Items.size()-1].id==MENU_SEPARATOR && !m_Items[m_Items.size()-1].bInline)
+	// remove trailing separators, but not headings: a heading over an empty list still starts its column
+	while (!m_Items.empty() && m_Items[m_Items.size()-1].id==MENU_SEPARATOR && !m_Items[m_Items.size()-1].bInline && m_Items[m_Items.size()-1].name.IsEmpty())
 		m_Items.pop_back();
 
 	if (m_Items.empty())

@@ -1075,6 +1075,8 @@ BEGIN
     IDS_MAIN_MENU_SETTINGS  "Main Menu"
 	IDS_BUTTON_OFFSET		"Button offset"
 	IDS_BUTTON_OFFSET_TIP	"Offset the start button horizontally by the amount of pixels specified"
+    IDS_HEADING_ITEM        "Heading"
+    IDS_HEADING_TIP         "A separator that shows its label as a heading over the items that follow it"
 END
 
 STRINGTABLE 
