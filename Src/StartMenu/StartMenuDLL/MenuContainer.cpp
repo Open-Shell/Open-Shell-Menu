@@ -1680,6 +1680,22 @@ bool CMenuContainer::IsPinnedSeparator( int index )
 	return m_PinnedPosition>=0 && index==m_ScrollCount && m_Items[index].id==MENU_SEPARATOR;
 }
 
+// Is the item a pinned or recent program?
+bool CMenuContainer::IsListItem( int index )
+{
+	return index<m_ScrollCount || m_Items[index].id==MENU_RECENT;
+}
+
+// Is order[k] the first pinned or recent program in its column, laid out so far?
+// The overflow columns line up with it, also when a second list follows in the same column
+bool CMenuContainer::IsFirstListInColumn( const std::vector<int> &order, int k, int column )
+{
+	if (!IsListItem(order[k])) return false;
+	for (int j=k-1;j>=0 && m_Items[order[j]].column==column;j--)
+		if (IsListItem(order[j])) return false;
+	return true;
+}
+
 // The SecondPane setting in effect
 TSecondPane CMenuContainer::GetSecondPaneMode( void )
 {
@@ -3569,7 +3585,7 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 		int y=0;
 		int maxw=0;
 		int index=m_bSecondPaneFirst?1:0;
-		int overflowTop=0; // where the current list starts, so its overflow columns line up with it
+		int overflowTop=0; // where the first list of the current column starts, so its overflow columns line up with it
 		for (int k=0;k<(int)order.size();k++)
 		{
 			int i=order[k];
@@ -3596,9 +3612,7 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 				else
 					index=GetPaneOfNewColumn(column,index,lastBreak<0 || k==lastBreak);
 			}
-			bool bPinnedStart=(i==0 && m_ScrollCount>0);
-			bool bRecentStart=(item.id==MENU_RECENT && (k==0 || m_Items[order[k-1]].id!=MENU_RECENT));
-			if (bPinnedStart || bRecentStart)
+			if (IsFirstListInColumn(order,k,column))
 				overflowTop=y;
 			item.bNew=false;
 			if (m_bTwoColumns && i<m_OriginalCount && s_MenuMode!=MODE_NORMAL && (i<=m_SearchIndex-m_SearchItemCount || i>m_SearchIndex) && item.id!=MENU_SHUTDOWN_BUTTON)

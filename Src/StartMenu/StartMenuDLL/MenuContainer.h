@@ -728,6 +728,8 @@ private:
 	void GetLayoutOrder( std::vector<int> &order );
 	int GetPinnedEnd( void );
 	bool IsPinnedSeparator( int index );
+	bool IsListItem( int index );
+	bool IsFirstListInColumn( const std::vector<int> &order, int k, int column );
 	static TSecondPane GetSecondPaneMode( void );
 	static int CountColumnBreaks( const StdMenuItem *pStdItem );
 	bool IsSecondPaneAfterBreaks( int breaks, int count );
