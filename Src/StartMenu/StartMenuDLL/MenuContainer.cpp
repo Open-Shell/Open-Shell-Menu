@@ -1628,6 +1628,32 @@ RECT CMenuContainer::GetScrollRect( void )
 	return rc;
 }
 
+// How far each column's bottom-aligned items move down: from the bottom of the column's items to the bottom of its pane
+void CMenuContainer::GetColumnBottomShifts( std::vector<int> &shifts )
+{
+	shifts.assign(m_ColumnOffsets.size(),0);
+	for (int i=0;i<m_OriginalCount;i++)
+	{
+		const MenuItem &item=m_Items[i];
+		if (shifts[item.column]<item.itemRect.bottom)
+			shifts[item.column]=item.itemRect.bottom;
+	}
+	for (int c=0;c<(int)shifts.size();c++)
+	{
+		int bottom=(!IsSecondPaneColumn(c) || s_MenuMode==MODE_SEARCH)?m_rContent.bottom:m_rContent2.bottom;
+		shifts[c]=bottom-shifts[c];
+		if (!s_bWin7Style && shifts[c]<0)
+			shifts[c]=0;
+	}
+}
+
+// Whether the point is in the column the pager scrolls: its buttons cover only that column
+bool CMenuContainer::IsInScrollColumn( const POINT &pt )
+{
+	RECT rc=GetScrollRect();
+	return pt.x>=rc.left && pt.x<rc.right;
+}
+
 // How far the pager can scroll: the height of the scrolling items beyond what it shows
 int CMenuContainer::GetScrollRange( void )
 {
@@ -3952,22 +3978,10 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 		if (m_bTwoColumns && columnWidths.size()>2)
 		{
 			// each column is aligned to the bottom separately (from its first COLUMN_PADDING on)
-			std::vector<int> columnDH(m_ColumnOffsets.size(),0); // how far down the column's aligned items move
-			for (int i=0;i<m_OriginalCount;i++)
-			{
-				const MenuItem &item=m_Items[i];
-				if (columnDH[item.column]<item.itemRect.bottom)
-					columnDH[item.column]=item.itemRect.bottom;
-			}
 			m_rContent.bottom=totalHeight-menuPadding[0].bottom;
 			m_rContent2.bottom=totalHeight-menuPadding[1].bottom;
-			for (int c=0;c<(int)columnDH.size();c++)
-			{
-				int bottom=(!IsSecondPaneColumn(c) || s_MenuMode==MODE_SEARCH)?m_rContent.bottom:m_rContent2.bottom;
-				columnDH[c]=bottom-columnDH[c];
-				if (!s_bWin7Style && columnDH[c]<0)
-					columnDH[c]=0;
-			}
+			std::vector<int> columnDH;
+			GetColumnBottomShifts(columnDH);
 			// only the Windows 7 style trims overlapping items below, and it always has the second pane in column m_Pane2Column
 			int dh1=columnDH[0], dh2=m_Pane2Column<(int)columnDH.size()?columnDH[m_Pane2Column]:0;
 
@@ -4662,13 +4676,12 @@ bool CMenuContainer::GetItemRect( int index, RECT &rc )
 
 int CMenuContainer::HitTest( const POINT &pt, bool *bArrow, bool bDrop )
 {
-	// the pager buttons cover only the column that scrolls
-	RECT rScroll=GetScrollRect();
-	bool bInPager=(pt.x>=rScroll.left && pt.x<rScroll.right);
-	if (m_bScrollUp && bInPager && pt.y<rScroll.top+m_ScrollButtonSize)
+	int scrollTop=GetScrollRect().top;
+	bool bInPager=IsInScrollColumn(pt);
+	if (m_bScrollUp && bInPager && pt.y<scrollTop+m_ScrollButtonSize)
 		return -1;
 	int start=0;
-	if (m_bScrollDown && bInPager && pt.y>=rScroll.top+m_ScrollHeight-m_ScrollButtonSize)
+	if (m_bScrollDown && bInPager && pt.y>=scrollTop+m_ScrollHeight-m_ScrollButtonSize)
 		start=m_ScrollCount;
 	int n=(int)m_Items.size();
 	for (int i=start;i<n;i++)

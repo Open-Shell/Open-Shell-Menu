@@ -720,6 +720,8 @@ private:
 	int GetColumnX( int column );
 	RECT GetScrollRect( void );
 	int GetScrollRange( void );
+	bool IsInScrollColumn( const POINT &pt );
+	void GetColumnBottomShifts( std::vector<int> &shifts );
 	bool IsClassicMainMenu( void ) { return m_bTwoColumns && !m_bSubMenu && !s_bWin7Style; }
 	bool IsSecondPaneColumn( int column ) { return column>=m_PaneColumns[1].first && column<m_PaneColumns[1].last; }
 
