@@ -713,6 +713,7 @@ CMenuContainer::CMenuContainer( CMenuContainer *pParent, int index, int options,
 	m_bSecondPaneFirst=false;
 	m_Pane2Column=1; // the first column is the first pane, the rest the second pane (the layout sets it from the column breaks)
 	memset(m_PaneColumns,0,sizeof(m_PaneColumns));
+	m_bColumnLines=false;
 	memset(&m_rMenu,0,sizeof(m_rMenu));
 	memset(&m_rContent,0,sizeof(m_rContent));
 	memset(&m_rContent2,0,sizeof(m_rContent2));
@@ -1616,6 +1617,18 @@ int CMenuContainer::GetColumnX( int column )
 	return m_rContent.left+m_ColumnOffsets[column]-m_ColumnOffsets[m_PaneColumns[0].first];
 }
 
+// room for the column lines on each side, in pixels at 96 DPI
+const int COLUMN_LINE_MARGIN=4;
+
+// The space between two columns of the main menu, wider with ColumnLines so the line keeps clear of the icons
+int CMenuContainer::GetMainColumnGap( void )
+{
+	int gap=s_Skin.Main_separatorWidth;
+	if (m_bColumnLines)
+		gap+=2*(s_Skin.Dpi*COLUMN_LINE_MARGIN/96);
+	return gap;
+}
+
 // Where the pager scrolls: the content of a sub-menu, or the first column of the main menu, where the pinned programs are
 RECT CMenuContainer::GetScrollRect( void )
 {
@@ -1624,7 +1637,7 @@ RECT CMenuContainer::GetScrollRect( void )
 	int pane=IsSecondPaneColumn(0)?1:0;
 	RECT rc=pane?m_rContent2:m_rContent;
 	if (m_PaneColumns[pane].last>1)
-		rc.right=GetColumnX(1)-s_Skin.Main_separatorWidth; // more columns share the pane: stop at the gap before the next one
+		rc.right=GetColumnX(1)-GetMainColumnGap(); // more columns share the pane: stop at the gap before the next one
 	return rc;
 }
 
@@ -3397,6 +3410,7 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 	// in the Classic two-column menu the last column break starts the second pane, and any earlier break adds a column to the first pane.
 	// the Windows 7 style keeps using only the first break
 	int lastBreak=InitSecondPane();
+	m_bColumnLines=IsClassicMainMenu() && GetSettingBool(L"ColumnLines");
 
 	{
 		int row=0, column=0, subColumn=0;
@@ -3673,7 +3687,8 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 		columnWidths[1]=CItemManager::EXTRA_LARGE_ICON_SIZE;
 
 	// calculate width of each column
-	if (!m_bTwoColumns && GetSettingBool(L"SameSizeColumns"))
+	// (SameSizeColumns is for multi-column sub-menus, SameWidthColumns for the Classic two-column main menu)
+	if ((!m_bTwoColumns && GetSettingBool(L"SameSizeColumns")) || (IsClassicMainMenu() && GetSettingBool(L"SameWidthColumns")))
 	{
 		int maxw=0;
 		for (size_t i=0;i<columnWidths.size();i++)
@@ -3736,7 +3751,7 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 		m_ColumnOffsets.resize(columnWidths.size());
 		for (size_t i=0;i<columnWidths.size();i++)
 		{
-			if (i>0) maxw+=m_bSubMenu?s_Skin.Submenu_separatorWidth:s_Skin.Main_separatorWidth;
+			if (i>0) maxw+=m_bSubMenu?s_Skin.Submenu_separatorWidth:GetMainColumnGap();
 			m_ColumnOffsets[i]=maxw;
 			maxw+=columnWidths[i];
 		}

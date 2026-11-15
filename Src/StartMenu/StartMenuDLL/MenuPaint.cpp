@@ -1594,6 +1594,51 @@ void CMenuContainer::CreateSubmenuRegion( int width, int height )
 	}
 }
 
+// how strong the column lines are: 25% of the item text color
+const unsigned int COLUMN_LINE_OPACITY=64;
+
+// A 1x1 bitmap in the column line's color, premultiplied for AlphaBlend
+HBITMAP CMenuContainer::CreateColumnLineBitmap( void )
+{
+	BITMAPINFO bi={0};
+	bi.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
+	bi.bmiHeader.biWidth=1;
+	bi.bmiHeader.biHeight=1;
+	bi.bmiHeader.biPlanes=1;
+	bi.bmiHeader.biBitCount=32;
+	bi.bmiHeader.biCompression=BI_RGB;
+	unsigned int *bits=NULL;
+	HBITMAP bmp=CreateDIBSection(NULL,&bi,DIB_RGB_COLORS,(void**)&bits,NULL,0);
+	if (!bmp) return NULL;
+	COLORREF color=s_Skin.ItemSettings[MenuSkin::COLUMN1_ITEM].textColors[0];
+	unsigned int alpha=COLUMN_LINE_OPACITY;
+	*bits=(alpha<<24)|((GetRValue(color)*alpha/255)<<16)|((GetGValue(color)*alpha/255)<<8)|(GetBValue(color)*alpha/255);
+	return bmp;
+}
+
+// Draws the ColumnLines of a pane: a thin line in the middle of the gap before each of its columns but the first
+void CMenuContainer::DrawColumnLines( HDC hdc, HDC hdcTemp, int pane )
+{
+	// for skins whose own column separator doesn't show, like Immersive, which tints it to the background
+	int first=m_PaneColumns[pane].first+1, last=m_PaneColumns[pane].last;
+	if (first>=last) return;
+	HBITMAP bmpLine=CreateColumnLineBitmap();
+	if (!bmpLine) return;
+
+	const RECT &content=pane?m_rContent2:m_rContent;
+	int width=s_Skin.Dpi>=192?2:1; // one pixel, two on high DPI screens
+	int gap=GetMainColumnGap();
+	HGDIOBJ bmp0=SelectObject(hdcTemp,bmpLine);
+	BLENDFUNCTION func={AC_SRC_OVER,0,255,AC_SRC_ALPHA};
+	for (int i=first;i<last;i++)
+	{
+		int x=GetColumnX(i)-(gap+width)/2; // the middle of the gap
+		AlphaBlend(hdc,x,content.top,width,content.bottom-content.top,hdcTemp,0,0,1,1,func);
+	}
+	SelectObject(hdcTemp,bmp0);
+	DeleteObject(bmpLine);
+}
+
 void CMenuContainer::DrawBackground( HDC hdc, const RECT &drawRect )
 {
 	HDC hdc2=CreateCompatibleDC(hdc);
@@ -2508,7 +2553,9 @@ void CMenuContainer::DrawBackground( HDC hdc, const RECT &drawRect )
 		int sepFirst=m_PaneColumns[pane].first+1, sepLast=m_PaneColumns[pane].last; // separators go before these columns
 		if (sepFirst>=sepLast)
 			continue;
-		if (bmpSeparatorV.GetBitmap())
+		if (m_bColumnLines)
+			DrawColumnLines(hdc,hdc2,pane); // instead of the skin's separators
+		else if (bmpSeparatorV.GetBitmap())
 		{
 			HGDIOBJ bmp0=SelectObject(hdc2,bmpSeparatorV.GetBitmap());
 			RECT rSrc={0,0,sepWidth,sepSlicesY[0]+sepSlicesY[1]+sepSlicesY[2]};

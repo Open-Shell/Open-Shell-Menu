@@ -1086,6 +1086,10 @@ BEGIN
     IDS_SECOND_PANE_FIRST   "First column"
     IDS_SECOND_PANE_FIRST_TIP 
                             "The column before the first column break looks like the second pane and is drawn on the left"
+    IDS_COLUMN_LINES        "Column lines"
+    IDS_COLUMN_LINES_TIP    "Draws a thin line between the columns of the main menu, in place of the skin's own separator, which some skins make invisible"
+    IDS_SAME_WIDTH          "Same width for all columns"
+    IDS_SAME_WIDTH_TIP      "All columns of the main menu are as wide as the widest one"
 END
 
 STRINGTABLE 

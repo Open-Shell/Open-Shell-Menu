@@ -670,6 +670,7 @@ private:
 		int first, last; // [first,last)
 	};
 	PaneColumns m_PaneColumns[2]; // the columns of the first and the second pane, set by InitWindowInternal
+	bool m_bColumnLines; // the ColumnLines setting, for this layout
 	RECT m_rMenu;
 	RECT m_rContent;
 	RECT m_rContent2;
@@ -718,6 +719,9 @@ private:
 	void UpdatePaneColumns( void );
 	int GetPaneWidth( int pane, const std::vector<int> &columnWidths );
 	int GetColumnX( int column );
+	int GetMainColumnGap( void );
+	void DrawColumnLines( HDC hdc, HDC hdcTemp, int pane );
+	static HBITMAP CreateColumnLineBitmap( void );
 	RECT GetScrollRect( void );
 	int GetScrollRange( void );
 	bool IsInScrollColumn( const POINT &pt );
