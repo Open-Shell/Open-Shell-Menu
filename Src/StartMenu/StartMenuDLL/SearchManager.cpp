@@ -692,7 +692,10 @@ void CSearchManager::SearchThread( void )
 						{
 							CComString pName;
 							if (SUCCEEDED(it->pItem->GetDisplayName(SIGDN_NORMALDISPLAY,&pName)))
-							AddSearchItem(it->pItem,pName,COLLECT_PROGRAMS|COLLECT_METRO,CATEGORY_PROGRAM,searchRequest);
+							{
+								pName.MakeUpper(); // like the names from the folders, so GetSearchResults can tell a Start Menu shortcut to the same app is a duplicate
+								AddSearchItem(it->pItem,pName,COLLECT_PROGRAMS|COLLECT_METRO,CATEGORY_PROGRAM,searchRequest);
+							}
 						}
 						if (searchRequest.requestId<m_LastProgramsRequestId)
 							continue;
