@@ -25,6 +25,7 @@
 #endif
 
 enum TRecentPrograms;
+enum TSecondPane;
 
 enum TMenuID
 {
@@ -97,6 +98,7 @@ enum TMenuID
 	MENU_RESTART_NOUPDATE,
 	MENU_SHUTDOWN_NOUPDATE,
 	MENU_SHUTDOWN_HYBRID,
+	MENU_PINNED_PROGRAMS, // places the pinned programs in the Classic two-column main menu
 	
 	MENU_IGNORE=1024, // ignore this item
 };
@@ -113,6 +115,7 @@ struct StdMenuItem
 	const wchar_t *iconPath;
 	const wchar_t *link;
 	unsigned int settings;
+	int rows; // Pinned programs and Recent Programs lists: rows per column before the list continues in the next column (0 - no limit)
 	const StdMenuItem *submenu;
 	CString labelString, tipString; // additional storage for the strings
 
@@ -135,6 +138,7 @@ struct StdMenuItem
 		MENU_SPLIT_BUTTON   = 0x002000, // the item is drawn as a split button
 		MENU_ITEM_DISABLED  = 0x004000, // the item is disabled
 		MENU_NORECENT       = 0x008000, // don't show recent items in the root menu (because a sub-menu uses MENU_RECENT_ITEMS)
+		MENU_FLAT_LIST      = 0x010000, // show the recent programs as a list in place of the item, instead of a sub-menu
 
 		// style
 		MENU_STYLE_CLASSIC1 = 0x100000,
@@ -453,7 +457,7 @@ private:
 			drawType=MenuSkin::COLUMN1_ITEM;
 			column=row=0;
 			memset(&itemRect,0,sizeof(itemRect));
-			bFolder=bLink=bPrograms=bAlignBottom=bBreak=bInline=bInlineFirst=bInlineLast=bSplit=bHasJumpList=bMetroLink=bMetroApp=bBlankSeparator=bNew=bStartScreen=bCustomAccelerator=false;
+			bFolder=bLink=bPrograms=bAlignBottom=bBreak=bInline=bInlineFirst=bInlineLast=bSplit=bHasJumpList=bMetroLink=bMetroApp=bBlankSeparator=bNew=bStartScreen=bCustomAccelerator=bOverflow=false;
 			priority=0;
 			pItem1=pItem2=NULL;
 			mfuHash=0;
@@ -490,6 +494,7 @@ private:
 		bool bBlankSeparator:1; // this is a blank separator that is the same size as normal items
 		bool bNew:1; // this is a highlighted new item
 		bool bStartScreen:1; // this is the start screen shortcut item
+		bool bOverflow:1; // starts a column because its list has more items than rows per column (see SetOverflowBreaks)
 		bool bCustomAccelerator:1; // the accelerator is specified explicitly
 		char priority; // used for sorting of the All Programs menu (0 for Start Menu, 1 for the separator, 2 for the Programs)
 		char drive;
@@ -661,6 +666,15 @@ private:
 	POINT m_PaintOffset;
 	int m_MaxWidth;
 	bool m_bTwoColumns;
+	int m_PinnedPosition; // Classic two-column main menu: the pinned programs (items 0..m_ScrollCount) are laid out just before this item. -1 when they come first
+	bool m_bSecondPane; // false when the SecondPane setting gives no column the second-pane look
+	bool m_bSecondPaneFirst; // SecondPane=First: the second pane is the columns before m_Pane2Column, on the left
+	int m_Pane2Column; // where the panes meet: the second pane starts here (or ends here with m_bSecondPaneFirst)
+	struct PaneColumns
+	{
+		int first, last; // [first,last)
+	};
+	PaneColumns m_PaneColumns[2]; // the columns of the first and the second pane, set by InitWindowInternal
 	RECT m_rMenu;
 	RECT m_rContent;
 	RECT m_rContent2;
@@ -700,7 +714,37 @@ private:
 	};
 
 	int AddSearchItems( const std::vector<SearchItem> &items, const CString &categoryName, unsigned int categoryHash, int originalCount );
-	void GetRecentPrograms( std::vector<MenuItem> &items, int maxCount );
+	void GetRecentPrograms( std::vector<MenuItem> &items, int maxCount, bool bSecondPane=false );
+	static int GetRecentProgramCount( void );
+	static void SetJumplistFlags( std::vector<MenuItem> &items );
+	bool IsInSecondPane( int index );
+	static void InheritColumnFlags( const MenuItem &placeholder, MenuItem &item );
+	static void SetOverflowBreaks( std::vector<MenuItem> &items, int first, int last, int rows );
+	static bool IsRecentProgramList( const StdMenuItem *pStdItem );
+	void GetRecentProgramList( int index, std::vector<MenuItem> &items );
+	void InsertRecentProgramLists( void );
+	void PlacePinnedPrograms( bool bSetPosition );
+	void MovePinnedPadding( void );
+	void GetLayoutOrder( std::vector<int> &order );
+	int GetPinnedEnd( void );
+	bool IsPinnedSeparator( int index );
+	bool IsListItem( int index );
+	bool IsFirstListInColumn( const std::vector<int> &order, int k, int column );
+	static TSecondPane GetSecondPaneMode( void );
+	static int CountColumnBreaks( const StdMenuItem *pStdItem );
+	bool IsSecondPaneAfterBreaks( int breaks, int count );
+	int InitSecondPane( const std::vector<int> &order );
+	int GetPaneOfNewColumn( int column, int pane, bool bLastBreak );
+	void UpdatePaneColumns( void );
+	int GetPaneWidth( int pane, const std::vector<int> &columnWidths );
+	int GetColumnX( int column );
+	RECT GetScrollRect( void );
+	int GetScrollRange( void );
+	bool IsInScrollColumn( const POINT &pt );
+	void GetColumnBottomShifts( std::vector<int> &shifts );
+	int GetScrollColumn( void ) { return (m_ScrollCount>0 && !m_Items.empty())?m_Items[0].column:0; } // where the pinned programs start
+	bool IsClassicMainMenu( void ) { return m_bTwoColumns && !m_bSubMenu && !s_bWin7Style; }
+	bool IsSecondPaneColumn( int column ) { return column>=m_PaneColumns[1].first && column<m_PaneColumns[1].last; }
 
 	// additional commands for the context menu
 	enum
@@ -842,7 +886,7 @@ private:
 	void SetSearchState( TSearchState state );
 	void UpdateSearchResults( bool bForceShowAll );
 	void AddInternetSearch( size_t index );
-	void AddStandardItems( void );
+	void AddStandardItems( bool bPlacePinned=false );
 	void UpdateAccelerators( int first, int last );
 	void ExecuteCommand( const wchar_t *command, bool bElevated, bool bEnvSubst );
 	void RunUserCommand( bool bPicture );

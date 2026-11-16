@@ -609,7 +609,8 @@ HRESULT STDMETHODCALLTYPE CMenuContainer::DragOver( DWORD grfKeyState, POINTL pt
 	}
 	else
 	{
-		if (!m_bSubMenu && index<m_OriginalCount && PtInRect(&m_rContent,p) && (s_pDragSource!=this || s_bDragFromTree || !s_bDragMovable || m_Items[m_DragIndex].id==MENU_RECENT))
+		RECT rScroll=GetScrollRect(); // a drop on empty space in the column of the pinned programs adds to them
+		if (!m_bSubMenu && index<m_OriginalCount && PtInRect(&rScroll,p) && (s_pDragSource!=this || s_bDragFromTree || !s_bDragMovable || m_Items[m_DragIndex].id==MENU_RECENT))
 		{
 			if (s_bWin7Style)
 			{

@@ -55,6 +55,7 @@ static StdMenuItem g_StdMenu[]=
 	{L"switch_user",MENU_SWITCHUSER},
 	{L"lock",MENU_LOCK},
 	{L"*recent_programs",MENU_RECENT_PROGRAMS},
+	{L"*pinned_programs",MENU_PINNED_PROGRAMS},
 	{L"search_box",MENU_SEARCH_BOX},
 	{L"*apps",MENU_APPS},
 
@@ -199,6 +200,7 @@ static unsigned int ParseItemSettings( const wchar_t *name )
 		if (_wcsicmp(token,L"NOEXTENSIONS")==0) settings|=StdMenuItem::MENU_NOEXTENSIONS;
 		if (_wcsicmp(token,L"INLINE")==0) settings|=StdMenuItem::MENU_INLINE;
 		if (_wcsicmp(token,L"SPLIT")==0) settings|=StdMenuItem::MENU_SPLIT_BUTTON;
+		if (_wcsicmp(token,L"FLAT_LIST")==0) settings|=StdMenuItem::MENU_FLAT_LIST;
 	}
 	return settings;
 }
@@ -285,6 +287,9 @@ static void ParseMenuItem( StdMenuItem &item, const wchar_t *name )
 	item.iconPath=g_CustomMenuParser.FindSetting(buf);
 
 	item.settings=ParseItemSettings(name);
+	Sprintf(buf,_countof(buf),L"%s.Rows",name);
+	str=g_CustomMenuParser.FindSetting(buf);
+	item.rows=str?_wtol(str):0;
 	if (custom7>=0)
 	{
 		if (g_StdCommands7[custom7].flags&CStdCommand7::ITEM_SINGLE)
@@ -491,6 +496,7 @@ const StdMenuItem *ParseCustomMenu( unsigned int &rootSettings )
 			item.folder1=item.folder2=NULL;
 			item.label=item.tip=item.iconPath=item.link=NULL;
 			item.settings=0;
+			item.rows=0;
 			item.submenu=NULL;
 
 			// handle special names

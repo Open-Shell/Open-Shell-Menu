@@ -243,9 +243,10 @@ struct CTreeItem
 	CString icon;
 	CString iconD;
 	unsigned int settings;
+	int rows; // rows per column of a Pinned programs or Recent Programs list (0 - no limit)
 	const CStdCommand *pStdCommand; // always valid
 
-	CTreeItem( void ) { settings=0; pStdCommand=NULL; }
+	CTreeItem( void ) { settings=0; rows=0; pStdCommand=NULL; }
 	void SetCommand( CString command, const CStdCommand *pStdCommands, int style, int mask );
 	unsigned int GetIconKey( void ) const;
 	HICON LoadIcon( bool bSmall, std::vector<HMODULE> &modules ) const;
