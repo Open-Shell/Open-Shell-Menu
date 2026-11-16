@@ -720,6 +720,7 @@ private:
 	void MovePinnedPadding( void );
 	void GetLayoutOrder( std::vector<int> &order );
 	int GetPinnedEnd( void );
+	bool IsPinnedSeparator( int index );
 	static TSecondPane GetSecondPaneMode( void );
 	static int CountColumnBreaks( const StdMenuItem *pStdItem );
 	bool IsSecondPaneAfterBreaks( int breaks, int count );

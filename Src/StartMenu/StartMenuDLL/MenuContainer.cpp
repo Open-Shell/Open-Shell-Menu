@@ -1598,6 +1598,13 @@ int CMenuContainer::GetPinnedEnd( void )
 	return end;
 }
 
+// Is the item the separator that AddStandardItems puts after the pinned programs, while a Pinned Programs item places them?
+// That separator gets no height: with a Pinned Programs item the user adds separators where they want them
+bool CMenuContainer::IsPinnedSeparator( int index )
+{
+	return m_PinnedPosition>=0 && index==m_ScrollCount && m_Items[index].id==MENU_SEPARATOR;
+}
+
 // The SecondPane setting in effect
 TSecondPane CMenuContainer::GetSecondPaneMode( void )
 {
@@ -3642,6 +3649,8 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 				h=0; // hide it for now
 			else if (!s_bShowTopEmpty && m_Items.size()>1 && (m_Items[i].id==MENU_EMPTY_TOP || (i>0 && m_Items[i-1].id==MENU_EMPTY_TOP)))
 				h=0; // this is the first (Empty) item in the top menu. hide it for now
+			else if (IsPinnedSeparator(i))
+				h=0;
 			else if (item.bInline)
 			{
 				h=iconSize+settings.iconPadding.top+settings.iconPadding.bottom;
