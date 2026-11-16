@@ -1061,6 +1061,7 @@ static const CStdCommand g_StdCommands[]={
 	{L"switch_user",IDS_SHUTDOWN_SWITCH,IDS_SWITCH_TIP,L"SwitchUserItem",L"$Menu.SwitchUser",L"$Menu.SwitchUserTip",L"none"},
 	{L"lock",IDS_SHUTDOWN_LOCK,IDS_LOCK_TIP,L"LockItem",L"$Menu.Lock",L"$Menu.LockTip",L"none"},
 	{L"recent_programs",IDS_SHOW_RECENT,IDS_RECENT_TIP,L"RecentPrograms",NULL,NULL,L"none"},
+	{L"pinned_programs",IDS_PINNED_ITEM,IDS_PINNED_ITEM_TIP,L"PinnedPrograms",NULL,NULL,L"none",NULL,StdMenuItem::MENU_STYLE_CLASSIC2},
 	{L"monitor_off",IDS_MONITOR_OFF_ITEM,IDS_MONITOR_OFF_TIP,L"MonitorOffItem",L"$Menu.MonitorOff",NULL,L"none"},
 	{L"",IDS_CUSTOM_ITEM,IDS_CUSTOM_TIP,L"CustomItem",NULL,NULL,L""},
 	{NULL},
@@ -1505,6 +1506,10 @@ protected:
 	LRESULT OnReset( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled );
 
 private:
+	// Rows per column applies to the list of pinned programs
+	bool IsPinnedPrograms( void ) { return m_pItem->pStdCommand && wcscmp(m_pItem->pStdCommand->name,L"pinned_programs")==0; }
+	void EnableRows( void );
+
 	int m_Style, m_StyleMask;
 };
 
@@ -1535,6 +1540,8 @@ LRESULT CEditMenuDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 	CheckDlgButton(IDC_CHECKINLINE,(m_pItem->settings&StdMenuItem::MENU_INLINE)?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHECKSPLIT,(m_pItem->settings&StdMenuItem::MENU_SPLIT_BUTTON)?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHECKNOEXT,(m_pItem->settings&StdMenuItem::MENU_NOEXTENSIONS)?BST_CHECKED:BST_UNCHECKED);
+	if (m_pItem->rows>0) SetDlgItemInt(IDC_EDITROWS,m_pItem->rows,FALSE);
+	EnableRows();
 	if (m_pItem->pStdCommand && (wcscmp(m_pItem->pStdCommand->name,L"programs")==0 || wcscmp(m_pItem->pStdCommand->name,L"apps")==0))
 	{
 		CheckDlgButton(IDC_CHECKMULTICOLUMN,BST_CHECKED);
@@ -1647,6 +1654,11 @@ LRESULT CEditMenuDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 	tool.uId=(UINT_PTR)(HWND)GetDlgItem(IDC_CHECKNOEXT);
 	tooltip.SendMessage(TTM_ADDTOOL,0,(LPARAM)&tool);
 
+	str=LoadStringEx(IDS_ROWS_TIP);
+	tool.lpszText=(LPWSTR)(LPCWSTR)str;
+	tool.uId=(UINT_PTR)(HWND)GetDlgItem(IDC_EDITROWS);
+	tooltip.SendMessage(TTM_ADDTOOL,0,(LPARAM)&tool);
+
 	str=LoadStringEx(IDS_RESTORE_TIP);
 	tool.lpszText=(LPWSTR)(LPCWSTR)str;
 	tool.uId=(UINT_PTR)(HWND)GetDlgItem(IDC_BUTTONRESET);
@@ -1677,6 +1689,7 @@ LRESULT CEditMenuDlg::OnOK( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 	if (IsDlgButtonChecked(IDC_CHECKINLINE)==BST_CHECKED) m_pItem->settings|=StdMenuItem::MENU_INLINE;
 	if (IsDlgButtonChecked(IDC_CHECKSPLIT)==BST_CHECKED) m_pItem->settings|=StdMenuItem::MENU_SPLIT_BUTTON;
 	if (IsDlgButtonChecked(IDC_CHECKNOEXT)==BST_CHECKED) m_pItem->settings|=StdMenuItem::MENU_NOEXTENSIONS;
+	m_pItem->rows=IsPinnedPrograms()?(int)GetDlgItemInt(IDC_EDITROWS,NULL,FALSE):0;
 	if (bForceMultiColumn)
 	{
 		// special handling of the Programs menu
@@ -1712,8 +1725,16 @@ LRESULT CEditMenuDlg::OnCommandChanged( WORD wNotifyCode, WORD wID, HWND hWndCtl
 		CheckDlgButton(IDC_CHECKMULTICOLUMN,(m_pItem->settings&StdMenuItem::MENU_MULTICOLUMN)?BST_CHECKED:BST_UNCHECKED);
 		GetDlgItem(IDC_CHECKMULTICOLUMN).EnableWindow(TRUE);
 	}
+	EnableRows();
 	UpdateIcons(IDC_ICONN,0);
 	return 0;
+}
+
+// Rows per column can be set only for the Pinned programs item
+void CEditMenuDlg::EnableRows( void )
+{
+	GetDlgItem(IDC_STATICROWS).EnableWindow(IsPinnedPrograms());
+	GetDlgItem(IDC_EDITROWS).EnableWindow(IsPinnedPrograms());
 }
 
 LRESULT CEditMenuDlg::OnLinkChanged( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled )
@@ -1816,6 +1837,8 @@ LRESULT CEditMenuDlg::OnReset( WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 	CheckDlgButton(IDC_CHECKINLINE,(m_pItem->settings&StdMenuItem::MENU_INLINE)?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHECKSPLIT,(m_pItem->settings&StdMenuItem::MENU_SPLIT_BUTTON)?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHECKNOEXT,(m_pItem->settings&StdMenuItem::MENU_NOEXTENSIONS)?BST_CHECKED:BST_UNCHECKED);
+	m_pItem->rows=0;
+	SetDlgItemText(IDC_EDITROWS,L"");
 	if (m_pItem->pStdCommand && (wcscmp(m_pItem->pStdCommand->name,L"programs")==0 || wcscmp(m_pItem->pStdCommand->name,L"apps")==0))
 	{
 		CheckDlgButton(IDC_CHECKMULTICOLUMN,BST_CHECKED);
@@ -1849,6 +1872,9 @@ void CCustomMenuDlg::ParseTreeItemExtra( CTreeItem *pItem, CSettingsParser &pars
 {
 	pItem->settings=0;
 	wchar_t text[256];
+	Sprintf(text,_countof(text),L"%s.Rows",pItem->name);
+	const wchar_t *rows=parser.FindSetting(text);
+	pItem->rows=rows?_wtol(rows):0;
 	Sprintf(text,_countof(text),L"%s.Settings",pItem->name);
 	const wchar_t *str=parser.FindSetting(text);
 	if (!str) return;
@@ -1875,8 +1901,13 @@ void CCustomMenuDlg::ParseTreeItemExtra( CTreeItem *pItem, CSettingsParser &pars
 
 void CCustomMenuDlg::SerializeItemExtra( CTreeItem *pItem, std::vector<wchar_t> &stringBuilder )
 {
-	if (!pItem->settings) return;
 	wchar_t text[256];
+	if (pItem->rows>0)
+	{
+		Sprintf(text,_countof(text),L"%s.Rows=%d\n",pItem->name,pItem->rows);
+		AppendString(stringBuilder,text);
+	}
+	if (!pItem->settings) return;
 	Sprintf(text,_countof(text),L"%s.Settings=",pItem->name);
 	AppendString(stringBuilder,text);
 	if (pItem->settings&StdMenuItem::MENU_OPENUP) AppendString(stringBuilder,L"OPEN_UP|");
@@ -4402,6 +4433,10 @@ CSetting g_Settings[]={
 	{L"LargeIconSize",CSetting::TYPE_INT,IDS_LARGE_SIZE_SM,IDS_LARGE_SIZE_SM_TIP,-1,CSetting::FLAG_COLD}, // 32 for DPI<=96, 40 for DPI<=120, 48 otherwise
 	{L"InvertMetroIcons",CSetting::TYPE_BOOL,IDS_INVERT_ICONS,IDS_INVERT_ICONS_TIP,0},
 	{L"MaxMainMenuWidth",CSetting::TYPE_INT,IDS_MENU_WIDTH,IDS_MENU_WIDTH_TIP,60,CSetting::FLAG_MENU_CLASSIC_BOTH},
+	{L"SecondPane",CSetting::TYPE_INT,IDS_SECOND_PANE,IDS_SECOND_PANE_TIP,SECOND_PANE_LAST,CSetting::FLAG_MENU_CLASSIC2},
+		{L"LastColumn",CSetting::TYPE_RADIO,IDS_SECOND_PANE_LAST,IDS_SECOND_PANE_LAST_TIP},
+		{L"None",CSetting::TYPE_RADIO,IDS_SECOND_PANE_NONE,IDS_SECOND_PANE_NONE_TIP},
+		{L"FirstColumn",CSetting::TYPE_RADIO,IDS_SECOND_PANE_FIRST,IDS_SECOND_PANE_FIRST_TIP},
 	{L"MaxMenuWidth",CSetting::TYPE_INT,IDS_SUBMENU_WIDTH,IDS_SUBMENU_WIDTH_TIP,60},
 	{L"AlignToWorkArea",CSetting::TYPE_BOOL,IDS_ALIGN_WORK_AREA,IDS_ALIGN_WORK_AREA_TIP,0},
 	{L"HorizontalMenuOffset",CSetting::TYPE_INT,IDS_HOR_OFFSET,IDS_HOR_OFFSET_TIP,0},

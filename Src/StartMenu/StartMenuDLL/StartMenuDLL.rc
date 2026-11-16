@@ -144,6 +144,8 @@ BEGIN
     CONTROL         "Don't track recent items",IDC_CHECKNOTRACK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,130,155,97,10
     CONTROL         "Place items first",IDC_CHECKITEMSFIRST,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,130,168,69,10
     CONTROL         "Hide extensions",IDC_CHECKNOEXT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,130,181,72,10
+    LTEXT           "Rows per column:",IDC_STATICROWS,130,195,60,8
+    EDITTEXT        IDC_EDITROWS,192,193,30,12,ES_AUTOHSCROLL | ES_NUMBER
     PUSHBUTTON      "Restore Defaults",IDC_BUTTONRESET,7,215,90,14
     DEFPUSHBUTTON   "OK",IDOK,135,215,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,192,215,50,14
@@ -754,7 +756,7 @@ END
 STRINGTABLE 
 BEGIN
     IDS_SEPARATOR_TIP       "This item separates items in the menu"
-    IDS_BREAK_TIP           "(only for two-column main menus) marks the start of the second column"
+    IDS_BREAK_TIP           "(only for two-column main menus) starts another column. By default the last one starts the second pane"
     IDS_PADDING_TIP         "(only for two-column main menus) moves the rest of the items in the column to the bottom"
     IDS_PROGRAMS_TIP        "The Programs folder - contains all installed programs"
     IDS_FAVORITES_TIP       "The Favorites folder"
@@ -1075,6 +1077,20 @@ BEGIN
     IDS_MAIN_MENU_SETTINGS  "Main Menu"
 	IDS_BUTTON_OFFSET		"Button offset"
 	IDS_BUTTON_OFFSET_TIP	"Offset the start button horizontally by the amount of pixels specified"
+    IDS_SECOND_PANE         "Second pane look"
+    IDS_SECOND_PANE_TIP     "Which column of the menu uses the skin's second (right) pane look. Some skins draw both panes alike; with them this changes little or nothing"
+    IDS_SECOND_PANE_LAST    "Last column"
+    IDS_SECOND_PANE_LAST_TIP 
+                            "The column after the last column break looks like the second pane (the default)"
+    IDS_SECOND_PANE_NONE    "None"
+    IDS_SECOND_PANE_NONE_TIP 
+                            "All columns look like the first pane. Column breaks only start new columns"
+    IDS_SECOND_PANE_FIRST   "First column"
+    IDS_SECOND_PANE_FIRST_TIP 
+                            "The column before the first column break looks like the second pane and is drawn on the left"
+    IDS_PINNED_ITEM         "Pinned programs"
+    IDS_PINNED_ITEM_TIP     "Places the pinned programs here, as a list. Without this item they are at the top of the first column"
+    IDS_ROWS_TIP            "After this many rows the list continues in the next column. Leave empty for no limit"
 END
 
 STRINGTABLE 
