@@ -2869,6 +2869,10 @@ bool CMenuContainer::InitSearchItems( void )
 			count=(h-sepHeight)/itemHeight;
 			if (categoryHash!=m_SearchCategoryHash && count>maxCount)
 				count=maxCount;
+			// limit the number of results per category (same setting as the non-Win7 styles)
+			int limit=GetSettingInt(categoryHash==m_SearchCategoryHash?L"SearchResultsMax":L"SearchResults");
+			if (count>limit)
+				count=limit;
 		}
 		else
 		{
