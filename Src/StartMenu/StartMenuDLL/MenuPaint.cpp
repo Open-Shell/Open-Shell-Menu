@@ -1793,7 +1793,7 @@ void CMenuContainer::DrawBackground( HDC hdc, const RECT &drawRect )
 		{
 			if (index-m_OriginalCount<m_SearchScrollPos || index-m_OriginalCount>=m_SearchScrollPos+m_SearchScrollHeight)
 				continue;
-			OffsetRect(&itemRect,0,-m_SearchScrollPos*(itemRect.bottom-itemRect.top));
+			OffsetRect(&itemRect,0,-SearchScrollOffset());
 		}
 		{
 			RECT q;
