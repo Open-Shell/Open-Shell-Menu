@@ -484,12 +484,15 @@ void CMenuContainer::CreateBackground( int width1, int width2, int height1, int 
 	if (s_MenuMode==MODE_SEARCH)
 	{
 		menuPadding[0]=s_Skin.Main_search_padding;
-		memset(&menuPadding[1],0,sizeof(menuPadding[1]));
+		if (s_Skin.bHasMain2_search_padding)
+			menuPadding[1]=s_Skin.Main2_search_padding;
+		else
+			memset(&menuPadding[1],0,sizeof(menuPadding[1]));
 	}
 	else if (s_MenuMode==MODE_JUMPLIST)
 	{
 		menuPadding[0]=s_Skin.Main_padding;
-		menuPadding[1]=s_Skin.Main_jump_padding;
+		menuPadding[1]=s_Skin.Main2_jump_padding;
 	}
 	else
 	{
@@ -1440,13 +1443,16 @@ void CMenuContainer::CreateContentRects( int width1, int width2, int height1, in
 	{
 		slicesY=s_Skin.Main_bitmap_search_slices_Y;
 		menuPadding[0]=s_Skin.Main_search_padding;
-		memset(&menuPadding[1],0,sizeof(menuPadding[1]));
+		if (s_Skin.bHasMain2_search_padding)
+			menuPadding[1]=s_Skin.Main2_search_padding;
+		else
+			memset(&menuPadding[1],0,sizeof(menuPadding[1]));
 	}
 	else if (s_MenuMode==MODE_JUMPLIST)
 	{
 		slicesY=s_Skin.Main_bitmap_jump_slices_Y;
 		menuPadding[0]=s_Skin.Main_padding;
-		menuPadding[1]=s_Skin.Main_jump_padding;
+		menuPadding[1]=s_Skin.Main2_jump_padding;
 	}
 	else
 	{
