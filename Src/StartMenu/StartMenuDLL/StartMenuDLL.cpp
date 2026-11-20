@@ -46,8 +46,8 @@ static HWND g_WinStartButton;
 static UINT g_StartMenuMsg;
 static HWND g_Tooltip;
 static TOOLINFO g_StartButtonTool;
-static bool g_bHotkeyShift;
-static int g_HotkeyCSM, g_HotkeyWSM, g_HotkeyShiftID, g_HotkeyCSMID, g_HotkeyWSMID;
+static bool g_bHotkeyShift, g_bHotkeyCtrl;
+static int g_HotkeyCSM, g_HotkeyWSM, g_HotkeyShiftID, g_HotkeyCtrlID, g_HotkeyCSMID, g_HotkeyWSMID;
 static HHOOK g_ProgHook, g_StartHook, g_StartMouseHook, g_AppManagerHook, g_NewWindowHook, g_StartMenuHook;
 static bool g_bAllProgramsTimer;
 static bool g_bInMenu;
@@ -545,6 +545,7 @@ static void FindTaskBar( void )
 		if (g_TaskBar)
 		{
 			g_HotkeyShiftID=GlobalAddAtom(L"OpenShellMenu.HotkeyShift");
+			g_HotkeyCtrlID=GlobalAddAtom(L"OpenShellMenu.HotkeyCtrl");
 			g_HotkeyCSMID=GlobalAddAtom(L"OpenShellMenu.HotkeyCSM");
 			g_HotkeyWSMID=GlobalAddAtom(L"OpenShellMenu.HotkeyWSM");
 			EnableHotkeys(HOTKEYS_NORMAL);
@@ -930,7 +931,7 @@ static LRESULT CALLBACK HookAppManager( int code, WPARAM wParam, LPARAM lParam )
 	if (code==HC_ACTION && wParam)
 	{
 		MSG *msg=(MSG*)lParam;
-		if (msg->message==g_StartMenuMsg && (msg->wParam==MSG_WINXMENU || msg->wParam==MSG_METROTHUMBNAIL || msg->wParam==MSG_SHIFTWIN))
+		if (msg->message==g_StartMenuMsg && (msg->wParam==MSG_WINXMENU || msg->wParam==MSG_METROTHUMBNAIL || msg->wParam==MSG_SHIFTWIN || msg->wParam==MSG_CTRLWIN))
 		{
 			HWND hwnd=FindWindow(L"ModeInputWnd",NULL);
 			if (hwnd)
@@ -1002,7 +1003,7 @@ static LRESULT CALLBACK HookAppManager( int code, WPARAM wParam, LPARAM lParam )
 									}
 								}
 							}
-							if (msg->wParam==MSG_SHIFTWIN)
+							if (msg->wParam==MSG_SHIFTWIN || msg->wParam==MSG_CTRLWIN)
 							{
 								if (GetWinVersion()==WIN_VER_WIN8)
 								{
@@ -1185,6 +1186,18 @@ void EnableHotkeys( THotkeys enable )
 	{
 		UnregisterHotKey(g_TaskBar,g_HotkeyShiftID);
 		g_bHotkeyShift=false;
+	}
+
+	bool bCtrlHook=(enable==HOTKEYS_SETTINGS || (enable==HOTKEYS_NORMAL && GetSettingInt(L"CtrlWin")!=0));
+	if (bCtrlHook)
+	{
+		RegisterHotKey(g_TaskBar,g_HotkeyCtrlID,MOD_CONTROL|MOD_WIN,0);
+		g_bHotkeyCtrl=true;
+	}
+	else if (g_bHotkeyCtrl)
+	{
+		UnregisterHotKey(g_TaskBar,g_HotkeyCtrlID);
+		g_bHotkeyCtrl=false;
 	}
 
 	if (g_HotkeyCSM)
@@ -3701,10 +3714,10 @@ if (!g_bTrimHooks)
 					if (GetSettingBool(L"EnableSettings"))
 						EditSettings(false,0);
 				}
-				else if (msg->wParam==MSG_SHIFTWIN)
+				else if (msg->wParam==MSG_SHIFTWIN || msg->wParam==MSG_CTRLWIN)
 				{
 					const TaskbarInfo *taskBar=GetDefaultTaskbarInfo();
-					int control=GetSettingInt(L"ShiftWin");
+					int control=GetSettingInt((msg->wParam==MSG_SHIFTWIN)?L"ShiftWin":L"CtrlWin");
 					if (control==OPEN_BOTH)
 					{
 						if (GetWinVersion()>=WIN_VER_WIN10)
@@ -3720,7 +3733,7 @@ if (!g_bTrimHooks)
 						OpenCortana();
 					else if (control==OPEN_CUSTOM)
 					{
-						CString commandText=GetSettingString(L"ShiftWinCommand");
+						CString commandText=GetSettingString((msg->wParam==MSG_SHIFTWIN)?L"ShiftWinCommand":L"CtrlWinCommand");
 						if (!commandText.IsEmpty())
 						{
 							wchar_t expandedCommand[_MAX_PATH]{};
@@ -3808,6 +3821,8 @@ if (!g_bTrimHooks)
 		{
 			if (msg->wParam==g_HotkeyShiftID)
 				PostMessage(g_TaskBar,g_StartMenuMsg,MSG_SHIFTWIN,0);
+			else if (msg->wParam==g_HotkeyCtrlID)
+				PostMessage(g_TaskBar,g_StartMenuMsg,MSG_CTRLWIN,0);
 			else if (msg->wParam==g_HotkeyCSMID)
 			{
 				msg->message=WM_NULL;
@@ -3897,6 +3912,11 @@ if (!g_bTrimHooks)
 				{
 					name=L"ShiftClick";
 					command=L"ShiftClickCommand";
+				}
+				else if (GetKeyState(VK_CONTROL)<0)
+				{
+					name=L"CtrlClick";
+					command=L"CtrlClickCommand";
 				}
 				else
 				{

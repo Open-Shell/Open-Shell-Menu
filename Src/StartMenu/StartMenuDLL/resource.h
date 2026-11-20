@@ -846,6 +846,11 @@
 #define IDS_STRING7110                  7110
 #define IDS_STRING7111                  7111
 
+#define IDS_CTRL_LCLICK                 3692
+#define IDS_CTRL_LCLICK_TIP             3693
+#define IDS_CTRL_WIN                    3694
+#define IDS_CTRL_WIN_TIP                3695
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

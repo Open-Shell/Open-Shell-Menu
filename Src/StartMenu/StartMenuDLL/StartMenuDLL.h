@@ -89,6 +89,7 @@ enum TMenuMsgParam // wParam for the OpenShellMenu.StartMenuMsg message
 	MSG_OPEN, // opens the classic start menu
 	MSG_SETTINGS, // show Settings
 	MSG_SHIFTWIN, // Shift+Win was pressed
+	MSG_CTRLWIN, // Ctrl+Win was pressed
 	MSG_DRAG, // an item is dragged on the start button
 	MSG_SHIFTDRAG, // an item is dragged on the start button (Shift is pressed)
 	MSG_NOP, // does nothing (basically just finds the Windows menu)

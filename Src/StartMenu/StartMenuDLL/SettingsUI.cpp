@@ -4203,6 +4203,20 @@ CSetting g_Settings[]={
 /*		{L"Desktop",CSetting::TYPE_RADIO,IDS_OPEN_DESKTOP,IDS_OPEN_DESKTOP_TIP,0,CSetting::FLAG_HIDDEN},
 		{L"Cortana",CSetting::TYPE_RADIO,IDS_OPEN_CORTANA,IDS_OPEN_CORTANA_TIP},*/
 	{L"ShiftWinCommand",CSetting::TYPE_STRING,IDS_OPEN_CMD_TEXT,IDS_OPEN_CMD_TEXT_TIP,"powershell",0,L"ShiftWin=3",L"Command"},
+	{L"CtrlClick",CSetting::TYPE_INT,IDS_CTRL_LCLICK,IDS_CTRL_LCLICK_TIP,2,CSetting::FLAG_BASIC},
+		{L"Nothing",CSetting::TYPE_RADIO,IDS_OPEN_NOTHING,IDS_OPEN_NOTHING_TIP},
+		{L"ClassicMenu",CSetting::TYPE_RADIO,IDS_OPEN_CSM,IDS_OPEN_CSM_TIP},
+		{L"WindowsMenu",CSetting::TYPE_RADIO,IDS_OPEN_WSM,IDS_OPEN_WSM_TIP},
+		{L"Command",CSetting::TYPE_RADIO,IDS_OPEN_CMD,IDS_OPEN_CMD_TIP},
+		{L"Both",CSetting::TYPE_RADIO,IDS_OPEN_BOTH,IDS_OPEN_BOTH_TIP,0,CSetting::FLAG_HIDDEN},
+	{L"CtrlClickCommand",CSetting::TYPE_STRING,IDS_OPEN_CMD_TEXT,IDS_OPEN_CMD_TEXT_TIP,"%systemdrive%",0,L"CtrlClick=3",L"Command"},
+	{L"CtrlWin",CSetting::TYPE_INT,IDS_CTRL_WIN,IDS_CTRL_WIN_TIP,2,CSetting::FLAG_BASIC},
+		{L"Nothing",CSetting::TYPE_RADIO,IDS_OPEN_NOTHING,IDS_OPEN_NOTHING_TIP},
+		{L"ClassicMenu",CSetting::TYPE_RADIO,IDS_OPEN_CSM,IDS_OPEN_CSM_TIP},
+		{L"WindowsMenu",CSetting::TYPE_RADIO,IDS_OPEN_WSM,IDS_OPEN_WSM_TIP},
+		{L"Command",CSetting::TYPE_RADIO,IDS_OPEN_CMD,IDS_OPEN_CMD_TIP},
+		{L"Both",CSetting::TYPE_RADIO,IDS_OPEN_BOTH,IDS_OPEN_BOTH_TIP},
+	{L"CtrlWinCommand",CSetting::TYPE_STRING,IDS_OPEN_CMD_TEXT,IDS_OPEN_CMD_TEXT_TIP,"powershell",0,L"CtrlWin=3",L"Command"},
 	{L"MiddleClick",CSetting::TYPE_INT,IDS_MCLICK,IDS_MCLICK_TIP,0},
 		{L"Nothing",CSetting::TYPE_RADIO,IDS_OPEN_NOTHING,IDS_OPEN_NOTHING_TIP},
 		{L"ClassicMenu",CSetting::TYPE_RADIO,IDS_OPEN_CSM,IDS_OPEN_CSM_TIP},
@@ -4884,6 +4898,10 @@ void UpdateSettings( void )
 		pSetting->nameID=bStartScreen?IDS_OPEN_WSS:IDS_OPEN_WSM;
 		pSetting->tipID=bStartScreen?IDS_OPEN_WSS_TIP:IDS_OPEN_WSM_TIP;
 
+		pSetting=FindSetting(L"CtrlWin")+3;
+		pSetting->nameID=bStartScreen?IDS_OPEN_WSS:IDS_OPEN_WSM;
+		pSetting->tipID=bStartScreen?IDS_OPEN_WSS_TIP:IDS_OPEN_WSM_TIP;
+
 		pSetting=FindSetting(L"MiddleClick")+3;
 		pSetting->nameID=bStartScreen?IDS_OPEN_WSS:IDS_OPEN_WSM;
 		pSetting->tipID=bStartScreen?IDS_OPEN_WSS_TIP:IDS_OPEN_WSM_TIP;
@@ -4943,6 +4961,7 @@ void UpdateSettings( void )
 		FindSetting(L"WinKey")[4].flags|=CSetting::FLAG_HIDDEN;
 		FindSetting(L"WinKey")[5].flags|=CSetting::FLAG_HIDDEN;
 		FindSetting(L"ShiftWin")[4].flags|=CSetting::FLAG_HIDDEN;
+		FindSetting(L"CtrlWin")[4].flags|=CSetting::FLAG_HIDDEN;
 		UpdateSetting(L"RecentMetroApps",CComVariant(0),false); HideSetting(L"RecentMetroApps",true);
 		UpdateSetting(L"SearchMetroApps",CComVariant(0),false); HideSetting(L"SearchMetroApps",true);
 		UpdateSetting(L"SearchMetroSettings",CComVariant(0),false); HideSetting(L"SearchMetroSettings",true);
@@ -5013,6 +5032,7 @@ void UpdateSettings( void )
 
 		FindSetting(L"MouseClick")[4].flags&=~CSetting::FLAG_HIDDEN;
 		FindSetting(L"ShiftClick")[4].flags&=~CSetting::FLAG_HIDDEN;
+		FindSetting(L"CtrlClick")[4].flags&=~CSetting::FLAG_HIDDEN;
 		FindSetting(L"WinKey")[5].flags|=CSetting::FLAG_HIDDEN;
 	}
 
