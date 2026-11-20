@@ -846,6 +846,9 @@
 #define IDS_STRING7110                  7110
 #define IDS_STRING7111                  7111
 
+#define IDS_SEARCH_PRIORITY             3297
+#define IDS_SEARCH_PRIORITY_TIP         3298
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

@@ -821,6 +821,7 @@ private:
 	void RemoveMFUShortcut( unsigned int hash, bool bAppId );
 	void FadeOutItem( int index );
 	bool GetItemRect( int index, RECT &rc );
+	int SearchScrollOffset( void ) const; // pixel offset of the scrollable search list
 	int HitTest( const POINT &pt, bool *bArrow, bool bDrop=false );
 	bool DragOut( int index, bool bApp );
 	bool DragOutApps( const CItemManager::ItemInfo *pInfo );

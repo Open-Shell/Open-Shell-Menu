@@ -2763,6 +2763,7 @@ bool CMenuContainer::InitSearchItems( void )
 	std::vector<int> counts;
 	int sepHeight=0, itemHeight=0, maxHeight=0, reservedHeight=0;
 	int maxCount=0;
+	bool bPrioritySearch=(s_bWin7Style && GetSettingBool(L"SearchResultsPriority"));
 	if (s_bWin7Style)
 	{
 		sepHeight=s_Skin.ItemSettings[s_Skin.More_bitmap_Size.cx?MenuSkin::LIST_SEPARATOR_SPLIT:MenuSkin::LIST_SEPARATOR].itemHeight;
@@ -2787,6 +2788,8 @@ bool CMenuContainer::InitSearchItems( void )
 	}
 	if (s_bWin7Style)
 	{
+		if (!bPrioritySearch)
+		{
 		// calculate the allowed counts per category
 		int selectedCount=0;
 		if (!s_SearchResults.programs.empty())
@@ -2845,9 +2848,12 @@ bool CMenuContainer::InitSearchItems( void )
 			if (reservedHeight>maxHeight) reservedHeight=maxHeight;
 			maxHeight-=reservedHeight;
 		}
+		}
 	}
 
 	// add categories
+	int resultsHeight=maxHeight;
+	int fitRows=0, fitH=0; // rows that fit in the results area (for the scrollbar page size)
 	std::list<CSearchManager::SearchCategory>::const_iterator it=s_SearchResults.indexed.begin();
 	for (size_t idx=0;idx<s_SearchResults.indexed.size()+3;idx++)
 	{
@@ -2865,10 +2871,23 @@ bool CMenuContainer::InitSearchItems( void )
 		int count=0;
 		if (s_bWin7Style)
 		{
-			int h=(categoryHash==m_SearchCategoryHash?reservedHeight:maxHeight);
-			count=(h-sepHeight)/itemHeight;
-			if (categoryHash!=m_SearchCategoryHash && count>maxCount)
-				count=maxCount;
+			if (bPrioritySearch)
+			{
+				// always show the configured number of results per category,
+				// the list is made scrollable to fit the extra items
+				count=GetSettingInt(categoryHash==m_SearchCategoryHash?L"SearchResultsMax":L"SearchResults");
+			}
+			else
+			{
+				int h=(categoryHash==m_SearchCategoryHash?reservedHeight:maxHeight);
+				count=(h-sepHeight)/itemHeight;
+				if (categoryHash!=m_SearchCategoryHash && count>maxCount)
+					count=maxCount;
+				// limit the number of results per category (same setting as the non-Win7 styles)
+				int limit=GetSettingInt(categoryHash==m_SearchCategoryHash?L"SearchResultsMax":L"SearchResults");
+				if (count>limit)
+					count=limit;
+			}
 		}
 		else
 		{
@@ -2957,11 +2976,37 @@ bool CMenuContainer::InitSearchItems( void )
 		{
 			count=AddSearchItems(items,name,categoryHash,originalCount);
 		}
-		if (s_bWin7Style && categoryHash!=m_SearchCategoryHash && count>0)
-			maxHeight-=sepHeight+count*itemHeight;
+		if (s_bWin7Style && count>0)
+		{
+			if (bPrioritySearch)
+			{
+				// count how many rows fit in the visible area (headers are taller than items)
+				for (int r=0;r<1+count && fitH<resultsHeight;r++)
+				{
+					int rh=(r==0)?sepHeight:itemHeight;
+					if (fitH+rh<=resultsHeight || fitRows==0)
+					{
+						fitH+=rh;
+						fitRows++;
+					}
+				}
+			}
+			if (categoryHash!=m_SearchCategoryHash)
+				maxHeight-=sepHeight+count*itemHeight;
+		}
 	}
 	if (s_bWin7Style)
 	{
+		if (bPrioritySearch && fitRows>0 && m_SearchScrollCount==0)
+		{
+			// enable scrolling when the prioritized results don't fit
+			int total=(int)m_Items.size()-m_OriginalCount;
+			if (total>fitRows)
+			{
+				m_SearchScrollCount=total;
+				m_SearchScrollHeight=fitRows;
+			}
+		}
 		UpdateAccelerators(m_OriginalCount,(int)m_Items.size());
 		MenuItem &item=m_Items[m_SearchIndex-m_SearchItemCount+1];
 		if (s_SearchResults.bSearching)
@@ -4506,6 +4551,23 @@ HRESULT __stdcall CMenuContainer::ReleaseAccessible( ComCallData *pData )
 	return CoDisconnectContext(INFINITE);
 }
 
+// Returns the pixel offset the scrollable search list is shifted by.
+// The scroll position is in rows, but the rows have different heights
+// (category headers are taller), so the offset is the sum of the heights
+// of the rows scrolled out of view.
+int CMenuContainer::SearchScrollOffset( void ) const
+{
+	if (m_SearchScrollPos<=0)
+		return 0;
+	int end=m_OriginalCount+m_SearchScrollPos;
+	if (end>(int)m_Items.size())
+		end=(int)m_Items.size();
+	int offset=0;
+	for (int i=m_OriginalCount;i<end;i++)
+		offset+=m_Items[i].itemRect.bottom-m_Items[i].itemRect.top;
+	return offset;
+}
+
 bool CMenuContainer::GetItemRect( int index, RECT &rc )
 {
 	if (index>=0 && index<(int)m_Items.size())
@@ -4521,7 +4583,7 @@ bool CMenuContainer::GetItemRect( int index, RECT &rc )
 		}
 		if (m_SearchScrollCount>m_SearchScrollHeight && index>=m_OriginalCount)
 		{
-			OffsetRect(&rc,0,-m_SearchScrollPos*(rc.bottom-rc.top));
+			OffsetRect(&rc,0,-SearchScrollOffset());
 		}
 	}
 	return true;
@@ -4549,7 +4611,7 @@ int CMenuContainer::HitTest( const POINT &pt, bool *bArrow, bool bDrop )
 		}
 		else if (m_SearchScrollCount>m_SearchScrollHeight && i>=m_OriginalCount)
 		{
-			OffsetRect(&rc,0,-m_SearchScrollPos*(rc.bottom-rc.top));
+			OffsetRect(&rc,0,-SearchScrollOffset());
 		}
 		else if (bDrop && m_bTwoColumns && i<n-1 && m_Items[i+1].column==0 && m_Items[i+1].bAlignBottom)
 			rc.bottom=m_Items[i+1].itemRect.top; // when dropping on the padding of the first column, assume the item above the padding was hit

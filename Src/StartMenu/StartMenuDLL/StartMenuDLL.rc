@@ -1045,6 +1045,8 @@ BEGIN
     IDS_SEARCH_MAX_TIP2     "Limit the number of results shown per category"
     IDS_SEARCH_MAX3         "Results per maximized category"
     IDS_SEARCH_MAX_TIP3     "Limit the number of results shown for the maximized category"
+    IDS_SEARCH_PRIORITY     "Prioritize results per category"
+    IDS_SEARCH_PRIORITY_TIP "Always show the specified number of results per category instead of dividing the available space equally. The search list becomes scrollable when the results don't fit"
     IDS_SHOW_APPS           "Show Metro apps"
     IDS_SHOW_APPS_TIP       "When this is checked, the programs tree will include a folder for the Metro apps"
     IDS_FOLDERS_FIRST       "Show folders first"
