@@ -214,6 +214,19 @@ void CMenuContainer::ExecuteCommand( const wchar_t *command, bool bElevated, boo
 	}
 }
 
+// Opens the Control Panel in the category view (ControlPanelCategory setting)
+static void OpenControlPanelCategory( void )
+{
+	// the category view home is the {26EE0668-A00A-44D7-9371-BEB064C98683} shell folder
+	CAbsolutePidl pidl;
+	if (FAILED(SHParseDisplayName(L"::{26EE0668-A00A-44D7-9371-BEB064C98683}",NULL,&pidl,0,NULL)))
+		return;
+	SHELLEXECUTEINFO execute={sizeof(execute),SEE_MASK_IDLIST|SEE_MASK_FLAG_LOG_USAGE};
+	execute.lpIDList=pidl;
+	execute.nShow=SW_SHOWNORMAL;
+	ShellExecuteEx(&execute);
+}
+
 // Dialog proc for the Log Off dialog box
 static INT_PTR CALLBACK LogOffDlgProc( HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
@@ -1576,6 +1589,26 @@ void CMenuContainer::ActivateItem( int index, TActivateType type, const POINT *p
 		if (item.id==MENU_EMPTY || item.id==MENU_EMPTY_TOP) return;
 		if (item.bFolder && pItemPidl1 && !item.bSplit && !GetSettingBool(L"EnableExplorer"))
 				return;
+		// open the Control Panel in the category view if enabled (ControlPanelCategory setting)
+		if (GetSettingBool(L"ControlPanelCategory") && (pItemPidl1 || pItemPidl2))
+		{
+			CAbsolutePidl pidlCP;
+			if (SUCCEEDED(ShGetKnownFolderIDList(FOLDERID_ControlPanelFolder,&pidlCP)) &&
+				((pItemPidl1 && ILIsEqual(pItemPidl1,pidlCP)) || (pItemPidl2 && ILIsEqual(pItemPidl2,pidlCP))))
+			{
+				if (bKeepOpen)
+					LockSetForegroundWindow(LSFW_LOCK);
+				else
+				{
+					LockSetForegroundWindow(LSFW_UNLOCK);
+					FadeOutItem(index);
+					CloseSubMenus(CLOSE_POST,NULL);
+				}
+				PlayMenuSound(SOUND_COMMAND);
+				OpenControlPanelCategory();
+				return;
+			}
+		}
 		if (item.id==MENU_SEARCH_BOX)
 		{
 			// the search button was pressed
