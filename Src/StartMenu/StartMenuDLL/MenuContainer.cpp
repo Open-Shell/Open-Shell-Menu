@@ -3110,12 +3110,15 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 	else if (s_MenuMode==MODE_SEARCH)
 	{
 		menuPadding[0]=s_Skin.Main_search_padding;
-		memset(&menuPadding[1],0,sizeof(menuPadding[1]));
+		if (s_Skin.bHasMain2_search_padding)
+			menuPadding[1]=s_Skin.Main2_search_padding;
+		else
+			memset(&menuPadding[1],0,sizeof(menuPadding[1]));
 	}
 	else if (s_MenuMode==MODE_JUMPLIST)
 	{
 		menuPadding[0]=s_Skin.Main_padding;
-		menuPadding[1]=s_Skin.Main_jump_padding;
+		menuPadding[1]=s_Skin.Main2_jump_padding;
 	}
 	else
 	{
@@ -3824,7 +3827,7 @@ void CMenuContainer::InitWindowInternal( bool bDontShrink, const POINT &corner, 
 			m_rContent.bottom=totalHeight-menuPadding[0].bottom;
 			m_rContent2.bottom=totalHeight-menuPadding[1].bottom;
 			dh1=m_rContent.bottom-dh1;
-			dh2=(s_MenuMode==MODE_SEARCH?m_rContent.bottom:m_rContent2.bottom)-dh2;
+			dh2=((s_MenuMode==MODE_SEARCH && !s_Skin.bHasMain2_search_padding)?m_rContent.bottom:m_rContent2.bottom)-dh2;
 			if (!s_bWin7Style)
 			{
 				if (dh1<0) dh1=0;
@@ -8437,6 +8440,14 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 	s_Skin.Main2_padding=s_Skin.Main2_padding0;
 	s_Skin.Main_search_padding=s_Skin.Main_search_padding0;
 	s_Skin.Main_jump_padding=s_Skin.Main_jump_padding0;
+	s_Skin.bHasMain2_search_padding=s_Skin.Main2_search_padding0.left>=0;
+	if (s_Skin.bHasMain2_search_padding)
+		s_Skin.Main2_search_padding=s_Skin.Main2_search_padding0;
+	else
+		memset(&s_Skin.Main2_search_padding,0,sizeof(s_Skin.Main2_search_padding)); // not defined by the skin - keep the old behavior
+	s_Skin.Main2_jump_padding=s_Skin.Main2_jump_padding0;
+	if (s_Skin.Main2_jump_padding0.left<0)
+		s_Skin.Main2_jump_padding=s_Skin.Main_jump_padding0; // not defined by the skin - keep the old behavior
 
 	{
 		RECT margin={0,0,0,0};
@@ -8511,6 +8522,17 @@ HWND CMenuContainer::ToggleStartMenu( int taskbarId, bool bKeyboard, bool bAllPr
 			s_Skin.Main_jump_padding.right-=margin.right; if (s_Skin.Main_jump_padding.right<0) s_Skin.Main_jump_padding.right=0;
 			s_Skin.Main_jump_padding.top+=margin.top; if (s_Skin.Main_jump_padding.top<0) s_Skin.Main_jump_padding.top=0;
 			s_Skin.Main_jump_padding.bottom-=margin.bottom; if (s_Skin.Main_jump_padding.bottom<0) s_Skin.Main_jump_padding.bottom=0;
+
+			if (s_Skin.bHasMain2_search_padding)
+			{
+				s_Skin.Main2_search_padding.right-=margin.right; if (s_Skin.Main2_search_padding.right<0) s_Skin.Main2_search_padding.right=0;
+				s_Skin.Main2_search_padding.top+=margin.top; if (s_Skin.Main2_search_padding.top<0) s_Skin.Main2_search_padding.top=0;
+				s_Skin.Main2_search_padding.bottom-=margin.bottom; if (s_Skin.Main2_search_padding.bottom<0) s_Skin.Main2_search_padding.bottom=0;
+			}
+
+			s_Skin.Main2_jump_padding.right-=margin.right; if (s_Skin.Main2_jump_padding.right<0) s_Skin.Main2_jump_padding.right=0;
+			s_Skin.Main2_jump_padding.top+=margin.top; if (s_Skin.Main2_jump_padding.top<0) s_Skin.Main2_jump_padding.top=0;
+			s_Skin.Main2_jump_padding.bottom-=margin.bottom; if (s_Skin.Main2_jump_padding.bottom<0) s_Skin.Main2_jump_padding.bottom=0;
 		}
 
 		if (!bTheme)

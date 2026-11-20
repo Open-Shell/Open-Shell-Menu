@@ -2158,6 +2158,18 @@ bool MenuSkin::LoadSkin( HMODULE hMod, const wchar_t *variation, const wchar_t *
 		else
 			memset(&Main_jump_padding0,0,sizeof(Main_jump_padding0));
 
+		str=parser.FindSetting(L"Main2_search_padding");
+		if (str)
+			LoadSkinNumbers(str,(int*)&Main2_search_padding0,4,NUMBERS_PADDING);
+		else
+			memset(&Main2_search_padding0,-1,sizeof(Main2_search_padding0)); // -1 = not defined, falls back to Main_search_padding
+
+		str=parser.FindSetting(L"Main2_jump_padding");
+		if (str)
+			LoadSkinNumbers(str,(int*)&Main2_jump_padding0,4,NUMBERS_PADDING);
+		else
+			memset(&Main2_jump_padding0,-1,sizeof(Main2_jump_padding0)); // -1 = not defined, falls back to Main_jump_padding
+
 		str=parser.FindSetting(L"Main2_padding");
 		if (str)
 			LoadSkinNumbers(str,(int*)&Main2_padding0,4,NUMBERS_PADDING);

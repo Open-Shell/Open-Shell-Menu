@@ -264,6 +264,8 @@ struct MenuSkin
 	RECT Main2_padding0;
 	RECT Main_search_padding0;
 	RECT Main_jump_padding0;
+	RECT Main2_search_padding0;
+	RECT Main2_jump_padding0;
 	int Main_search_indent;
 	MenuBitmap Main_separatorV;
 	int Main_separatorWidth;
@@ -400,6 +402,9 @@ struct MenuSkin
 	mutable RECT Main2_padding;
 	mutable RECT Main_search_padding;
 	mutable RECT Main_jump_padding;
+	mutable RECT Main2_search_padding;
+	mutable RECT Main2_jump_padding;
+	mutable bool bHasMain2_search_padding; // the skin defines Main2_search_padding (otherwise the old search-mode behavior is kept)
 	mutable RECT Submenu_padding;
 
 	MenuSkin( void );
