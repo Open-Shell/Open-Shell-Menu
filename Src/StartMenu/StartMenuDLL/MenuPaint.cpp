@@ -2112,9 +2112,18 @@ void CMenuContainer::DrawBackground( HDC hdc, const RECT &drawRect )
 					{
 						itemRect2.top=(itemRect2.top+itemRect2.bottom-settings.sepHeight)/2;
 						itemRect2.bottom=itemRect2.top+settings.sepHeight;
+						// negative margins extend the separator past the menu padding,
+						// the middle (stretchable) band then spans the extended area
+						bool bExtendLeft=settings.sepSlicesX[0]<0;
+						bool bExtendRight=settings.sepSlicesX[2]<0;
+						if (bExtendLeft)
+							itemRect2.left+=settings.sepSlicesX[0];
+						if (bExtendRight)
+							itemRect2.right-=settings.sepSlicesX[2];
+						int midStart=bExtendLeft?0:settings.sepSlicesX[0];
 						HGDIOBJ bmp0=SelectObject(hdc2,settings.bmpSeparator.GetBitmap());
-						RECT rSrc={0,0,settings.sepSlicesX[0]+settings.sepSlicesX[1]+settings.sepSlicesX[2],settings.sepHeight};
-						RECT rMargins={settings.sepSlicesX[0],settings.sepHeight,settings.sepSlicesX[2],0};
+						RECT rSrc={0,0,midStart+settings.sepSlicesX[1]+(bExtendRight?0:settings.sepSlicesX[2]),settings.sepHeight};
+						RECT rMargins={bExtendLeft?0:settings.sepSlicesX[0],settings.sepHeight,bExtendRight?0:settings.sepSlicesX[2],0};
 						MarginsBlit(hdc2,hdc,rSrc,itemRect2,rMargins,settings.bmpSeparator.bIs32);
 						SelectObject(hdc2,bmp0);
 					}
